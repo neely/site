@@ -104,10 +104,13 @@ div#right_col
 	font-size: 14px;
 	text-decoration: underline;
 }
-.item
-{
-	margin: 30px 0 0 0;
-	clear: both;
+.item {
+    margin: 30px 0 0 0;
+    clear: both;
+}
+/* Special case for Publications section */
+.item.publications {
+    text-align: left;
 }
 .item p
 {
