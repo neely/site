@@ -135,3 +135,9 @@ div#right_col
 {
 	display: none;
 }
+/* Other CSS styles */
+
+/* Force left alignment for Publications section */
+#right_col .item.publications {
+    text-align: left !important;
+}
