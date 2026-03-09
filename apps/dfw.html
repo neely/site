@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>DFW</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f10;
+    --surface: #1a1a1c;
+    --surface2: #242426;
+    --border: #2e2e30;
+    --ink: #ededea;
+    --dim: #6b6b68;
+    --accent: #e8c547;
+    --accent2: #e5837a;
+    --go: #4caf7d;
+    --go-dim: #2d6b4a;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 2rem 1.5rem;
+    animation: fadeIn 0.25s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SETUP SCREEN ── */
+  .program-badge {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .program-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+
+  .program-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .session-descriptor {
+    font-size: 0.72rem;
+    color: var(--dim);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* week/day selector */
+  .selector-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .selector-group label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.4rem;
+  }
+
+  .seg-control {
+    display: flex;
+    background: var(--surface);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .seg-btn {
+    flex: 1;
+    padding: 0.5rem 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    background: transparent;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .seg-btn.active {
+    background: var(--surface2);
+    color: var(--ink);
+  }
+
+  /* today's scheme display */
+  .scheme-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .scheme-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.4rem;
+  }
+
+  .scheme-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+  }
+
+  .scheme-desc {
+    font-size: 0.7rem;
+    color: var(--dim);
+    line-height: 1.5;
+  }
+
+  /* weight setup */
+  .weight-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .weight-section label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+  }
+
+  .bell-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .bell-opt {
+    flex: 1;
+    padding: 0.5rem;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .bell-opt.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--surface2);
+  }
+
+  .weight-inputs {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .weight-inputs.doubles { grid-template-columns: 1fr 1fr; }
+  .weight-inputs.single  { grid-template-columns: 1fr; }
+
+  .weight-input-wrap {
+    position: relative;
+  }
+
+  .weight-input-wrap span {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    color: var(--dim);
+    pointer-events: none;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.1rem;
+    padding: 0.6rem 2.5rem 0.6rem 0.85rem;
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type="number"]:focus { border-color: var(--accent); }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 1.1rem;
+    background: var(--go);
+    border: none;
+    border-radius: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: #0f1a13;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: auto;
+  }
+
+  .btn-primary:active { transform: scale(0.98); background: #3d9e68; }
+
+  /* ── SESSION SCREEN ── */
+  #session {
+    padding: 0;
+    justify-content: stretch;
+  }
+
+  .session-header {
+    padding: 1rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .workout-clock {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .workout-clock .clock-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .workout-clock .clock-val {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  .sess-info {
+    text-align: right;
+  }
+
+  .sess-info .day-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .sess-info .scheme-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ── BIG CADENCE TIMER AREA ── */
+  .cadence-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    gap: 0.25rem;
+    position: relative;
+  }
+
+  .cadence-context {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+  }
+
+  /* the huge timer number */
+  .cadence-timer {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(5rem, 22vw, 7rem);
+    font-weight: 300;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    transition: color 0.3s;
+  }
+
+  .cadence-timer.over-target { color: var(--accent2); }
+  .cadence-timer.idle        { color: var(--dim); }
+
+  .cadence-target-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
+  .target-pip {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--go);
+    flex-shrink: 0;
+  }
+
+  .target-pip.over { background: var(--accent2); }
+
+  .cadence-target-label {
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* rep badge + weight */
+  .rep-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .rep-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .rep-badge-meta {
+    font-size: 0.65rem;
+    color: var(--dim);
+    line-height: 1.5;
+  }
+
+  .rep-badge-meta .wt {
+    color: var(--accent);
+    font-size: 0.72rem;
+  }
+
+  /* last set result */
+  .last-set-row {
+    font-size: 0.65rem;
+    color: var(--dim);
+    margin-top: 0.75rem;
+    min-height: 1.2em;
+    letter-spacing: 0.05em;
+  }
+
+  .last-set-row .good  { color: var(--go); }
+  .last-set-row .slow  { color: var(--accent2); }
+
+  /* ── TAP BUTTON ── */
+  .tap-zone {
+    margin: 0 1.5rem;
+    height: 100px;
+    background: var(--go);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: #0f1a13;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.08s;
+    user-select: none;
+    -webkit-user-select: none;
+    flex-shrink: 0;
+  }
+
+  .tap-zone:active { transform: scale(0.97); }
+  .tap-zone.active-set { background: var(--accent2); color: #1a0a08; }
+  .tap-zone .tap-sub {
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    opacity: 0.7;
+  }
+
+  /* set log */
+  .set-log-area {
+    padding: 0.75rem 1.5rem 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .set-log-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.4rem;
+  }
+
+  .set-log-scroll {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .set-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.62rem;
+    color: var(--dim);
+  }
+
+  .set-chip.fresh  { border-color: var(--go-dim); color: var(--go); }
+  .set-chip.slow   { border-color: #6b2e2a; color: var(--accent2); }
+
+  /* session bottom bar */
+  .session-bottom {
+    padding: 0.75rem 1.5rem 1.5rem;
+    display: flex;
+    gap: 0.6rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-pill {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.45rem 0.5rem;
+    text-align: center;
+  }
+
+  .stat-pill .val {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .stat-pill .lbl {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .btn-end {
+    padding: 0.4rem 0.7rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  .btn-end:hover { color: var(--accent2); border-color: var(--accent2); opacity: 1; }
+
+  .end-confirm-row { display: flex; }
+
+  .btn-end-yes, .btn-end-no {
+    padding: 0.35rem 0.6rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .btn-end-yes {
+    background: var(--accent2);
+    color: #1a0a08;
+    border-color: var(--accent2);
+  }
+
+  .btn-end-yes:hover { background: #d0685f; }
+
+  .btn-end-no {
+    background: transparent;
+    color: var(--dim);
+  }
+
+  .btn-end-no:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* ── SUMMARY SCREEN ── */
+  #summary {
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .summary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+
+  .summary-card .big-val {
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .summary-card .card-lbl {
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 0.2rem;
+  }
+
+  .summary-card.full { grid-column: span 2; }
+
+  .set-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+  }
+
+  .h-chip {
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.65rem;
+    color: var(--dim);
+  }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1: SETUP
+══════════════════════════════════════ -->
+<div id="setup" class="screen active">
+  <div class="program-badge">Dry Fighting Weight</div>
+  <div class="program-title">DFW <em>Coach</em></div>
+  <div class="session-descriptor">Clean + Press · Front Squat · 30 min</div>
+
+  <!-- Week / Day -->
+  <div class="selector-row">
+    <div class="selector-group">
+      <label>Week</label>
+      <div class="seg-control" id="week-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+        <button class="seg-btn" data-val="4">4</button>
+      </div>
+    </div>
+    <div class="selector-group">
+      <label>Day</label>
+      <div class="seg-control" id="day-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's scheme -->
+  <div class="scheme-card">
+    <div class="scheme-label">Today's scheme</div>
+    <div class="scheme-value" id="scheme-name">Ladders 1–2–3</div>
+    <div class="scheme-desc" id="scheme-desc">Alternate C+P and FSQ. Complete each rung then rest. Repeat for 30 min.</div>
+  </div>
+
+  <!-- Weight setup -->
+  <div class="weight-section">
+    <label>Kettlebell setup</label>
+    <div class="bell-toggle">
+      <div class="bell-opt active" id="opt-single" onclick="setBellMode('single')">Single</div>
+      <div class="bell-opt" id="opt-double" onclick="setBellMode('double')">Double</div>
+    </div>
+    <div class="weight-inputs single" id="weight-inputs">
+      <div class="weight-input-wrap">
+        <input type="number" id="w1" placeholder="24" min="4" max="100" step="4">
+        <span>kg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Target cadence -->
+  <div class="weight-section" style="margin-bottom:1rem;">
+    <label>Target cadence (seconds per set)</label>
+    <div class="weight-inputs single">
+      <div class="weight-input-wrap">
+        <input type="number" id="cadence-target" placeholder="60" min="20" max="300" step="5" value="60">
+        <span>sec</span>
+      </div>
+    </div>
+    <div style="font-size:0.62rem;color:var(--dim);margin-top:0.4rem;line-height:1.5;">
+      Full cycle time: your work + rest. Tap to start, tap when done.
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="startSession()">Start Session →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 2: SESSION
+══════════════════════════════════════ -->
+<div id="session" class="screen">
+  <div class="session-header">
+    <div class="workout-clock">
+      <div class="clock-label">remaining</div>
+      <div class="clock-val" id="elapsed">30:00</div>
+    </div>
+    <div class="sess-info">
+      <div class="day-label" id="sess-day-label">Week 1 · Day 1</div>
+      <div class="scheme-big" id="sess-scheme-name">Ladders 1–2–3</div>
+    </div>
+  </div>
+
+  <div class="cadence-area">
+    <div class="cadence-context" id="cadence-context">READY</div>
+    <div class="cadence-timer idle" id="cadence-timer">0</div>
+    <div class="cadence-target-row">
+      <div class="target-pip" id="target-pip"></div>
+      <div class="cadence-target-label" id="target-label">target: — s per set</div>
+    </div>
+    <div class="rep-badge-row">
+      <div class="rep-badge" id="rep-badge">1</div>
+      <div class="rep-badge-meta">
+        <div>reps each side</div>
+        <div class="wt" id="weight-reminder">24 kg</div>
+      </div>
+    </div>
+    <div class="last-set-row" id="last-set-row"></div>
+  </div>
+
+  <div class="tap-zone" id="tap-zone" onclick="handleTap()">
+    <span id="tap-label">START FIRST SET</span>
+    <span class="tap-sub" id="tap-sub">C+P · then FSQ</span>
+  </div>
+
+  <div class="set-log-area">
+    <div class="set-log-label">Sets</div>
+    <div class="set-log-scroll" id="set-log"></div>
+  </div>
+
+  <div class="session-bottom">
+    <div class="stat-pill">
+      <div class="val" id="stat-sets">0</div>
+      <div class="lbl">Sets</div>
+    </div>
+    <div class="stat-pill">
+      <div class="val" id="stat-reps">0</div>
+      <div class="lbl">Reps</div>
+    </div>
+    <div class="stat-pill">
+      <div class="val" id="stat-tons">0.0</div>
+      <div class="lbl">Tons</div>
+    </div>
+    <div id="end-wrap" style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0;">
+      <button class="btn-end" id="btn-end-1" onclick="showEndConfirm()">End Workout</button>
+      <div id="end-confirm" style="display:none;gap:0.35rem;align-items:center;" class="end-confirm-row">
+        <span style="font-size:0.55rem;color:var(--dim);letter-spacing:0.05em;">sure?</span>
+        <button class="btn-end-yes" onclick="endSession()">Yes</button>
+        <button class="btn-end-no" onclick="hideEndConfirm()">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3: SUMMARY
+══════════════════════════════════════ -->
+<div id="summary" class="screen">
+  <div class="summary-title">Session Complete</div>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="big-val" id="sum-sets">—</div>
+      <div class="card-lbl">Total Sets</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-val" id="sum-reps">—</div>
+      <div class="card-lbl">Total Reps</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-val" id="sum-tons">—</div>
+      <div class="card-lbl">Tonnage (kg)</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-val" id="sum-time">—</div>
+      <div class="card-lbl">Time</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-val" id="sum-avg">—</div>
+      <div class="card-lbl">Avg Cadence</div>
+    </div>
+    <div class="summary-card full">
+      <div class="card-lbl" style="margin-bottom:0.5rem">Set breakdown</div>
+      <div class="set-history" id="sum-history"></div>
+    </div>
+  </div>
+  <button class="btn-secondary" onclick="goSetup()">← New Session</button>
+</div>
+
+<script>
+// ── PROGRAM DATA ──────────────────────────────────────────────
+const SCHEMES = {
+  '1-1': { name: 'Ladders 1–2–3',   rungs: [1,2,3],   type: 'ladder' },
+  '1-2': { name: 'Sets of 1',        rungs: [1],        type: 'fixed'  },
+  '1-3': { name: 'Sets of 2',        rungs: [2],        type: 'fixed'  },
+  '2-1': { name: 'Ladders 1–2–3',   rungs: [1,2,3],   type: 'ladder' },
+  '2-2': { name: 'Sets of 1',        rungs: [1],        type: 'fixed'  },
+  '2-3': { name: 'Sets of 3',        rungs: [3],        type: 'fixed'  },
+  '3-1': { name: 'Ladders 1–2–3–4', rungs: [1,2,3,4], type: 'ladder' },
+  '3-2': { name: 'Sets of 2',        rungs: [2],        type: 'fixed'  },
+  '3-3': { name: 'Sets of 3',        rungs: [3],        type: 'fixed'  },
+  '4-1': { name: 'Ladders 1–2–3–4', rungs: [1,2,3,4], type: 'ladder' },
+  '4-2': { name: 'Sets of 2',        rungs: [2],        type: 'fixed'  },
+  '4-3': { name: 'Alt 3s & 4s',      rungs: [3,4],     type: 'alt'    },
+};
+
+const DESCS = {
+  ladder: 'Complete each rung (1–2–3 reps), alternating C+P and FSQ. Repeat for 30 min.',
+  fixed:  'Perform sets of the same rep count, alternating C+P and FSQ. 30 min.',
+  alt:    'Alternate between the rep counts listed, alternating C+P and FSQ. 30 min.',
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let state = {
+  week: 1, day: 1,
+  bellMode: 'single',
+  weights: [24],
+  targetCadence: 60,
+  scheme: null,
+  // session
+  sets: [],
+  rungIdx: 0,
+  sessionStart: null,
+  workoutInterval: null,   // 30-min countdown
+  cadenceInterval: null,   // per-set cadence clock
+  setStart: null,
+  setPhase: 'idle',        // 'idle' | 'running'
+  totalElapsed: 0,
+};
+
+// ── SETUP ─────────────────────────────────────────────────────
+function segInit(id, stateKey) {
+  document.getElementById(id).querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById(id).querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state[stateKey] = parseInt(btn.dataset.val);
+      updateSchemeCard();
+    });
+  });
+}
+
+segInit('week-seg', 'week');
+segInit('day-seg', 'day');
+
+function updateSchemeCard() {
+  const key = `${state.week}-${state.day}`;
+  const s = SCHEMES[key];
+  if (!s) return;
+  state.scheme = s;
+  document.getElementById('scheme-name').textContent = s.name;
+  document.getElementById('scheme-desc').textContent = DESCS[s.type];
+}
+
+function setBellMode(mode) {
+  state.bellMode = mode;
+  document.getElementById('opt-single').classList.toggle('active', mode === 'single');
+  document.getElementById('opt-double').classList.toggle('active', mode === 'double');
+  const inp = document.getElementById('weight-inputs');
+  inp.className = 'weight-inputs ' + (mode === 'double' ? 'doubles' : 'single');
+  inp.innerHTML = mode === 'single'
+    ? `<div class="weight-input-wrap"><input type="number" id="w1" placeholder="24" min="4" max="100" step="4"><span>kg</span></div>`
+    : `<div class="weight-input-wrap"><input type="number" id="w1" placeholder="24" min="4" max="100" step="4"><span>kg L</span></div>
+       <div class="weight-input-wrap"><input type="number" id="w2" placeholder="24" min="4" max="100" step="4"><span>kg R</span></div>`;
+}
+
+function startSession() {
+  const w1 = parseFloat(document.getElementById('w1')?.value) || 24;
+  const w2 = parseFloat(document.getElementById('w2')?.value) || w1;
+  state.weights = state.bellMode === 'single' ? [w1] : [w1, w2];
+  state.targetCadence = parseInt(document.getElementById('cadence-target')?.value) || 60;
+  state.sets = [];
+  state.rungIdx = 0;
+  state.setPhase = 'idle';
+  state.sessionStart = Date.now();
+  state.totalElapsed = 0;
+  updateSchemeCard();
+
+  document.getElementById('sess-day-label').textContent = `Week ${state.week} · Day ${state.day}`;
+  document.getElementById('sess-scheme-name').textContent = state.scheme.name;
+
+  const wLabel = state.weights.length === 1
+    ? `${state.weights[0]} kg`
+    : `${state.weights[0]} / ${state.weights[1]} kg`;
+  document.getElementById('weight-reminder').textContent = wLabel;
+  document.getElementById('target-label').textContent = `target: ${state.targetCadence}s per set`;
+
+  showScreen('session');
+  resetCadenceDisplay(false);
+  startWorkoutClock();
+}
+
+// ── WORKOUT CLOCK (30 min countdown, top left) ────────────────
+function startWorkoutClock() {
+  clearInterval(state.workoutInterval);
+  const totalSec = 30 * 60;
+  state.workoutInterval = setInterval(() => {
+    state.totalElapsed = Math.floor((Date.now() - state.sessionStart) / 1000);
+    const remaining = Math.max(0, totalSec - state.totalElapsed);
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    document.getElementById('elapsed').textContent =
+      `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (remaining === 0) {
+      clearInterval(state.workoutInterval);
+      endSession();
+    }
+  }, 500);
+}
+
+// ── CADENCE CLOCK (big center display) ───────────────────────
+function startCadenceClock() {
+  clearInterval(state.cadenceInterval);
+  state.setStart = Date.now();
+  const timerEl = document.getElementById('cadence-timer');
+  const pipEl = document.getElementById('target-pip');
+  timerEl.classList.remove('idle', 'over-target');
+
+  state.cadenceInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - state.setStart) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    timerEl.textContent = m > 0
+      ? `${m}:${String(s).padStart(2,'0')}`
+      : `${s}`;
+
+    const over = elapsed > state.targetCadence;
+    timerEl.classList.toggle('over-target', over);
+    timerEl.classList.toggle('idle', false);
+    pipEl.classList.toggle('over', over);
+  }, 200);
+}
+
+function stopCadenceClock() {
+  clearInterval(state.cadenceInterval);
+  return Math.floor((Date.now() - state.setStart) / 1000);
+}
+
+function resetCadenceDisplay(autoStart) {
+  const timerEl = document.getElementById('cadence-timer');
+  timerEl.textContent = '0';
+  timerEl.classList.remove('over-target');
+  timerEl.classList.add('idle');
+  document.getElementById('target-pip').classList.remove('over');
+  document.getElementById('rep-badge').textContent = currentReps();
+
+  if (autoStart) {
+    // immediately kick off next set
+    state.setPhase = 'running';
+    startCadenceClock();
+    document.getElementById('cadence-context').textContent = 'SET IN PROGRESS';
+    const tap = document.getElementById('tap-zone');
+    tap.classList.add('active-set');
+    document.getElementById('tap-label').textContent = 'DONE SET';
+    document.getElementById('tap-sub').textContent =
+      `${currentReps()} rep${currentReps()>1?'s':''} · C+P then FSQ`;
+  } else {
+    // first set — wait for tap
+    state.setPhase = 'idle';
+    const tap = document.getElementById('tap-zone');
+    tap.classList.remove('active-set');
+    document.getElementById('cadence-context').textContent = 'READY';
+    document.getElementById('tap-label').textContent = 'START FIRST SET';
+    document.getElementById('tap-sub').textContent =
+      `${currentReps()} rep${currentReps()>1?'s':''} · C+P then FSQ`;
+  }
+}
+
+// ── TAP HANDLER ───────────────────────────────────────────────
+function handleTap() {
+  if (state.setPhase === 'idle') {
+    // ── First tap: start the first set ──
+    state.setPhase = 'running';
+    startCadenceClock();
+    document.getElementById('cadence-context').textContent = 'SET IN PROGRESS';
+    const tap = document.getElementById('tap-zone');
+    tap.classList.add('active-set');
+    document.getElementById('tap-label').textContent = 'DONE SET';
+    document.getElementById('tap-sub').textContent =
+      `${currentReps()} rep${currentReps()>1?'s':''} · C+P then FSQ`;
+    document.getElementById('last-set-row').textContent = '';
+
+  } else {
+    // ── Done tap: log set, immediately start next ──
+    const cycleTime = stopCadenceClock();
+
+    const reps = currentReps();
+    const totalWeight = state.weights.reduce((a, b) => a + b, 0);
+    const tonnage = reps * totalWeight * 2;
+    state.sets.push({ reps, tonnage, cycleTime });
+    state.rungIdx++;
+
+    const over = cycleTime > state.targetCadence;
+    const diff = Math.abs(cycleTime - state.targetCadence);
+    const lastEl = document.getElementById('last-set-row');
+    lastEl.innerHTML = over
+      ? `<span class="slow">Set ${state.sets.length}: ${cycleTime}s — ${diff}s over</span>`
+      : `<span class="good">Set ${state.sets.length}: ${cycleTime}s — ${diff}s under ✓</span>`;
+
+    updateStats();
+    addChip(reps, cycleTime, over);
+    logSetToSheet(state.sets.length, reps, cycleTime);
+
+    // auto-start next set immediately
+    resetCadenceDisplay(true);
+  }
+}
+
+function showEndConfirm() {
+  document.getElementById('end-confirm').style.display = 'flex';
+  document.getElementById('btn-end-1').style.display = 'none';
+}
+function hideEndConfirm() {
+  document.getElementById('end-confirm').style.display = 'none';
+  document.getElementById('btn-end-1').style.display = 'block';
+}
+
+function currentReps() {
+  const rungs = state.scheme.rungs;
+  return rungs[state.rungIdx % rungs.length];
+}
+
+function updateStats() {
+  const totalSets = state.sets.length;
+  const totalReps = state.sets.reduce((a, s) => a + s.reps, 0);
+  const totalTons = state.sets.reduce((a, s) => a + s.tonnage, 0) / 1000;
+  document.getElementById('stat-sets').textContent = totalSets;
+  document.getElementById('stat-reps').textContent = totalReps;
+  document.getElementById('stat-tons').textContent = totalTons.toFixed(2);
+}
+
+function addChip(reps, time, over) {
+  const log = document.getElementById('set-log');
+  const chip = document.createElement('div');
+  chip.className = 'set-chip fresh' + (over ? ' slow' : '');
+  chip.textContent = `×${reps} ${time}s`;
+  log.appendChild(chip);
+  setTimeout(() => chip.classList.remove('fresh'), 1500);
+  // keep scrolled to end
+  log.scrollLeft = log.scrollWidth;
+}
+
+function endSession() {
+  clearInterval(state.workoutInterval);
+  clearInterval(state.cadenceInterval);
+  hideEndConfirm();
+  logSessionToSheet();
+
+  const totalSets = state.sets.length;
+  const totalReps = state.sets.reduce((a, s) => a + s.reps, 0);
+  const totalTons = state.sets.reduce((a, s) => a + s.tonnage, 0);
+  const elapsed = state.totalElapsed;
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+
+  // avg cadence
+  const avgCadence = totalSets > 0
+    ? Math.round(state.sets.reduce((a, s) => a + s.cycleTime, 0) / totalSets)
+    : 0;
+
+  document.getElementById('sum-sets').textContent = totalSets;
+  document.getElementById('sum-reps').textContent = totalReps;
+  document.getElementById('sum-tons').textContent = totalTons.toLocaleString() + ' kg';
+  document.getElementById('sum-time').textContent = `${m}:${String(s).padStart(2,'0')}`;
+
+  // add avg cadence card if it exists
+  const avgEl = document.getElementById('sum-avg');
+  if (avgEl) avgEl.textContent = avgCadence + 's avg';
+
+  const hist = document.getElementById('sum-history');
+  hist.innerHTML = '';
+  state.sets.forEach((set, i) => {
+    const chip = document.createElement('div');
+    const over = set.cycleTime > state.targetCadence;
+    chip.className = 'h-chip' + (over ? ' style="color:var(--accent2)"' : '');
+    chip.textContent = `${i+1}: ×${set.reps} ${set.cycleTime}s`;
+    if (over) chip.style.color = 'var(--accent2)';
+    hist.appendChild(chip);
+  });
+
+  showScreen('summary');
+}
+
+function goSetup() {
+  clearInterval(state.workoutInterval);
+  clearInterval(state.cadenceInterval);
+  showScreen('setup');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+updateSchemeCard();
+
+// ═══════════════════════════════════════════════════
+// GOOGLE SHEETS LOGGING
+// ═══════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
+
+function logSessionToSheet() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  const elapsed = state.totalElapsed;
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  const totalReps = state.sets.reduce((a, s) => a + s.reps, 0);
+  const totalKg   = state.sets.reduce((a, s) => a + s.tonnage, 0);
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'session', program: 'DFW',
+      week: state.week, day: state.day, session: 'C+P / FSQ',
+      weightL: state.weights[0], weightR: state.weights[1] || state.weights[0],
+      reps: totalReps, kgMoved: totalKg, duration: elapsed,
+      durationStr: `${m}:${String(s).padStart(2,'0')}`,
+    }),
+  }).catch(() => {});
+}
+
+function logSetToSheet(setNum, reps, cycleTime) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'set', program: 'DFW',
+      week: state.week, day: state.day, session: 'C+P / FSQ',
+      number: setNum, reps: reps, seconds: cycleTime,
+      weightL: state.weights[0], weightR: state.weights[1] || state.weights[0],
+      onTarget: cycleTime <= state.targetCadence,
+    }),
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>

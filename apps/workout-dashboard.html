@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Workout Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0b0d0f;
+  --surface:  #13161a;
+  --surface2: #1c2028;
+  --border:   #272c35;
+  --ink:      #e2e8f0;
+  --dim:      #5a6478;
+  --dim2:     #3d4455;
+  --accent:   #58a6ff;
+  --gold:     #e3b341;
+  --go:       #3fb950;
+  --ember:    #f0883e;
+  --warn:     #f85149;
+  --radius:   10px;
+
+  /* program colors — auto-assigned by JS, these are defaults */
+  --c0: #58a6ff;
+  --c1: #f0883e;
+  --c2: #3fb950;
+  --c3: #e3b341;
+  --c4: #c084fc;
+  --c5: #f472b6;
+}
+
+html, body { height: 100%; background: var(--bg); }
+
+body {
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #0f1318 0%, var(--bg) 100%);
+}
+.hdr-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.2rem; }
+.hdr-badge { font-size: 0.52rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+.hdr-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.hdr-title em { font-style: italic; color: var(--accent); }
+.hdr-sub { font-size: 0.58rem; color: var(--dim); margin-top: 0.15rem; }
+.refresh-btn {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 0.35rem 0.6rem; color: var(--dim); font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.56rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s;
+  margin-top: 0.2rem;
+}
+.refresh-btn:hover { color: var(--ink); border-color: var(--accent); }
+.refresh-btn.spinning { color: var(--accent); }
+
+/* ── MAIN SCROLL ── */
+main { flex: 1; overflow-y: auto; padding: 1rem 1.5rem 3rem; display: flex; flex-direction: column; gap: 1.1rem; }
+
+/* ── LOADING / ERROR ── */
+.state-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 2rem 1.5rem; text-align: center;
+}
+.state-card .sc-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.state-card .sc-msg { font-size: 0.72rem; color: var(--dim); line-height: 1.6; }
+.state-card .sc-msg a { color: var(--accent); text-decoration: none; }
+
+/* ── SUMMARY CARDS ── */
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.sum-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.8rem 0.9rem;
+  position: relative; overflow: hidden;
+}
+.sum-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.sum-card.c-accent::after { background: var(--accent); }
+.sum-card.c-gold::after   { background: var(--gold); }
+.sum-card.c-go::after     { background: var(--go); }
+.sum-card.c-ember::after  { background: var(--ember); }
+.sum-val { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; line-height: 1; color: var(--ink); }
+.sum-lbl { font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-top: 0.2rem; }
+
+/* ── SECTION HEADER ── */
+.sec-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+.sec-title { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+
+/* ── PROGRAM FILTER PILLS ── */
+.prog-pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.prog-pill {
+  padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.58rem;
+  letter-spacing: 0.06em; border: 1px solid var(--border);
+  color: var(--dim); background: transparent; cursor: pointer;
+  transition: all 0.15s; font-family: 'IBM Plex Mono', monospace;
+}
+.prog-pill.all { border-color: var(--accent); color: var(--accent); }
+.prog-pill.active { color: #0b0d0f; }
+
+/* ── TIME RANGE BUTTONS ── */
+.range-btns { display: flex; gap: 0.3rem; }
+.range-btn {
+  padding: 0.22rem 0.5rem; border-radius: 5px; font-size: 0.55rem;
+  letter-spacing: 0.06em; border: 1px solid var(--border);
+  color: var(--dim); background: transparent; cursor: pointer;
+  transition: all 0.15s; font-family: 'IBM Plex Mono', monospace;
+}
+.range-btn.active { background: var(--surface2); color: var(--ink); border-color: var(--dim); }
+
+/* ── CHART CONTAINER ── */
+.chart-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 0.5rem 0.5rem;
+  position: relative;
+}
+#chart-canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
+
+.chart-empty {
+  padding: 2.5rem 1rem; text-align: center;
+  font-size: 0.65rem; color: var(--dim); line-height: 1.7;
+}
+
+/* ── DETAIL CARD (slides up on dot tap) ── */
+.detail-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.15rem;
+  transform: translateY(6px); opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: none;
+}
+.detail-card.visible { transform: none; opacity: 1; pointer-events: auto; }
+.detail-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; }
+.detail-date { font-size: 0.58rem; color: var(--dim); }
+.detail-close { background: none; border: none; color: var(--dim); font-size: 1rem; cursor: pointer; padding: 0; line-height: 1; }
+.detail-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; margin-bottom: 0.6rem; }
+.detail-stat { background: var(--surface); border-radius: 7px; padding: 0.4rem 0.5rem; }
+.detail-stat .dsv { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+.detail-stat .dsl { font-size: 0.46rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-top: 0.1rem; }
+.detail-sessions { display: flex; flex-direction: column; gap: 0.3rem; }
+.detail-session-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.35rem 0.5rem; background: var(--surface); border-radius: 6px;
+  font-size: 0.6rem;
+}
+.dsr-left { color: var(--ink); }
+.dsr-right { color: var(--dim); }
+
+/* ── HEATMAP ── */
+.heatmap-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.9rem 0.75rem 0.75rem;
+  overflow-x: auto;
+}
+.heatmap-grid { display: flex; gap: 2px; align-items: flex-start; }
+.heatmap-col  { display: flex; flex-direction: column; gap: 2px; }
+.hm-cell {
+  width: 11px; height: 11px; border-radius: 2px;
+  background: var(--surface2); transition: background 0.15s;
+  cursor: pointer; flex-shrink: 0;
+}
+.hm-cell:hover { opacity: 0.8; }
+.hm-month-labels { display: flex; gap: 2px; margin-bottom: 3px; min-height: 12px; }
+.hm-month-lbl { font-size: 0.44rem; color: var(--dim); letter-spacing: 0.04em; }
+.hm-legend { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; }
+.hm-legend-label { font-size: 0.48rem; color: var(--dim); }
+.hm-legend-cells { display: flex; gap: 2px; }
+.hm-legend-cell { width: 11px; height: 11px; border-radius: 2px; }
+
+/* ── TOP SESSIONS ── */
+.top-sessions { display: flex; flex-direction: column; gap: 0.4rem; }
+.top-row {
+  display: flex; align-items: center; gap: 0.65rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.6rem 0.75rem; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.top-row:hover { border-color: var(--dim); }
+.top-rank { font-size: 0.56rem; color: var(--dim); min-width: 1.2rem; }
+.top-rank.gold   { color: var(--gold); }
+.top-rank.silver { color: #94a3b8; }
+.top-rank.bronze { color: var(--ember); }
+.top-info { flex: 1; }
+.top-name { font-size: 0.72rem; color: var(--ink); }
+.top-meta { font-size: 0.55rem; color: var(--dim); margin-top: 0.1rem; }
+.top-kg { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
+.top-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-badge">Kettlebell Training</div>
+      <div class="hdr-title">Your <em>Log</em></div>
+      <div class="hdr-sub" id="hdr-sub">Loading data…</div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="state-card" id="loading-card">
+    <div class="sc-icon">⏳</div>
+    <div class="sc-msg">Connecting to your workout log…</div>
+  </div>
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+// CONFIG — paste your Apps Script URL here
+// ══════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
+
+// ══════════════════════════════════════════════════
+// PROGRAM → COLOR MAP (auto-extends for new programs)
+// ══════════════════════════════════════════════════
+const PALETTE = ['#58a6ff','#f0883e','#3fb950','#e3b341','#c084fc','#f472b6','#67e8f9','#a3e635'];
+const progColors = {};
+let paletteIdx = 0;
+function colorFor(prog) {
+  if (!prog) return PALETTE[0];
+  const key = prog.toLowerCase();
+  if (!progColors[key]) { progColors[key] = PALETTE[paletteIdx++ % PALETTE.length]; }
+  return progColors[key];
+}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let allSessions   = [];   // raw from sheet
+let dayData       = [];   // aggregated by day
+let filteredDays  = [];   // after program + range filter
+let activeProgram = 'all';
+let activeRange   = '3M';
+let selectedDay   = null;
+
+// ══════════════════════════════════════════════════
+// LOAD
+// ══════════════════════════════════════════════════
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  btn.textContent = '↻ Loading…';
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) {
+    renderError('no-url');
+    btn.classList.remove('spinning'); btn.textContent = '↻ Refresh';
+    return;
+  }
+
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL + '?dashboard=1');
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Script error');
+    allSessions = json.sessions || [];
+    processData();
+    renderAll();
+  } catch(e) {
+    renderError('fetch', e.message);
+  }
+
+  btn.classList.remove('spinning'); btn.textContent = '↻ Refresh';
+}
+
+// ══════════════════════════════════════════════════
+// PROCESS — aggregate sessions → days
+// ══════════════════════════════════════════════════
+function processData() {
+  // Build day map
+  const map = {};
+  allSessions.forEach(s => {
+    const d = s.ts.slice(0,10); // YYYY-MM-DD
+    if (!map[d]) map[d] = { date: d, totalKg: 0, sessions: [] };
+    map[d].totalKg += Number(s.kgMoved) || 0;
+    map[d].sessions.push(s);
+  });
+  dayData = Object.values(map).sort((a,b) => a.date.localeCompare(b.date));
+}
+
+// ══════════════════════════════════════════════════
+// FILTER
+// ══════════════════════════════════════════════════
+function applyFilters() {
+  let days = dayData;
+
+  // Program filter
+  if (activeProgram !== 'all') {
+    days = days.map(d => {
+      const sess = d.sessions.filter(s => s.program.toLowerCase() === activeProgram);
+      if (!sess.length) return null;
+      return { ...d, totalKg: sess.reduce((a,s) => a + Number(s.kgMoved),0), sessions: sess };
+    }).filter(Boolean);
+  }
+
+  // Range filter
+  const now  = new Date();
+  const cuts = { '7D':7,'1M':30,'3M':90,'6M':180,'1Y':365,'ALL':99999 };
+  const cutDays = cuts[activeRange] || 90;
+  const cutDate = new Date(now - cutDays * 86400000).toISOString().slice(0,10);
+  days = days.filter(d => d.date >= cutDate);
+
+  filteredDays = days;
+}
+
+// ══════════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════════
+function renderAll() {
+  applyFilters();
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  if (!allSessions.length) {
+    renderEmpty(main);
+    return;
+  }
+
+  // Update subtitle
+  const progSet = [...new Set(allSessions.map(s=>s.program).filter(Boolean))];
+  document.getElementById('hdr-sub').textContent =
+    `${allSessions.length} sessions · ${progSet.join(', ')}`;
+
+  renderSummaryCards(main);
+  renderProgramFilter(main, progSet);
+  renderChart(main);
+  renderDetailCard(main);
+  renderHeatmap(main);
+  renderTopSessions(main);
+}
+
+// ══════════════════════════════════════════════════
+// SUMMARY CARDS
+// ══════════════════════════════════════════════════
+function renderSummaryCards(container) {
+  // Compute from allSessions (lifetime stats)
+  const totalSessions = allSessions.length;
+  const totalTons     = allSessions.reduce((a,s) => a + Number(s.kgMoved),0);
+  const streak        = computeStreak();
+  const thisWeekKg    = (() => {
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-7);
+    const cut = cutoff.toISOString().slice(0,10);
+    return allSessions.filter(s=>s.ts.slice(0,10)>=cut)
+      .reduce((a,s)=>a+Number(s.kgMoved),0);
+  })();
+
+  const fmtKg = kg => kg >= 1000 ? (kg/1000).toFixed(1)+'t' : Math.round(kg)+'kg';
+
+  const grid = document.createElement('div');
+  grid.className = 'summary-grid';
+  grid.innerHTML = `
+    <div class="sum-card c-accent">
+      <div class="sum-val">${totalSessions}</div>
+      <div class="sum-lbl">Total Sessions</div>
+    </div>
+    <div class="sum-card c-gold">
+      <div class="sum-val">${fmtKg(totalTons)}</div>
+      <div class="sum-lbl">Total Tonnage</div>
+    </div>
+    <div class="sum-card c-go">
+      <div class="sum-val">${streak}</div>
+      <div class="sum-lbl">Day Streak</div>
+    </div>
+    <div class="sum-card c-ember">
+      <div class="sum-val">${fmtKg(thisWeekKg)}</div>
+      <div class="sum-lbl">This Week</div>
+    </div>`;
+  container.appendChild(grid);
+}
+
+function computeStreak() {
+  if (!dayData.length) return 0;
+  const dates = new Set(dayData.map(d=>d.date));
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today - i*86400000).toISOString().slice(0,10);
+    if (dates.has(d)) streak++;
+    else if (i > 0) break;
+  }
+  return streak;
+}
+
+// ══════════════════════════════════════════════════
+// PROGRAM FILTER
+// ══════════════════════════════════════════════════
+function renderProgramFilter(container, programs) {
+  const wrap = document.createElement('div');
+  const hdr  = document.createElement('div');
+  hdr.className = 'sec-hdr';
+  hdr.innerHTML = '<span class="sec-title">Program</span>';
+  wrap.appendChild(hdr);
+
+  const pills = document.createElement('div');
+  pills.className = 'prog-pills';
+
+  const makeP = (label, val, color) => {
+    const b = document.createElement('button');
+    b.className = 'prog-pill' + (val==='all'?' all':'') + (activeProgram===val?' active':'');
+    b.textContent = label;
+    if (activeProgram === val && color) {
+      b.style.background = color;
+      b.style.borderColor = color;
+    } else if (color) {
+      b.style.borderColor = color+'55';
+      b.style.color = color;
+    }
+    b.onclick = () => { activeProgram = val; renderAll(); };
+    return b;
+  };
+
+  pills.appendChild(makeP('All', 'all', null));
+  programs.forEach(p => pills.appendChild(makeP(p, p.toLowerCase(), colorFor(p))));
+  wrap.appendChild(pills);
+  container.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════
+// TIMELINE CHART
+// ══════════════════════════════════════════════════
+function renderChart(container) {
+  const wrap = document.createElement('div');
+  const hdr  = document.createElement('div');
+  hdr.className = 'sec-hdr';
+
+  const rangeWrap = document.createElement('div');
+  rangeWrap.className = 'range-btns';
+  ['7D','1M','3M','6M','1Y','ALL'].forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'range-btn' + (activeRange===r?' active':'');
+    b.textContent = r;
+    b.onclick = () => { activeRange = r; renderAll(); };
+    rangeWrap.appendChild(b);
+  });
+
+  hdr.innerHTML = '<span class="sec-title">Tonnage Timeline</span>';
+  hdr.appendChild(rangeWrap);
+  wrap.appendChild(hdr);
+
+  const chartWrap = document.createElement('div');
+  chartWrap.className = 'chart-wrap';
+
+  if (!filteredDays.length) {
+    chartWrap.innerHTML = '<div class="chart-empty">No sessions in this range yet.<br>Complete a workout to see your data here.</div>';
+    wrap.appendChild(chartWrap);
+    container.appendChild(wrap);
+    return;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.id = 'chart-canvas';
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.min(window.innerWidth - 48, 432);
+  const H = 180;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  chartWrap.appendChild(canvas);
+  wrap.appendChild(chartWrap);
+  container.appendChild(wrap);
+
+  drawChart(canvas, W, H, dpr);
+
+  // tap / click
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left);
+    const my = (e.clientY - rect.top);
+    handleChartTap(mx, my);
+  });
+}
+
+let chartPoints = []; // [{x,y,day}] in canvas CSS px
+
+function drawChart(canvas, W, H, dpr) {
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top:12, right:12, bottom:28, left:42 };
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top  - PAD.bottom;
+
+  const days  = filteredDays;
+  const maxKg = Math.max(...days.map(d=>d.totalKg)) * 1.15 || 1000;
+
+  const dates = days.map(d => new Date(d.date + 'T00:00:00'));
+  const minTs = dates[0].getTime();
+  const maxTs = dates[dates.length-1].getTime() || minTs + 1;
+
+  const toX = ts => PAD.left + ((ts - minTs) / (maxTs - minTs || 1)) * cW;
+  const toY = kg => PAD.top  + cH - (kg / maxKg) * cH;
+
+  // ── grid lines ──
+  ctx.strokeStyle = '#1c2028';
+  ctx.lineWidth = 1;
+  const yTicks = 4;
+  for (let i = 0; i <= yTicks; i++) {
+    const y = PAD.top + (cH / yTicks) * i;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
+    const val = Math.round(maxKg * (1 - i/yTicks));
+    ctx.fillStyle = '#3d4455';
+    ctx.font = `9px 'IBM Plex Mono'`;
+    ctx.textAlign = 'right';
+    ctx.fillText(val >= 1000 ? (val/1000).toFixed(1)+'t' : val+'kg', PAD.left - 4, y + 3);
+  }
+
+  // ── area fill ──
+  if (days.length > 1) {
+    const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + cH);
+    grad.addColorStop(0, 'rgba(88,166,255,0.18)');
+    grad.addColorStop(1, 'rgba(88,166,255,0)');
+    ctx.beginPath();
+    ctx.moveTo(toX(dates[0].getTime()), toY(0));
+    days.forEach((d,i) => ctx.lineTo(toX(dates[i].getTime()), toY(d.totalKg)));
+    ctx.lineTo(toX(dates[dates.length-1].getTime()), toY(0));
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // ── line ──
+  if (days.length > 1) {
+    ctx.beginPath();
+    days.forEach((d,i) => {
+      const x = toX(dates[i].getTime()), y = toY(d.totalKg);
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = 'rgba(88,166,255,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // ── dots ──
+  chartPoints = [];
+  days.forEach((d,i) => {
+    const x = toX(dates[i].getTime());
+    const y = toY(d.totalKg);
+    chartPoints.push({ x, y, day: d });
+
+    // program color — use first session's program color
+    const col = colorFor(d.sessions[0]?.program || '');
+    const isSelected = selectedDay && selectedDay.date === d.date;
+
+    ctx.beginPath();
+    ctx.arc(x, y, isSelected ? 6 : 4, 0, Math.PI*2);
+    ctx.fillStyle = isSelected ? col : col + 'cc';
+    ctx.fill();
+    if (isSelected) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+
+  // ── x axis labels ──
+  ctx.fillStyle = '#3d4455';
+  ctx.font = `9px 'IBM Plex Mono'`;
+  ctx.textAlign = 'center';
+  const labelCount = Math.min(days.length, 5);
+  const step = Math.max(1, Math.floor(days.length / labelCount));
+  for (let i = 0; i < days.length; i += step) {
+    const x = toX(dates[i].getTime());
+    const lbl = fmtDateShort(days[i].date);
+    ctx.fillText(lbl, x, H - 6);
+  }
+}
+
+function handleChartTap(mx, my) {
+  // find nearest dot within 20px
+  let best = null, bestD = 99;
+  chartPoints.forEach(p => {
+    const d = Math.hypot(p.x - mx, p.y - my);
+    if (d < bestD) { bestD = d; best = p; }
+  });
+  if (best && bestD < 22) {
+    selectedDay = best.day;
+    updateDetailCard(best.day);
+    renderAll();
+  }
+}
+
+// ══════════════════════════════════════════════════
+// DETAIL CARD
+// ══════════════════════════════════════════════════
+function renderDetailCard(container) {
+  const card = document.createElement('div');
+  card.className = 'detail-card' + (selectedDay ? ' visible' : '');
+  card.id = 'detail-card';
+  if (selectedDay) card.innerHTML = buildDetailHTML(selectedDay);
+  container.appendChild(card);
+}
+
+function updateDetailCard(day) {
+  const card = document.getElementById('detail-card');
+  if (!card) return;
+  card.innerHTML = buildDetailHTML(day);
+  card.classList.add('visible');
+}
+
+function buildDetailHTML(day) {
+  const totalKg  = day.totalKg;
+  const totalReps = day.sessions.reduce((a,s) => a + Number(s.reps),0);
+  const totalSec  = day.sessions.reduce((a,s) => a + Number(s.durationSec),0);
+  const m = Math.floor(totalSec/60), s = totalSec%60;
+  const programs  = [...new Set(day.sessions.map(s=>s.program).filter(Boolean))];
+  const col = colorFor(programs[0] || '');
+
+  const sessRows = day.sessions.map(s => `
+    <div class="detail-session-row">
+      <span class="dsr-left">${s.session || s.program || 'Session'}</span>
+      <span class="dsr-right">${s.reps ? s.reps+' reps · ' : ''}${Math.round(s.kgMoved).toLocaleString()}kg${s.duration ? ' · '+s.duration : ''}</span>
+    </div>`).join('');
+
+  return `
+    <div class="detail-top">
+      <div>
+        <div class="detail-date">${fmtDateLong(day.date)}</div>
+        <div class="detail-title" style="color:${col}">${programs.join(' + ') || 'Workout'}</div>
+      </div>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-stat"><div class="dsv">${Math.round(totalKg).toLocaleString()}<span style="font-size:0.6rem">kg</span></div><div class="dsl">Tonnage</div></div>
+      <div class="detail-stat"><div class="dsv">${totalReps||'—'}</div><div class="dsl">Reps</div></div>
+      <div class="detail-stat"><div class="dsv">${totalSec ? m+'m '+String(s).padStart(2,'0')+'s' : '—'}</div><div class="dsl">Time</div></div>
+    </div>
+    <div class="detail-sessions">${sessRows}</div>`;
+}
+
+function closeDetail() {
+  selectedDay = null;
+  const card = document.getElementById('detail-card');
+  if (card) card.classList.remove('visible');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════
+// HEATMAP (52 weeks × 7 days)
+// ══════════════════════════════════════════════════
+function renderHeatmap(container) {
+  const wrap = document.createElement('div');
+  const hdr  = document.createElement('div');
+  hdr.className = 'sec-hdr';
+  hdr.innerHTML = '<span class="sec-title">Consistency — Past Year</span>';
+  wrap.appendChild(hdr);
+
+  const hmWrap = document.createElement('div');
+  hmWrap.className = 'heatmap-wrap';
+
+  // Build date→kg map for past 52 weeks
+  const today    = new Date();
+  const start    = new Date(today); start.setDate(start.getDate() - 363);
+  // align to Sunday
+  start.setDate(start.getDate() - start.getDay());
+
+  const kgMap = {};
+  dayData.forEach(d => kgMap[d.date] = d.totalKg);
+  const maxKg = Math.max(...Object.values(kgMap), 1);
+
+  // Build columns (weeks)
+  const grid = document.createElement('div');
+  grid.className = 'heatmap-grid';
+
+  const months = [];
+  let colIdx = 0;
+
+  for (let w = 0; w < 53; w++) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-col';
+
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + w*7 + d);
+      if (date > today) { col.appendChild(document.createElement('div')); continue; }
+
+      const ds   = date.toISOString().slice(0,10);
+      const kg   = kgMap[ds] || 0;
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+
+      // intensity
+      if (kg > 0) {
+        const pct = Math.min(kg / (maxKg * 0.7), 1);
+        const alpha = 0.25 + pct * 0.75;
+        cell.style.background = `rgba(88,166,255,${alpha.toFixed(2)})`;
+        cell.title = `${fmtDateLong(ds)}: ${Math.round(kg).toLocaleString()}kg`;
+        cell.onclick = () => {
+          selectedDay = dayData.find(x => x.date === ds);
+          if (selectedDay) { updateDetailCard(selectedDay); renderAll(); }
+        };
+      }
+
+      // track month labels
+      if (d === 0 && (date.getDate() <= 7)) {
+        months.push({ col: colIdx, label: date.toLocaleDateString('en',{month:'short'}) });
+      }
+
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+    colIdx++;
+  }
+
+  hmWrap.appendChild(grid);
+
+  // legend
+  const legend = document.createElement('div');
+  legend.className = 'hm-legend';
+  legend.innerHTML = '<span class="hm-legend-label">Less</span>';
+  const lc = document.createElement('div'); lc.className = 'hm-legend-cells';
+  [0.05, 0.25, 0.5, 0.75, 1.0].forEach(a => {
+    const c = document.createElement('div');
+    c.className = 'hm-legend-cell';
+    c.style.background = a === 0.05 ? 'var(--surface2)' : `rgba(88,166,255,${a})`;
+    lc.appendChild(c);
+  });
+  legend.appendChild(lc);
+  legend.innerHTML += '<span class="hm-legend-label">More</span>';
+  hmWrap.appendChild(legend);
+  wrap.appendChild(hmWrap);
+  container.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════
+// TOP 5 SESSIONS
+// ══════════════════════════════════════════════════
+function renderTopSessions(container) {
+  const sorted = [...dayData].sort((a,b) => b.totalKg - a.totalKg).slice(0,5);
+  if (!sorted.length) return;
+
+  const wrap = document.createElement('div');
+  const hdr  = document.createElement('div');
+  hdr.className = 'sec-hdr';
+  hdr.innerHTML = '<span class="sec-title">Biggest Days</span>';
+  wrap.appendChild(hdr);
+
+  const ranks = ['🥇','🥈','🥉','4','5'];
+  const rankCls = ['gold','silver','bronze','',''];
+
+  const list = document.createElement('div');
+  list.className = 'top-sessions';
+
+  sorted.forEach((d, i) => {
+    const programs = [...new Set(d.sessions.map(s=>s.program).filter(Boolean))];
+    const sessions = [...new Set(d.sessions.map(s=>s.session).filter(Boolean))];
+    const col = colorFor(programs[0] || '');
+    const row = document.createElement('div');
+    row.className = 'top-row';
+    row.innerHTML = `
+      <div class="top-rank ${rankCls[i]}">${ranks[i]}</div>
+      <div class="top-info">
+        <div class="top-name">${programs.join(' + ') || 'Workout'}</div>
+        <div class="top-meta">${fmtDateLong(d.date)} · ${sessions.join(', ') || ''}</div>
+      </div>
+      <div class="top-kg" style="color:${col}">${Math.round(d.totalKg).toLocaleString()}<span style="font-size:0.65rem;color:var(--dim)">kg</span></div>
+      <div class="top-dot" style="background:${col}"></div>`;
+    row.onclick = () => {
+      selectedDay = d;
+      updateDetailCard(d);
+      // scroll to detail
+      setTimeout(() => document.getElementById('detail-card')?.scrollIntoView({behavior:'smooth', block:'center'}), 50);
+      renderAll();
+    };
+    list.appendChild(row);
+  });
+
+  wrap.appendChild(list);
+  container.appendChild(wrap);
+}
+
+// ══════════════════════════════════════════════════
+// EMPTY / ERROR STATES
+// ══════════════════════════════════════════════════
+function renderEmpty(container) {
+  document.getElementById('hdr-sub').textContent = 'No sessions logged yet';
+  container.innerHTML = `
+    <div class="state-card">
+      <div class="sc-icon">🏋️</div>
+      <div class="sc-msg">No sessions logged yet.<br><br>
+        Complete a workout in DFW, ABF, or Iron Tide<br>
+        and your data will appear here.</div>
+    </div>`;
+}
+
+function renderError(type, msg) {
+  document.getElementById('hdr-sub').textContent = 'Could not load data';
+  const main = document.getElementById('main');
+  main.innerHTML = type === 'no-url'
+    ? `<div class="state-card">
+        <div class="sc-icon">🔗</div>
+        <div class="sc-msg">Add your Apps Script URL to this file.<br><br>
+          Find the line:<br><code style="color:#58a6ff">const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE'</code><br><br>
+          and replace the placeholder with your deployed /exec URL.</div>
+       </div>`
+    : `<div class="state-card">
+        <div class="sc-icon">⚠️</div>
+        <div class="sc-msg">Could not reach your workout log.<br><br>
+          ${msg || ''}<br><br>
+          Check that your Apps Script is deployed with<br>
+          <strong>Who has access: Anyone</strong> and try refreshing.</div>
+       </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// DATE HELPERS
+// ══════════════════════════════════════════════════
+function fmtDateShort(ds) {
+  const d = new Date(ds + 'T00:00:00');
+  return d.toLocaleDateString('en', { month:'short', day:'numeric' });
+}
+function fmtDateLong(ds) {
+  const d = new Date(ds + 'T00:00:00');
+  return d.toLocaleDateString('en', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+loadData();
+</script>
+</body>
+</html>

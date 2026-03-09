@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1·3·5 Today</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1c1c1e;
+    --surface: #2c2c2e;
+    --surface-raised: #3a3a3c;
+    --border: #3a3a3c;
+    --border-subtle: #2c2c2e;
+    --ink: #f0ede8;
+    --ink-dim: #98958f;
+    --big: #e5837a;
+    --med: #6db887;
+    --sml: #7aabe5;
+    --done: #5a5754;
+    --strike: #4a4745;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .tagline {
+    font-size: 0.7rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .badge {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    font-style: italic;
+    line-height: 1;
+  }
+
+  .big .badge { color: var(--big); }
+  .med .badge { color: var(--med); }
+  .sml .badge { color: var(--sml); }
+
+  .section-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-height: 32px;
+    padding: 2px 0;
+    position: relative;
+  }
+
+  .task-row + .task-row {
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  /* Custom checkbox */
+  .cb-wrap {
+    flex-shrink: 0;
+    width: 20px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .cb-wrap input[type="checkbox"] {
+    display: none;
+  }
+
+  .cb-box {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    position: relative;
+    transition: border-color 0.15s, background 0.15s;
+    background: transparent;
+  }
+
+  .big .cb-box { border-color: var(--big); }
+  .med .cb-box { border-color: var(--med); }
+  .sml .cb-box { border-color: var(--sml); }
+
+  .cb-wrap input:checked + .cb-box {
+    background: var(--done);
+    border-color: var(--done);
+  }
+
+  .cb-wrap input:checked + .cb-box::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid var(--bg);
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
+
+  /* Editable task text */
+  .task-text {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 32px;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    min-height: 32px;
+    height: 32px;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0;
+    transition: color 0.2s;
+    caret-color: var(--ink);
+  }
+
+  .task-text::placeholder {
+    color: var(--done);
+    font-style: italic;
+  }
+
+  .task-text:focus {
+    white-space: pre-wrap;
+    height: auto;
+    overflow: visible;
+  }
+
+  .task-row.done .task-text {
+    color: var(--done);
+    text-decoration: line-through;
+    text-decoration-color: var(--strike);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 2px;
+    background: var(--surface-raised);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .big .progress-fill { background: var(--big); }
+  .med .progress-fill { background: var(--med); }
+  .sml .progress-fill { background: var(--sml); }
+
+  /* Footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .total-progress {
+    font-size: 0.7rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.08em;
+  }
+
+  .total-progress span {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .reset-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .reset-btn:hover {
+    color: var(--big);
+    border-color: var(--big);
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.75rem 3rem; }
+    header { flex-direction: column; gap: 0.25rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>1·3·5</h1>
+    <div class="tagline">1 big thing<br>3 medium things<br>5 small things</div>
+  </header>
+
+  <div id="app"></div>
+
+  <footer>
+    <div class="total-progress">
+      <span id="done-count">0</span> of <span id="total-count">9</span> complete
+    </div>
+    <button class="reset-btn" onclick="resetAll()">↺ clear all checks</button>
+  </footer>
+</div>
+
+<script>
+const SECTIONS = [
+  { id: 'big', label: '1', name: 'Big', count: 1, cls: 'big' },
+  { id: 'med', label: '3', name: 'Medium', count: 3, cls: 'med' },
+  { id: 'sml', label: '5', name: 'Small',  count: 5, cls: 'sml' },
+];
+
+const PLACEHOLDERS = {
+  big: ['the one thing that matters most today'],
+  med: ['important but not urgent', 'needs doing today', 'worth your attention'],
+  sml: ['quick win', 'small task', 'easy to knock out', 'five minutes tops', 'while you\'re at it'],
+};
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('135-tasks') || '{}'); } 
+  catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem('135-tasks', JSON.stringify(state));
+}
+
+let state = loadState();
+
+function getKey(sectionId, i) { return `${sectionId}-${i}`; }
+
+function renderApp() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  SECTIONS.forEach(sec => {
+    const div = document.createElement('div');
+    div.className = `section ${sec.cls}`;
+
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.innerHTML = `<span class="badge">${sec.label}</span><span class="section-name">${sec.name}</span>`;
+    div.appendChild(label);
+
+    let checked = 0;
+    for (let i = 0; i < sec.count; i++) {
+      const key = getKey(sec.id, i);
+      const taskData = state[key] || { text: '', done: false };
+      if (taskData.done) checked++;
+
+      const row = document.createElement('div');
+      row.className = 'task-row' + (taskData.done ? ' done' : '');
+      row.dataset.key = key;
+
+      const cbWrap = document.createElement('label');
+      cbWrap.className = 'cb-wrap';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = taskData.done;
+      cb.addEventListener('change', () => {
+        const k = row.dataset.key;
+        state[k] = state[k] || {};
+        state[k].done = cb.checked;
+        row.className = 'task-row' + (cb.checked ? ' done' : '');
+        saveState(state);
+        updateProgress();
+      });
+
+      const box = document.createElement('span');
+      box.className = 'cb-box';
+      cbWrap.appendChild(cb);
+      cbWrap.appendChild(box);
+
+      const ta = document.createElement('textarea');
+      ta.className = 'task-text';
+      ta.rows = 1;
+      ta.value = taskData.text || '';
+      ta.placeholder = PLACEHOLDERS[sec.id][i % PLACEHOLDERS[sec.id].length];
+      ta.spellcheck = true;
+
+      ta.addEventListener('input', () => {
+        const k = row.dataset.key;
+        state[k] = state[k] || {};
+        state[k].text = ta.value;
+        saveState(state);
+      });
+
+      ta.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); }
+      });
+
+      row.appendChild(cbWrap);
+      row.appendChild(ta);
+      div.appendChild(row);
+    }
+
+    // Progress bar
+    const pbar = document.createElement('div');
+    pbar.className = 'progress-bar';
+    const pfill = document.createElement('div');
+    pfill.className = 'progress-fill';
+    pfill.id = `progress-${sec.id}`;
+    pfill.style.width = `${(checked / sec.count) * 100}%`;
+    pbar.appendChild(pfill);
+    div.appendChild(pbar);
+
+    app.appendChild(div);
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  let totalDone = 0;
+  let total = 0;
+  SECTIONS.forEach(sec => {
+    let checked = 0;
+    for (let i = 0; i < sec.count; i++) {
+      const k = getKey(sec.id, i);
+      if (state[k]?.done) checked++;
+    }
+    total += sec.count;
+    totalDone += checked;
+    const bar = document.getElementById(`progress-${sec.id}`);
+    if (bar) bar.style.width = `${(checked / sec.count) * 100}%`;
+  });
+  document.getElementById('done-count').textContent = totalDone;
+  document.getElementById('total-count').textContent = total;
+}
+
+function resetAll() {
+  if (!confirm('Clear all checkmarks? (Task text stays.)')) return;
+  SECTIONS.forEach(sec => {
+    for (let i = 0; i < sec.count; i++) {
+      const k = getKey(sec.id, i);
+      if (state[k]) state[k].done = false;
+    }
+  });
+  saveState(state);
+  renderApp();
+}
+
+renderApp();
+</script>
+</body>
+</html>

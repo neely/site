@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ABF Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f10;
+  --surface: #1a1a1c;
+  --surface2: #242426;
+  --border: #2e2e30;
+  --ink: #ededea;
+  --dim: #6b6b68;
+  --abc: #e8c547;       /* gold for ABC */
+  --press: #7aabe5;     /* blue for Press */
+  --go: #4caf7d;
+  --go-dark: #0f1a13;
+  --warn: #e5837a;
+  --warn-dark: #1a0a08;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.2s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ══════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════ */
+#setup { padding: 1.75rem 1.5rem 2rem; }
+
+.program-badge { font-size: 0.58rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.4rem; }
+.program-title { font-family: 'Playfair Display', serif; font-size: clamp(2.4rem,8vw,3.2rem); font-weight: 700; line-height: 1; color: var(--ink); margin-bottom: 0.2rem; }
+.program-title em { font-style: italic; color: var(--abc); }
+.program-sub { font-size: 0.68rem; color: var(--dim); margin-bottom: 2rem; letter-spacing: 0.04em; }
+
+.field-label { font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.5rem; display: block; }
+
+.seg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+.seg-group { }
+.seg-control { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.seg-btn { flex: 1; padding: 0.5rem 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; background: transparent; border: none; color: var(--dim); cursor: pointer; transition: background 0.12s, color 0.12s; }
+.seg-btn.active { background: var(--surface2); color: var(--ink); }
+
+/* today card */
+.today-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+.today-card .tc-type { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.3rem; }
+.today-card .tc-name { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; margin-bottom: 0.25rem; }
+.today-card.abc .tc-name { color: var(--abc); }
+.today-card.press .tc-name { color: var(--press); }
+.today-card .tc-target { font-size: 0.7rem; color: var(--dim); line-height: 1.55; }
+.today-card .tc-target strong { color: var(--ink); }
+
+/* weight inputs */
+.weight-section { margin-bottom: 1.25rem; }
+.weight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.w-wrap { position: relative; }
+.w-wrap span { position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); font-size: 0.6rem; color: var(--dim); pointer-events: none; }
+input[type="number"] {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 1.05rem;
+  padding: 0.6rem 2.4rem 0.6rem 0.8rem; outline: none;
+  -moz-appearance: textfield; appearance: textfield;
+}
+input[type="number"]:focus { border-color: var(--abc); }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* emom field */
+.emom-row { margin-bottom: 1.5rem; }
+.emom-row input { max-width: 140px; }
+.emom-hint { font-size: 0.6rem; color: var(--dim); margin-top: 0.35rem; line-height: 1.5; }
+
+.btn-primary {
+  width: 100%; padding: 1.1rem; background: var(--go); border: none; border-radius: 10px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem; font-weight: 500;
+  letter-spacing: 0.08em; color: var(--go-dark); cursor: pointer;
+  transition: background 0.12s, transform 0.08s; margin-top: auto;
+}
+.btn-primary:active { transform: scale(0.98); }
+
+/* ══════════════════════════════════════
+   SESSION — shared header
+══════════════════════════════════════ */
+#session-abc, #session-press { padding: 0; }
+
+.sess-header {
+  padding: 0.9rem 1.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+.sess-header .wk-info .wk-label { font-size: 0.52rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.sess-header .wk-info .wk-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
+.sess-header .wk-info .wk-name.abc  { color: var(--abc); }
+.sess-header .wk-info .wk-name.press { color: var(--press); }
+.sess-header .clock-wrap { text-align: right; }
+.sess-header .clock-wrap .clock-label { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.sess-header .clock-wrap .clock-val { font-size: 1.35rem; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.1; }
+
+/* bottom stats bar */
+.stat-bar {
+  padding: 0.65rem 1.5rem 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 0.5rem; align-items: center;
+  flex-shrink: 0;
+}
+.stat-pill { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 0.4rem 0.4rem; text-align: center; }
+.stat-pill .sp-val { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+.stat-pill .sp-lbl { font-size: 0.48rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.end-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; }
+.btn-end { padding: 0.35rem 0.65rem; background: transparent; border: 1px solid var(--border); border-radius: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 0.52rem; letter-spacing: 0.08em; color: var(--dim); cursor: pointer; opacity: 0.45; transition: all 0.15s; }
+.btn-end:hover { opacity: 1; color: var(--warn); border-color: var(--warn); }
+.end-confirm { display: none; gap: 0.3rem; align-items: center; }
+.end-confirm.visible { display: flex; }
+.end-confirm span { font-size: 0.5rem; color: var(--dim); }
+.btn-yes { padding: 0.3rem 0.55rem; background: var(--warn); border: none; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 0.5rem; color: var(--warn-dark); cursor: pointer; }
+.btn-no  { padding: 0.3rem 0.55rem; background: transparent; border: 1px solid var(--border); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 0.5rem; color: var(--dim); cursor: pointer; }
+
+/* ══════════════════════════════════════
+   ABC SESSION
+══════════════════════════════════════ */
+.abc-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 1rem 1.5rem; gap: 0.2rem;
+}
+.abc-ctx { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.25rem; }
+
+/* round counter */
+.round-display { display: flex; align-items: baseline; gap: 0.5rem; }
+.round-done { font-family: 'Playfair Display', serif; font-size: clamp(5rem,20vw,6.5rem); font-weight: 700; line-height: 1; color: var(--ink); }
+.round-sep  { font-size: 2rem; color: var(--dim); font-weight: 300; }
+.round-target { font-size: 2rem; color: var(--dim); font-weight: 300; font-variant-numeric: tabular-nums; }
+
+.abc-scheme { font-size: 0.7rem; color: var(--abc); letter-spacing: 0.06em; margin-top: 0.15rem; }
+.abc-weight { font-size: 0.68rem; color: var(--dim); margin-top: 0.1rem; }
+
+/* emom timer under round */
+.emom-timer-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.6rem; }
+.emom-arc-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.emom-arc-wrap svg { transform: rotate(-90deg); }
+.emom-arc-bg  { fill: none; stroke: var(--surface2); stroke-width: 3; }
+.emom-arc-fg  { fill: none; stroke: var(--abc); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear; }
+.emom-arc-fg.warn { stroke: var(--warn); }
+.emom-time-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); }
+.emom-label { font-size: 0.6rem; color: var(--dim); line-height: 1.4; }
+.emom-label strong { color: var(--ink); }
+
+.abc-last { font-size: 0.62rem; color: var(--dim); margin-top: 0.5rem; min-height: 1em; }
+.abc-last .good { color: var(--go); }
+.abc-last .late { color: var(--warn); }
+
+/* big tap button */
+.tap-btn {
+  margin: 0 1.5rem; flex-shrink: 0;
+  height: 96px; border-radius: 13px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.88rem; font-weight: 500;
+  letter-spacing: 0.1em; cursor: pointer; user-select: none; -webkit-user-select: none;
+  transition: transform 0.08s, background 0.12s; border: none;
+}
+.tap-btn:active { transform: scale(0.97); }
+.tap-btn .tap-sub { font-size: 0.56rem; letter-spacing: 0.12em; opacity: 0.7; }
+.tap-btn.go    { background: var(--go); color: var(--go-dark); }
+.tap-btn.active-set { background: var(--warn); color: var(--warn-dark); }
+
+/* set log strip */
+.log-strip { padding: 0.6rem 1.5rem 0; flex-shrink: 0; }
+.log-strip-label { font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.35rem; }
+.log-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; max-height: 52px; overflow: hidden; }
+.chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.6rem; color: var(--dim); transition: border-color 0.4s, color 0.4s; }
+.chip.fresh { border-color: #2d6b4a; color: var(--go); }
+.chip.late  { border-color: #6b2e2a; color: var(--warn); }
+
+/* ══════════════════════════════════════
+   PRESS SESSION
+══════════════════════════════════════ */
+.press-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 1rem 1.5rem; gap: 0.3rem;
+}
+.press-ctx { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+
+/* reps done / target */
+.press-reps-display { display: flex; align-items: baseline; gap: 0.5rem; margin: 0.1rem 0; }
+.press-reps-done { font-family: 'Playfair Display', serif; font-size: clamp(4.5rem,18vw,6rem); font-weight: 700; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.press-reps-sep  { font-size: 1.8rem; color: var(--dim); }
+.press-reps-target { font-size: 1.8rem; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* ladder rungs */
+.ladder-row { display: flex; gap: 0.4rem; align-items: center; margin: 0.35rem 0; }
+.rung {
+  width: 36px; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 500;
+  border: 1.5px solid var(--border); color: var(--dim);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.rung.done    { background: var(--surface2); border-color: var(--press); color: var(--press); }
+.rung.current { background: var(--press); border-color: var(--press); color: #08121a; }
+.rung.pending { }
+
+.press-weight { font-size: 0.68rem; color: var(--dim); margin-top: 0.1rem; }
+.press-next   { font-size: 0.65rem; color: var(--dim); margin-top: 0.4rem; min-height: 1.1em; }
+.press-next strong { color: var(--press); }
+
+/* ══════════════════════════════════════
+   SUMMARY SCREEN
+══════════════════════════════════════ */
+#summary { padding: 1.75rem 1.5rem 2.5rem; justify-content: center; gap: 1.25rem; }
+.sum-title { font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700; }
+.sum-title.abc   { color: var(--abc); }
+.sum-title.press { color: var(--press); }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 0.85rem 1rem; }
+.sum-card.full { grid-column: span 2; }
+.sum-card .sc-val { font-size: 1.7rem; font-weight: 400; color: var(--ink); }
+.sum-card .sc-lbl { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-top: 0.15rem; }
+.sum-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+.sum-chip { background: var(--surface2); border-radius: 4px; padding: 0.15rem 0.4rem; font-size: 0.6rem; color: var(--dim); }
+.btn-secondary {
+  width: 100%; padding: 0.95rem; background: transparent;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
+  letter-spacing: 0.1em; color: var(--dim); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-secondary:hover { color: var(--ink); border-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SETUP
+══════════════════════════════════ -->
+<div id="setup" class="screen active">
+  <div class="program-badge">Dan John</div>
+  <div class="program-title">ABF <em>Coach</em></div>
+  <div class="program-sub">Armor Building Formula · 8 Weeks · Double KB</div>
+
+  <div class="seg-row">
+    <div class="seg-group">
+      <label class="field-label">Week</label>
+      <div class="seg-control" id="week-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+        <button class="seg-btn" data-val="4">4</button>
+      </div>
+    </div>
+    <div class="seg-group">
+      <label class="field-label">&nbsp;</label>
+      <div class="seg-control" id="week-seg2">
+        <button class="seg-btn" data-val="5">5</button>
+        <button class="seg-btn" data-val="6">6</button>
+        <button class="seg-btn" data-val="7">7</button>
+        <button class="seg-btn" data-val="8">8</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.25rem;">
+    <label class="field-label">Day</label>
+    <div class="seg-control" id="day-seg" style="max-width:180px;">
+      <button class="seg-btn active" data-val="1">1</button>
+      <button class="seg-btn" data-val="2">2</button>
+      <button class="seg-btn" data-val="3">3</button>
+    </div>
+  </div>
+
+  <!-- today card -->
+  <div class="today-card" id="today-card">
+    <div class="tc-type">Today's Session</div>
+    <div class="tc-name" id="tc-name">ABC</div>
+    <div class="tc-target" id="tc-target">—</div>
+  </div>
+
+  <!-- weights -->
+  <div class="weight-section">
+    <label class="field-label">Double Kettlebells</label>
+    <div class="weight-grid">
+      <div class="w-wrap">
+        <input type="number" id="wL" placeholder="24" min="4" max="100" step="2">
+        <span>kg L</span>
+      </div>
+      <div class="w-wrap">
+        <input type="number" id="wR" placeholder="24" min="4" max="100" step="2">
+        <span>kg R</span>
+      </div>
+    </div>
+    <div class="emom-hint" id="uneven-hint" style="display:none; color:var(--abc); margin-top:0.4rem;">
+      ⚠ Uneven bells — remember to switch sides each round
+    </div>
+  </div>
+
+  <!-- EMOM / cadence (shown for ABC sessions) -->
+  <div class="emom-row" id="emom-row">
+    <label class="field-label">EMOM interval (seconds)</label>
+    <div class="w-wrap">
+      <input type="number" id="emom-sec" placeholder="60" min="20" max="180" step="5" value="60">
+      <span>sec</span>
+    </div>
+    <div class="emom-hint">Every minute on the minute. Tap DONE ROUND when each round is complete.</div>
+  </div>
+
+  <button class="btn-primary" onclick="startSession()">Start Session →</button>
+</div>
+
+<!-- ══════════════════════════════════
+     ABC SESSION
+══════════════════════════════════ -->
+<div id="session-abc" class="screen">
+  <div class="sess-header">
+    <div class="wk-info">
+      <div class="wk-label" id="abc-wk-label">Week 1 · Day 2</div>
+      <div class="wk-name abc">Armor Building Complex</div>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock-label">session</div>
+      <div class="clock-val" id="abc-session-clock">0:00</div>
+    </div>
+  </div>
+
+  <div class="abc-center">
+    <div class="abc-ctx" id="abc-ctx">READY</div>
+
+    <div class="round-display">
+      <div class="round-done" id="abc-rounds-done">0</div>
+      <div class="round-sep">/</div>
+      <div class="round-target" id="abc-rounds-target">20</div>
+    </div>
+
+    <div class="abc-scheme">2 Cleans · 1 Press · 3 Front Squats</div>
+    <div class="abc-weight" id="abc-weight-label">24 / 24 kg</div>
+
+    <div class="emom-timer-row">
+      <div class="emom-arc-wrap">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle class="emom-arc-bg" cx="22" cy="22" r="19"/>
+          <circle class="emom-arc-fg" id="emom-arc" cx="22" cy="22" r="19"
+            stroke-dasharray="119.4" stroke-dashoffset="119.4"/>
+        </svg>
+        <div class="emom-time-center" id="emom-time">—</div>
+      </div>
+      <div class="emom-label" id="emom-label">
+        Tap to start first round
+      </div>
+    </div>
+
+    <div class="abc-last" id="abc-last"></div>
+  </div>
+
+  <button class="tap-btn go" id="abc-tap" onclick="abcTap()">
+    <span id="abc-tap-label">START ROUND 1</span>
+    <span class="tap-sub">2 cleans · 1 press · 3 FSQ</span>
+  </button>
+
+  <div class="log-strip">
+    <div class="log-strip-label">Rounds</div>
+    <div class="log-chips" id="abc-chips"></div>
+  </div>
+
+  <div class="stat-bar">
+    <div class="stat-pill"><div class="sp-val" id="abc-stat-rounds">0</div><div class="sp-lbl">Rounds</div></div>
+    <div class="stat-pill"><div class="sp-val" id="abc-stat-reps">0</div><div class="sp-lbl">Reps</div></div>
+    <div class="stat-pill"><div class="sp-val" id="abc-stat-tons">0</div><div class="sp-lbl">kg moved</div></div>
+    <div class="end-wrap">
+      <button class="btn-end" id="abc-end-btn" onclick="showEndConfirm('abc')">End</button>
+      <div class="end-confirm" id="abc-end-confirm">
+        <span>done?</span>
+        <button class="btn-yes" onclick="endSession()">Yes</button>
+        <button class="btn-no"  onclick="hideEndConfirm('abc')">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     PRESS SESSION
+══════════════════════════════════ -->
+<div id="session-press" class="screen">
+  <div class="sess-header">
+    <div class="wk-info">
+      <div class="wk-label" id="press-wk-label">Week 1 · Day 1</div>
+      <div class="wk-name press">Military Press</div>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock-label">session</div>
+      <div class="clock-val" id="press-session-clock">0:00</div>
+    </div>
+  </div>
+
+  <div class="press-center">
+    <div class="press-ctx" id="press-ctx">LADDER</div>
+
+    <div class="press-reps-display">
+      <div class="press-reps-done" id="press-reps-done">0</div>
+      <div class="press-reps-sep">/</div>
+      <div class="press-reps-target" id="press-reps-target">30</div>
+    </div>
+
+    <div class="ladder-row" id="ladder-row"></div>
+
+    <div class="press-weight" id="press-weight-label">24 / 24 kg</div>
+    <div class="press-next" id="press-next"></div>
+  </div>
+
+  <button class="tap-btn go" id="press-tap" onclick="pressTap()">
+    <span id="press-tap-label">START SET</span>
+    <span class="tap-sub" id="press-tap-sub">2 reps · double press</span>
+  </button>
+
+  <div class="log-strip">
+    <div class="log-strip-label">Sets</div>
+    <div class="log-chips" id="press-chips"></div>
+  </div>
+
+  <div class="stat-bar">
+    <div class="stat-pill"><div class="sp-val" id="press-stat-sets">0</div><div class="sp-lbl">Sets</div></div>
+    <div class="stat-pill"><div class="sp-val" id="press-stat-reps">0</div><div class="sp-lbl">Reps</div></div>
+    <div class="stat-pill"><div class="sp-val" id="press-stat-tons">0</div><div class="sp-lbl">kg moved</div></div>
+    <div class="end-wrap">
+      <button class="btn-end" id="press-end-btn" onclick="showEndConfirm('press')">End</button>
+      <div class="end-confirm" id="press-end-confirm">
+        <span>done?</span>
+        <button class="btn-yes" onclick="endSession()">Yes</button>
+        <button class="btn-no"  onclick="hideEndConfirm('press')">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SUMMARY
+══════════════════════════════════ -->
+<div id="summary" class="screen">
+  <div class="sum-title" id="sum-title">Session Complete</div>
+  <div class="sum-grid">
+    <div class="sum-card"><div class="sc-val" id="sum-v1">—</div><div class="sc-lbl" id="sum-l1">—</div></div>
+    <div class="sum-card"><div class="sc-val" id="sum-v2">—</div><div class="sc-lbl" id="sum-l2">—</div></div>
+    <div class="sum-card"><div class="sc-val" id="sum-v3">—</div><div class="sc-lbl" id="sum-l3">—</div></div>
+    <div class="sum-card"><div class="sc-val" id="sum-v4">—</div><div class="sc-lbl" id="sum-l4">—</div></div>
+    <div class="sum-card full">
+      <div class="sc-lbl" style="margin-bottom:0.45rem" id="sum-hist-label">History</div>
+      <div class="sum-chips" id="sum-chips"></div>
+    </div>
+  </div>
+  <button class="btn-secondary" onclick="goSetup()">← New Session</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// PROGRAM DATA
+// ═══════════════════════════════════════════════════
+
+// Session type per week/day
+// odd weeks: Press, ABC, Press
+// even weeks: ABC, Press, ABC
+function sessionType(week, day) {
+  const odd = (week % 2 === 1);
+  if (odd) return day === 2 ? 'abc' : 'press';
+  else      return day === 2 ? 'press' : 'abc';
+}
+
+// ABC round targets per week/day
+// Phase 1 (wk1-2): 5+ rounds, just build capacity
+// Phase 2 (wk3-6): progressive targets
+// Phase 3 (wk7-8): 30 rounds / taper
+const ABC_TARGETS = {
+  1: { min:5,  max:15,  note:'Build capacity — aim for 5+ rounds' },
+  2: { min:10, max:20,  note:'Build capacity — aim for 10+ rounds' },
+  3: { min:15, max:20,  note:'Phase 2 begins — 15–20 rounds' },
+  4: { min:18, max:22,  note:'Medium & light sessions — 18–22 rounds' },
+  5: { min:20, max:25,  note:'Pushing toward 25 — 20–25 rounds' },
+  6: { min:23, max:27,  note:'Near peak — 23–27 rounds' },
+  7: { min:28, max:30,  note:'Challenge week — aim for 30 rounds!' },
+  8: { min:15, max:20,  note:'Taper week — 15–20 rounds, stay fresh' },
+};
+
+// Press rep targets per week
+// Odd weeks (2 press days): lighter, cut back from previous
+// Even weeks (1 press day): add toward 100 rep goal
+const PRESS_TARGETS = {
+  1: { min:20, max:30,  ladder:'2-3-5',    note:'Both movements per session. 20–30 press reps.' },
+  2: { min:20, max:30,  ladder:'2-3-5',    note:'Both movements per session. 20–30 press reps.' },
+  3: { min:15, max:25,  ladder:'2-3-5',    note:'Double press week — cut back volume.' },
+  4: { min:30, max:50,  ladder:'2-3-5-10', note:'Single press week — add reps toward 100.' },
+  5: { min:20, max:30,  ladder:'2-3-5',    note:'Double press week — keep it crisp.' },
+  6: { min:50, max:70,  ladder:'2-3-5-10', note:'Single press week — push toward 70+ reps.' },
+  7: { min:30, max:50,  ladder:'2-3-5',    note:'Challenge week — 30–50 reps per session.' },
+  8: { min:80, max:100, ladder:'2-3-5-10', note:'Final goal: 100 total press reps!' },
+};
+
+// Ladder rungs
+const LADDERS = {
+  '2-3-5':    [2, 3, 5],
+  '2-3-5-10': [2, 3, 5, 10],
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let S = {
+  week: 1, day: 1,
+  type: 'abc',          // 'abc' | 'press'
+  wL: 24, wR: 24,
+  emomSec: 60,
+  // session
+  sessionStart: null,
+  sessionInterval: null,
+  totalElapsed: 0,
+  // abc
+  abcRounds: 0,
+  abcTarget: 20,
+  abcPhase: 'idle',     // 'idle' | 'running'
+  abcRoundStart: null,
+  abcEmomInterval: null,
+  abcLog: [],           // [{sec}]
+  // press
+  pressReps: 0,
+  pressTarget: 30,
+  pressLadder: [2,3,5],
+  pressRungIdx: 0,
+  pressSets: 0,
+  pressPhase: 'idle',   // 'idle' | 'running'
+  pressSetStart: null,
+  pressClock: null,
+  pressLog: [],         // [{reps, sec}]
+};
+
+// ═══════════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════════
+function initSegs() {
+  // weeks 1-4
+  document.getElementById('week-seg').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('week-seg').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('week-seg2').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      S.week = parseInt(btn.dataset.val);
+      updateTodayCard();
+    });
+  });
+  // weeks 5-8
+  document.getElementById('week-seg2').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('week-seg').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('week-seg2').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      S.week = parseInt(btn.dataset.val);
+      updateTodayCard();
+    });
+  });
+  document.getElementById('day-seg').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('day-seg').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      S.day = parseInt(btn.dataset.val);
+      updateTodayCard();
+    });
+  });
+  // uneven bell hint
+  ['wL','wR'].forEach(id => {
+    document.getElementById(id).addEventListener('input', checkUneven);
+  });
+}
+
+function checkUneven() {
+  const l = parseFloat(document.getElementById('wL').value)||0;
+  const r = parseFloat(document.getElementById('wR').value)||0;
+  document.getElementById('uneven-hint').style.display = (l && r && l !== r) ? 'block' : 'none';
+}
+
+function updateTodayCard() {
+  const type = sessionType(S.week, S.day);
+  S.type = type;
+  const card = document.getElementById('today-card');
+  const nameEl = document.getElementById('tc-name');
+  const targetEl = document.getElementById('tc-target');
+  const emomRow = document.getElementById('emom-row');
+
+  card.className = 'today-card ' + type;
+
+  if (type === 'abc') {
+    const t = ABC_TARGETS[S.week];
+    nameEl.textContent = 'Armor Building Complex';
+    targetEl.innerHTML = `<strong>${t.min}–${t.max} rounds</strong> · ${t.note}<br>2 Cleans · 1 Press · 3 Front Squats`;
+    emomRow.style.display = 'block';
+  } else {
+    const t = PRESS_TARGETS[S.week];
+    nameEl.textContent = 'Military Press';
+    targetEl.innerHTML = `<strong>${t.min}–${t.max} reps</strong> · ${t.note}<br>Ladder: ${t.ladder}`;
+    emomRow.style.display = 'none';
+  }
+}
+
+function startSession() {
+  S.wL = parseFloat(document.getElementById('wL').value) || 24;
+  S.wR = parseFloat(document.getElementById('wR').value) || S.wL;
+  S.emomSec = parseInt(document.getElementById('emom-sec').value) || 60;
+  S.type = sessionType(S.week, S.day);
+  S.sessionStart = Date.now();
+  S.totalElapsed = 0;
+
+  if (S.type === 'abc') {
+    initAbcSession();
+    showScreen('session-abc');
+  } else {
+    initPressSession();
+    showScreen('session-press');
+  }
+  startSessionClock();
+}
+
+// ═══════════════════════════════════════════════════
+// SESSION CLOCK
+// ═══════════════════════════════════════════════════
+function startSessionClock() {
+  clearInterval(S.sessionInterval);
+  const clockId = S.type === 'abc' ? 'abc-session-clock' : 'press-session-clock';
+  S.sessionInterval = setInterval(() => {
+    S.totalElapsed = Math.floor((Date.now() - S.sessionStart) / 1000);
+    const m = Math.floor(S.totalElapsed / 60);
+    const sec = S.totalElapsed % 60;
+    document.getElementById(clockId).textContent = `${m}:${String(sec).padStart(2,'0')}`;
+  }, 500);
+}
+
+// ═══════════════════════════════════════════════════
+// ABC SESSION
+// ═══════════════════════════════════════════════════
+function initAbcSession() {
+  S.abcRounds = 0;
+  S.abcPhase = 'idle';
+  S.abcLog = [];
+  const t = ABC_TARGETS[S.week];
+  S.abcTarget = t.max;
+
+  document.getElementById('abc-wk-label').textContent = `Week ${S.week} · Day ${S.day}`;
+  document.getElementById('abc-rounds-done').textContent = '0';
+  document.getElementById('abc-rounds-target').textContent = S.abcTarget;
+  document.getElementById('abc-weight-label').textContent = `${S.wL} / ${S.wR} kg`;
+  document.getElementById('abc-stat-rounds').textContent = '0';
+  document.getElementById('abc-stat-reps').textContent = '0';
+  document.getElementById('abc-stat-tons').textContent = '0';
+  document.getElementById('abc-chips').innerHTML = '';
+  document.getElementById('abc-last').textContent = '';
+  document.getElementById('abc-ctx').textContent = 'READY';
+  document.getElementById('abc-tap-label').textContent = 'START ROUND 1';
+  document.getElementById('abc-tap').className = 'tap-btn go';
+  resetEmomArc();
+  document.getElementById('emom-time').textContent = '—';
+  document.getElementById('emom-label').innerHTML = 'Tap to start first round';
+}
+
+function abcTap() {
+  if (S.abcPhase === 'idle') {
+    // start round
+    S.abcPhase = 'running';
+    S.abcRoundStart = Date.now();
+    document.getElementById('abc-ctx').textContent = 'ROUND IN PROGRESS';
+    document.getElementById('abc-tap').className = 'tap-btn active-set';
+    document.getElementById('abc-tap-label').textContent = 'DONE ROUND';
+    document.getElementById('abc-last').textContent = '';
+    startEmomArc();
+  } else {
+    // end round
+    const elapsed = Math.round((Date.now() - S.abcRoundStart) / 1000);
+    stopEmomArc();
+    S.abcRounds++;
+    S.abcLog.push({ sec: elapsed });
+
+    const over = elapsed > S.emomSec;
+    const diff = Math.abs(elapsed - S.emomSec);
+    const lastEl = document.getElementById('abc-last');
+    lastEl.innerHTML = over
+      ? `<span class="late">Round ${S.abcRounds}: ${elapsed}s — ${diff}s over</span>`
+      : `<span class="good">Round ${S.abcRounds}: ${elapsed}s ✓</span>`;
+
+    // update round counter
+    document.getElementById('abc-rounds-done').textContent = S.abcRounds;
+
+    // update stats
+    const totalWeight = S.wL + S.wR;
+    // ABC: 2 cleans + 1 press + 3 FSQ = 6 reps, but tonnage:
+    // cleans: 2 * totalWeight, press: 1 * totalWeight, FSQ: 3 * totalWeight = 6 * totalWeight per round
+    const totalReps = S.abcRounds * 6;
+    const totalTons = S.abcLog.reduce(() => S.abcRounds, 0) * 6 * totalWeight;
+    document.getElementById('abc-stat-rounds').textContent = S.abcRounds;
+    document.getElementById('abc-stat-reps').textContent = S.abcRounds * 6;
+    document.getElementById('abc-stat-tons').textContent = (S.abcRounds * 6 * totalWeight).toLocaleString();
+
+    addChip('abc-chips', `R${S.abcRounds} ${elapsed}s`, over ? 'late' : 'fresh');
+    logAbcRound(S.abcRounds, elapsed);
+
+    // check if target hit
+    if (S.abcRounds >= S.abcTarget) {
+      document.getElementById('abc-ctx').textContent = `TARGET REACHED! 🎯`;
+    }
+
+    // auto-start next round
+    S.abcPhase = 'running';
+    S.abcRoundStart = Date.now();
+    document.getElementById('abc-tap').className = 'tap-btn active-set';
+    document.getElementById('abc-tap-label').textContent = 'DONE ROUND';
+    document.getElementById('abc-ctx').textContent = `ROUND ${S.abcRounds + 1} IN PROGRESS`;
+    startEmomArc();
+  }
+}
+
+// EMOM arc
+let emomArcInterval = null;
+const ARC_CIRCUMFERENCE = 119.4;
+
+function startEmomArc() {
+  clearInterval(emomArcInterval);
+  const arc = document.getElementById('emom-arc');
+  const timeEl = document.getElementById('emom-time');
+  const labelEl = document.getElementById('emom-label');
+  let elapsed = 0;
+
+  emomArcInterval = setInterval(() => {
+    elapsed++;
+    const pct = Math.min(elapsed / S.emomSec, 1);
+    const offset = ARC_CIRCUMFERENCE * (1 - pct);
+    arc.style.strokeDashoffset = offset;
+    timeEl.textContent = elapsed + 's';
+    const over = elapsed > S.emomSec;
+    arc.classList.toggle('warn', over);
+    const remaining = S.emomSec - elapsed;
+    if (remaining > 0) {
+      labelEl.innerHTML = `<strong>${remaining}s</strong> until next round`;
+    } else {
+      labelEl.innerHTML = `<strong class="late">+${Math.abs(remaining)}s over</strong>`;
+    }
+  }, 1000);
+}
+
+function stopEmomArc() {
+  clearInterval(emomArcInterval);
+}
+
+function resetEmomArc() {
+  clearInterval(emomArcInterval);
+  const arc = document.getElementById('emom-arc');
+  arc.style.strokeDashoffset = ARC_CIRCUMFERENCE;
+  arc.classList.remove('warn');
+}
+
+// ═══════════════════════════════════════════════════
+// PRESS SESSION
+// ═══════════════════════════════════════════════════
+function initPressSession() {
+  S.pressReps = 0;
+  S.pressSets = 0;
+  S.pressRungIdx = 0;
+  S.pressPhase = 'idle';
+  S.pressLog = [];
+  const t = PRESS_TARGETS[S.week];
+  S.pressTarget = t.max;
+  S.pressLadder = LADDERS[t.ladder];
+
+  document.getElementById('press-wk-label').textContent = `Week ${S.week} · Day ${S.day}`;
+  document.getElementById('press-reps-done').textContent = '0';
+  document.getElementById('press-reps-target').textContent = S.pressTarget;
+  document.getElementById('press-weight-label').textContent = `${S.wL} / ${S.wR} kg`;
+  document.getElementById('press-stat-sets').textContent = '0';
+  document.getElementById('press-stat-reps').textContent = '0';
+  document.getElementById('press-stat-tons').textContent = '0';
+  document.getElementById('press-chips').innerHTML = '';
+  document.getElementById('press-ctx').textContent = `LADDER ${t.ladder}`;
+  document.getElementById('press-tap').className = 'tap-btn go';
+  renderLadder();
+  updatePressTapLabel();
+}
+
+function renderLadder() {
+  const row = document.getElementById('ladder-row');
+  row.innerHTML = '';
+  S.pressLadder.forEach((reps, i) => {
+    const div = document.createElement('div');
+    const rungPos = S.pressRungIdx % S.pressLadder.length;
+    let cls = 'rung ';
+    if (i < rungPos) cls += 'done';
+    else if (i === rungPos) cls += 'current';
+    else cls += 'pending';
+    div.className = cls;
+    div.textContent = reps;
+    row.appendChild(div);
+  });
+}
+
+function updatePressTapLabel() {
+  const rungPos = S.pressRungIdx % S.pressLadder.length;
+  const reps = S.pressLadder[rungPos];
+  document.getElementById('press-tap-label').textContent =
+    S.pressPhase === 'idle' ? 'START SET' : 'DONE SET';
+  document.getElementById('press-tap-sub').textContent =
+    `${reps} rep${reps > 1 ? 's' : ''} · double press`;
+
+  // next rung hint
+  const nextPos = (rungPos + 1) % S.pressLadder.length;
+  const nextReps = S.pressLadder[nextPos];
+  const remaining = S.pressTarget - S.pressReps;
+  document.getElementById('press-next').innerHTML =
+    remaining > 0
+      ? `<strong>${remaining}</strong> reps to target · next set: <strong>${nextReps}</strong>`
+      : `<span style="color:var(--go)">Target reached! Keep going or end session.</span>`;
+}
+
+let pressSetInterval = null;
+
+function pressTap() {
+  if (S.pressPhase === 'idle') {
+    S.pressPhase = 'running';
+    S.pressSetStart = Date.now();
+    document.getElementById('press-tap').className = 'tap-btn active-set';
+    document.getElementById('press-tap-label').textContent = 'DONE SET';
+    const rungPos = S.pressRungIdx % S.pressLadder.length;
+    document.getElementById('press-tap-sub').textContent =
+      `${S.pressLadder[rungPos]} reps · press now`;
+  } else {
+    const elapsed = Math.round((Date.now() - S.pressSetStart) / 1000);
+    S.pressPhase = 'idle';
+
+    const rungPos = S.pressRungIdx % S.pressLadder.length;
+    const reps = S.pressLadder[rungPos];
+    S.pressReps += reps;
+    S.pressSets++;
+    S.pressRungIdx++;
+    S.pressLog.push({ reps, elapsed });
+
+    // update display
+    document.getElementById('press-reps-done').textContent = S.pressReps;
+    document.getElementById('press-stat-sets').textContent = S.pressSets;
+    document.getElementById('press-stat-reps').textContent = S.pressReps;
+    const totalWeight = S.wL + S.wR;
+    document.getElementById('press-stat-tons').textContent =
+      (S.pressReps * totalWeight).toLocaleString();
+
+    addChip('press-chips', `×${reps} ${elapsed}s`, 'fresh');
+    logPressSet(S.pressSets, reps, elapsed);
+    renderLadder();
+
+    // auto-start next set
+    S.pressPhase = 'running';
+    S.pressSetStart = Date.now();
+    document.getElementById('press-tap').className = 'tap-btn active-set';
+    const nextRungPos = S.pressRungIdx % S.pressLadder.length;
+    document.getElementById('press-tap-label').textContent = 'DONE SET';
+    document.getElementById('press-tap-sub').textContent =
+      `${S.pressLadder[nextRungPos]} reps · press now`;
+    updatePressTapLabel();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SHARED UTILS
+// ═══════════════════════════════════════════════════
+function addChip(containerId, text, cls) {
+  const container = document.getElementById(containerId);
+  const chip = document.createElement('div');
+  chip.className = `chip ${cls}`;
+  chip.textContent = text;
+  container.appendChild(chip);
+  setTimeout(() => chip.classList.remove('fresh', 'late'), 1800);
+}
+
+function showEndConfirm(type) {
+  document.getElementById(`${type}-end-btn`).style.display = 'none';
+  document.getElementById(`${type}-end-confirm`).classList.add('visible');
+}
+function hideEndConfirm(type) {
+  document.getElementById(`${type}-end-btn`).style.display = 'block';
+  document.getElementById(`${type}-end-confirm`).classList.remove('visible');
+}
+
+function endSession() {
+  clearInterval(S.sessionInterval);
+  stopEmomArc();
+  logSessionSummary();
+
+  const elapsed = S.totalElapsed;
+  const m = Math.floor(elapsed / 60);
+  const sec = elapsed % 60;
+  const timeStr = `${m}:${String(sec).padStart(2,'0')}`;
+  const totalWeight = S.wL + S.wR;
+
+  const titleEl = document.getElementById('sum-title');
+  const chipsEl = document.getElementById('sum-chips');
+  chipsEl.innerHTML = '';
+
+  if (S.type === 'abc') {
+    titleEl.className = 'sum-title abc';
+    titleEl.textContent = 'ABC Complete';
+    document.getElementById('sum-v1').textContent = S.abcRounds;
+    document.getElementById('sum-l1').textContent = 'Rounds';
+    document.getElementById('sum-v2').textContent = S.abcRounds * 6;
+    document.getElementById('sum-l2').textContent = 'Total Reps';
+    document.getElementById('sum-v3').textContent = (S.abcRounds * 6 * totalWeight).toLocaleString();
+    document.getElementById('sum-l3').textContent = 'kg Moved';
+    document.getElementById('sum-v4').textContent = timeStr;
+    document.getElementById('sum-l4').textContent = 'Time';
+    document.getElementById('sum-hist-label').textContent = 'Round times';
+    S.abcLog.forEach((r, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'sum-chip';
+      chip.textContent = `R${i+1} ${r.sec}s`;
+      chipsEl.appendChild(chip);
+    });
+  } else {
+    titleEl.className = 'sum-title press';
+    titleEl.textContent = 'Press Complete';
+    document.getElementById('sum-v1').textContent = S.pressReps;
+    document.getElementById('sum-l1').textContent = 'Total Reps';
+    document.getElementById('sum-v2').textContent = S.pressSets;
+    document.getElementById('sum-l2').textContent = 'Sets';
+    document.getElementById('sum-v3').textContent = (S.pressReps * totalWeight).toLocaleString();
+    document.getElementById('sum-l3').textContent = 'kg Moved';
+    document.getElementById('sum-v4').textContent = timeStr;
+    document.getElementById('sum-l4').textContent = 'Time';
+    document.getElementById('sum-hist-label').textContent = 'Set log';
+    S.pressLog.forEach((s, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'sum-chip';
+      chip.textContent = `${i+1}: ×${s.reps} ${s.elapsed}s`;
+      chipsEl.appendChild(chip);
+    });
+  }
+
+  showScreen('summary');
+}
+
+function goSetup() {
+  clearInterval(S.sessionInterval);
+  stopEmomArc();
+  showScreen('setup');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+// GOOGLE SHEETS LOGGING
+// ═══════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
+
+function logAbcRound(roundNum, seconds) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'round', program: 'ABF',
+      week: S.week, day: S.day, session: 'ABC',
+      number: roundNum, reps: 6, seconds: seconds,
+      weightL: S.wL, weightR: S.wR,
+      onTarget: seconds <= S.emomSec,
+    }),
+  }).catch(() => {});
+}
+
+function logPressSet(setNum, reps, seconds) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'set', program: 'ABF',
+      week: S.week, day: S.day, session: 'Press',
+      number: setNum, reps: reps, seconds: seconds,
+      weightL: S.wL, weightR: S.wR,
+      onTarget: true,
+    }),
+  }).catch(() => {});
+}
+
+function logSessionSummary() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  const elapsed = S.totalElapsed;
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  const totalWeight = S.wL + S.wR;
+  let payload = {
+    type: 'session', program: 'ABF',
+    week: S.week, day: S.day,
+    weightL: S.wL, weightR: S.wR,
+    duration: elapsed,
+    durationStr: `${m}:${String(s).padStart(2,'0')}`,
+  };
+  if (S.type === 'abc') {
+    payload.session = 'ABC';
+    payload.rounds  = S.abcRounds;
+    payload.reps    = S.abcRounds * 6;
+    payload.kgMoved = S.abcRounds * 6 * totalWeight;
+  } else {
+    payload.session = 'Press';
+    payload.reps    = S.pressReps;
+    payload.kgMoved = S.pressReps * totalWeight;
+  }
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+initSegs();
+updateTodayCard();
+</script>
+</body>
+</html>
