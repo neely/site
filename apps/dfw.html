@@ -616,6 +616,19 @@
   }
 
   .btn-secondary:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ── REST TIMER ── */
+.rest-timer {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 0.35rem 0; flex-shrink: 0;
+  min-height: 28px;
+}
+.rt-label { font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.rt-val   { font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 3ch; text-align: center; }
+.rt-phase { font-size: 0.52rem; letter-spacing: 0.1em; color: var(--dim); }
+.rt-val.resting { color: var(--go); }
+.rt-val.working { color: var(--warn); }
+
 </style>
 </head>
 <body>
@@ -836,12 +849,81 @@ function segInit(id, stateKey) {
       document.getElementById(id).querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state[stateKey] = parseInt(btn.dataset.val);
-      updateSchemeCard();
+      
+// ── WAKE LOCK ────────────────────────────────────────────────
+let _wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch(e) {}
+}
+function releaseWakeLock() {
+  if (_wakeLock) { _wakeLock.release().catch(()=>{}); _wakeLock = null; }
+}
+document.addEventListener('visibilitychange', async () => {
+  if (_wakeLock && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+// ── REST TIMER ENGINE ────────────────────────────────────────
+// call startSetTimer() when set begins, stopSetTimer() when set ends
+// call resetRestTimer() to clear
+let _rtInterval = null;
+let _rtStart    = null;
+let _rtPhase    = 'idle'; // 'working' | 'resting' | 'idle'
+
+function _rtTick(valId, phaseId) {
+  const elapsed = Math.round((Date.now() - _rtStart) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = String(elapsed % 60).padStart(2, '0');
+  const el = document.getElementById(valId);
+  const ph = document.getElementById(phaseId);
+  if (!el) return;
+  el.textContent = m > 0 ? `${m}:${s}` : `${elapsed}s`;
+  el.className = 'rt-val ' + _rtPhase;
+  if (ph) ph.textContent = _rtPhase === 'working' ? 'SET' : _rtPhase === 'resting' ? 'REST' : '';
+}
+
+function startSetTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtStart = Date.now();
+  _rtPhase = 'working';
+  _rtTick(valId, phaseId);
+  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
+}
+
+function startRestTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtStart = Date.now();
+  _rtPhase = 'resting';
+  _rtTick(valId, phaseId);
+  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
+}
+
+function stopRestTimer() {
+  clearInterval(_rtInterval);
+  _rtInterval = null;
+}
+
+function resetRestTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtInterval = null;
+  _rtPhase = 'idle';
+  const el = document.getElementById(valId);
+  const ph = document.getElementById(phaseId);
+  if (el) { el.textContent = '—'; el.className = 'rt-val'; }
+  if (ph)   ph.textContent = '';
+}
+
     });
   });
 }
 
 segInit('week-seg', 'week');
+updateSchemeCard();
 segInit('day-seg', 'day');
 
 function updateSchemeCard() {
@@ -866,6 +948,7 @@ function setBellMode(mode) {
 }
 
 function startSession() {
+  requestWakeLock();
   const w1 = parseFloat(document.getElementById('w1')?.value) || 24;
   const w2 = parseFloat(document.getElementById('w2')?.value) || w1;
   state.weights = state.bellMode === 'single' ? [w1] : [w1, w2];
@@ -887,6 +970,7 @@ function startSession() {
   document.getElementById('target-label').textContent = `target: ${state.targetCadence}s per set`;
 
   showScreen('session');
+  document.getElementById('dfw-rt-row').style.display='flex';
   resetCadenceDisplay(false);
   startWorkoutClock();
 }
@@ -987,7 +1071,7 @@ function handleTap() {
 
     const reps = currentReps();
     const totalWeight = state.weights.reduce((a, b) => a + b, 0);
-    const tonnage = reps * totalWeight * 2;
+    const tonnage = reps * totalWeight;  // totalWeight = wL+wR, already both bells
     state.sets.push({ reps, tonnage, cycleTime });
     state.rungIdx++;
 
@@ -1001,6 +1085,7 @@ function handleTap() {
     updateStats();
     addChip(reps, cycleTime, over);
     logSetToSheet(state.sets.length, reps, cycleTime);
+    startRestTimer('dfw-rt-val','dfw-rt-phase');
 
     // auto-start next set immediately
     resetCadenceDisplay(true);
@@ -1045,6 +1130,9 @@ function endSession() {
   clearInterval(state.workoutInterval);
   clearInterval(state.cadenceInterval);
   hideEndConfirm();
+  releaseWakeLock();
+  stopRestTimer();
+  resetRestTimer('dfw-rt-val','dfw-rt-phase');
   logSessionToSheet();
 
   const totalSets = state.sets.length;
@@ -1101,7 +1189,7 @@ updateSchemeCard();
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
 
 function logSessionToSheet() {
-  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
   const elapsed = state.totalElapsed;
   const m = Math.floor(elapsed / 60);
   const s = elapsed % 60;
@@ -1121,7 +1209,7 @@ function logSessionToSheet() {
 }
 
 function logSetToSheet(setNum, reps, cycleTime) {
-  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
   fetch(APPS_SCRIPT_URL, {
     method: 'POST', mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },

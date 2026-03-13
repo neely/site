@@ -205,9 +205,9 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
 .bna-main { font-family: 'Playfair Display', serif; font-size: clamp(5rem,20vw,6.5rem); font-weight: 700; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
 .bna-sep   { font-size: 2rem; color: var(--dim); font-weight: 300; }
 .bna-sub   { font-size: 2rem; color: var(--dim); font-weight: 300; font-variant-numeric: tabular-nums; }
-.bna-detail { font-size: 0.68rem; color: var(--dim); margin-top: 0.1rem; }
+.bna-detail { font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem; line-height: 1.45; }
 .bna-detail strong { color: var(--ink); }
-.bna-last { font-size: 0.6rem; min-height: 1.1em; margin-top: 0.4rem; }
+.bna-last { font-size: 0.75rem; min-height: 1.2em; margin-top: 0.4rem; }
 .bna-last .good { color: var(--go); }
 .bna-last .late { color: var(--warn); }
 .bna-last .note { color: var(--dim); }
@@ -246,7 +246,7 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
   transition: transform 0.08s, opacity 0.12s;
 }
 .tap-btn:active { transform: scale(0.97); }
-.tap-btn .tb-sub { font-size: 0.54rem; letter-spacing: 0.1em; opacity: 0.72; }
+.tap-btn .tb-sub { font-size: 0.88rem; letter-spacing: 0.04em; opacity: 0.92; font-weight: 500; }
 .tap-btn.tide-go   { background: var(--tide); color: #071220; }
 .tap-btn.tide-live { background: #1a3a5a; color: var(--tide); border: 1px solid var(--tide); }
 .tap-btn.ember-go  { background: var(--ember); color: #1a0c04; }
@@ -320,6 +320,19 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
   font-size: 0.6rem; color: var(--dim); line-height: 1.55;
 }
 .elbow-banner strong { color: var(--warn); }
+
+/* ── REST TIMER ── */
+.rest-timer {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 0.35rem 0; flex-shrink: 0;
+  min-height: 28px;
+}
+.rt-label { font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.rt-val   { font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 3ch; text-align: center; }
+.rt-phase { font-size: 0.52rem; letter-spacing: 0.1em; color: var(--dim); }
+.rt-val.resting { color: var(--go); }
+.rt-val.working { color: var(--warn); }
+
 </style>
 </head>
 <body>
@@ -383,6 +396,15 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
         <div class="iw"><input type="number" id="wR" placeholder="16" min="4" max="100" step="2"><span>kg R</span></div>
       </div>
       <div class="uneven-warn" id="uneven-warn">⚠ Uneven bells — switch sides each round</div>
+    </div>
+
+    <!-- Snatch weight (Day B only) -->
+    <div id="snatch-weight-field">
+      <label class="fl">Snatch Bell (single)</label>
+      <div class="iw" style="max-width:140px;">
+        <input type="number" id="wSnatch" placeholder="16" min="4" max="100" step="2">
+        <span>kg</span>
+      </div>
     </div>
 
     <!-- EMOM (Day A only) -->
@@ -567,6 +589,11 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       <span class="tb-sub" id="press-tap-sub">2 reps · double press</span>
     </button>
 
+    <div class="rest-timer" id="it-press-rt-row" style="display:none">
+      <span class="rt-label">Timer</span>
+      <span class="rt-val" id="it-press-rt-val">—</span>
+      <span class="rt-phase" id="it-press-rt-phase"></span>
+    </div>
     <div class="log-strip">
       <div class="log-label">Sets</div>
       <div class="log-chips" id="press-chips"></div>
@@ -611,6 +638,11 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       <span class="tb-sub" id="snatch-tap-sub">8 L · rest · 8 R</span>
     </button>
 
+    <div class="rest-timer" id="it-snatch-rt-row" style="display:none">
+      <span class="rt-label">Timer</span>
+      <span class="rt-val" id="it-snatch-rt-val">—</span>
+      <span class="rt-phase" id="it-snatch-rt-phase"></span>
+    </div>
     <div class="log-strip">
       <div class="log-label">Sets done</div>
       <div class="log-chips" id="snatch-chips"></div>
@@ -655,6 +687,11 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       <span class="tb-sub" id="pp-tap-sub">pushups · then pullups</span>
     </button>
 
+    <div class="rest-timer" id="it-pp-rt-row" style="display:none">
+      <span class="rt-label">Timer</span>
+      <span class="rt-val" id="it-pp-rt-val">—</span>
+      <span class="rt-phase" id="it-pp-rt-phase"></span>
+    </div>
     <div class="log-strip">
       <div class="log-label">Supersets</div>
       <div class="log-chips" id="pp-chips"></div>
@@ -741,7 +778,7 @@ function ppTargets(week) {
 // ════════════════════════════════════════════════
 const S = {
   week:1, day:1, type:'a',
-  wL:16, wR:16, emomSec:90,
+  wL:16, wR:16, wSnatch:16, emomSec:90,
   sessionStart:null, sessionInterval:null, totalElapsed:0,
   // ABC
   abcRounds:0, abcTarget:10, abcPhase:'idle', abcStart:null, abcLog:[],
@@ -811,6 +848,7 @@ function refreshSetup() {
     startBtn.className = 'btn-start day-a';
     startBtn.textContent = 'Start Day A →';
     emomField.style.display = 'block';
+    document.getElementById('snatch-weight-field').style.display = 'none';
     document.getElementById('emom-in').value = p.emom;
   } else {
     const p = PRESS_PLAN[S.week];
@@ -824,15 +862,18 @@ function refreshSetup() {
     startBtn.className = 'btn-start day-b';
     startBtn.textContent = 'Start Day B →';
     emomField.style.display = 'none';
+    document.getElementById('snatch-weight-field').style.display = 'block';
   }
 }
 
 function startSession() {
   S.wL = parseFloat(document.getElementById('wL').value) || 16;
   S.wR = parseFloat(document.getElementById('wR').value) || S.wL;
+  S.wSnatch = parseFloat(document.getElementById('wSnatch').value) || S.wL;
   S.emomSec = parseInt(document.getElementById('emom-in').value) || 90;
   S.type = dayType(S.week, S.day);
   S.sessionStart = Date.now();
+  requestWakeLock();
   S.totalElapsed = 0;
 
   if (S.type === 'a') {
@@ -841,6 +882,9 @@ function startSession() {
   } else {
     initDayB();
     showScreen('session-b');
+    document.getElementById('it-press-rt-row').style.display='flex';
+    document.getElementById('it-snatch-rt-row').style.display='flex';
+    document.getElementById('it-pp-rt-row').style.display='flex';
   }
   startClock();
 }
@@ -1021,7 +1065,7 @@ function initDayB() {
   document.getElementById('b-eyebrow').textContent = `Week ${S.week} · Day ${S.day}`;
   document.getElementById('press-done').textContent = '0';
   document.getElementById('press-target').textContent = S.pressTarget;
-  document.getElementById('press-detail').textContent = `${S.wL}/${S.wR} kg · target ${pp.min}–${pp.max} reps`;
+  document.getElementById('press-detail').innerHTML = `<strong>Double strict press</strong> · ${S.wL}/${S.wR} kg · target ${pp.min}–${pp.max} reps`;
   document.getElementById('press-ctx').textContent = `LADDER ${pp.scheme}`;
   document.getElementById('press-chips').innerHTML = '';
   document.getElementById('press-last').textContent = '';
@@ -1032,7 +1076,7 @@ function initDayB() {
 
   document.getElementById('snatch-sets').textContent = '0';
   document.getElementById('snatch-target').textContent = sn;
-  document.getElementById('snatch-wt').textContent = `${Math.max(S.wL,S.wR)} kg`;
+  document.getElementById('snatch-wt').textContent = `${S.wSnatch} kg`;
   document.getElementById('snatch-chips').innerHTML = '';
   document.getElementById('snatch-tap').className = 'tap-btn ember-go';
   document.getElementById('snatch-tap-lbl').textContent = 'START SET 1';
@@ -1073,7 +1117,7 @@ function pressTap() {
     document.getElementById('press-tap').className = 'tap-btn ember-live';
     const pos = S.pressRungIdx % S.pressLadder.length;
     document.getElementById('press-tap-lbl').textContent = 'DONE SET';
-    document.getElementById('press-tap-sub').textContent = `${S.pressLadder[pos]} reps · press hard`;
+    document.getElementById('press-tap-sub').textContent = `${S.pressLadder[pos]} reps · strict press`;
     return;
   }
 
@@ -1106,7 +1150,7 @@ function pressTap() {
   document.getElementById('press-tap').className = 'tap-btn ember-live';
   const nextPos = S.pressRungIdx % S.pressLadder.length;
   document.getElementById('press-tap-lbl').textContent = 'DONE SET';
-  document.getElementById('press-tap-sub').textContent = `${S.pressLadder[nextPos]} reps · press hard`;
+  document.getElementById('press-tap-sub').textContent = `${S.pressLadder[nextPos]} reps · strict press`;
 }
 
 // ════════════════════════════════════════════════
@@ -1146,6 +1190,7 @@ function snatchTap() {
   document.getElementById('snatch-tap').className = 'tap-btn ember-live';
   document.getElementById('snatch-tap-lbl').textContent = 'DONE SET';
   document.getElementById('snatch-tap-sub').textContent = `Set ${S.snatchSets+1} of ${S.snatchTarget} · 8L 8R`;
+  startSetTimer('it-snatch-rt-val','it-snatch-rt-phase');
 }
 
 // ════════════════════════════════════════════════
@@ -1171,6 +1216,7 @@ function ppTap() {
   document.getElementById('pp-s-push').textContent = S.ppTotalPush;
   document.getElementById('pp-s-pull').textContent = S.ppTotalPull;
   addChip('pp-chips', `S${S.ppSets} ${sec}s`, 'done-g');
+  startRestTimer('it-pp-rt-val','it-pp-rt-phase');
 
   if (S.ppSets >= 3) {
     document.getElementById('pp-tap').className = 'tap-btn neutral';
@@ -1186,6 +1232,7 @@ function ppTap() {
   document.getElementById('pp-tap').className = 'tap-btn neutral';
   document.getElementById('pp-tap-lbl').textContent = 'DONE SUPERSET';
   document.getElementById('pp-tap-sub').textContent = `set ${S.ppSets+1} · pushups ×${S.ppPushTarget} → pullups ×${S.ppPullTarget}`;
+  startSetTimer('it-pp-rt-val','it-pp-rt-phase');
 }
 
 function goPhaseB(idx) {
@@ -1266,11 +1313,13 @@ function buildSummary() {
   } else {
     titleEl.className = 'sum-title b';
     titleEl.textContent = 'Day B Complete';
+    const snatchKg = S.snatchSets * 16 * S.wSnatch;
+    const pressKg  = S.pressReps * totalKg;
     addCard(S.pressReps, 'Press Reps');
     addCard(S.snatchSets*16, 'Snatch Reps');
     addCard(S.ppTotalPush, 'Pushups');
     addCard(S.ppTotalPull, 'Pullups');
-    addCard((S.pressReps*totalKg).toLocaleString()+'kg', 'Press kg');
+    addCard((pressKg + snatchKg).toLocaleString()+'kg', 'Total kg Moved');
     addCard(timeStr, 'Time');
     if (S.pressLog.length)
       addChipsCard('Press sets', S.pressLog.map((s,i)=>`${i+1}: ×${s.reps} ${s.sec}s`));
@@ -1293,8 +1342,9 @@ function showScreen(id) {
 // ════════════════════════════════════════════════
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
 
-function logRoundToSheet(session, num, reps, sec, onTarget) {
+function logRoundToSheet(session, num, reps, sec, onTarget, overrideWeight) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  const wt = overrideWeight !== undefined ? overrideWeight : null;
   fetch(APPS_SCRIPT_URL, {
     method:'POST', mode:'no-cors',
     headers:{'Content-Type':'application/json'},
@@ -1302,7 +1352,9 @@ function logRoundToSheet(session, num, reps, sec, onTarget) {
       type:'round', program:'IronTide',
       week:S.week, day:S.day, session,
       number:num, reps, seconds:sec,
-      weightL:S.wL, weightR:S.wR, onTarget,
+      weightL: wt !== null ? wt : S.wL,
+      weightR: wt !== null ? wt : S.wR,
+      onTarget,
     }),
   }).catch(()=>{});
 }
@@ -1326,6 +1378,75 @@ function logSessionToSheet() {
       duration:elapsed, durationStr:`${m}:${String(s).padStart(2,'0')}`,
     }),
   }).catch(()=>{});
+}
+
+
+// ── WAKE LOCK ────────────────────────────────────────────────
+let _wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch(e) {}
+}
+function releaseWakeLock() {
+  if (_wakeLock) { _wakeLock.release().catch(()=>{}); _wakeLock = null; }
+}
+document.addEventListener('visibilitychange', async () => {
+  if (_wakeLock && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+// ── REST TIMER ENGINE ────────────────────────────────────────
+// call startSetTimer() when set begins, stopSetTimer() when set ends
+// call resetRestTimer() to clear
+let _rtInterval = null;
+let _rtStart    = null;
+let _rtPhase    = 'idle'; // 'working' | 'resting' | 'idle'
+
+function _rtTick(valId, phaseId) {
+  const elapsed = Math.round((Date.now() - _rtStart) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = String(elapsed % 60).padStart(2, '0');
+  const el = document.getElementById(valId);
+  const ph = document.getElementById(phaseId);
+  if (!el) return;
+  el.textContent = m > 0 ? `${m}:${s}` : `${elapsed}s`;
+  el.className = 'rt-val ' + _rtPhase;
+  if (ph) ph.textContent = _rtPhase === 'working' ? 'SET' : _rtPhase === 'resting' ? 'REST' : '';
+}
+
+function startSetTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtStart = Date.now();
+  _rtPhase = 'working';
+  _rtTick(valId, phaseId);
+  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
+}
+
+function startRestTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtStart = Date.now();
+  _rtPhase = 'resting';
+  _rtTick(valId, phaseId);
+  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
+}
+
+function stopRestTimer() {
+  clearInterval(_rtInterval);
+  _rtInterval = null;
+}
+
+function resetRestTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtInterval = null;
+  _rtPhase = 'idle';
+  const el = document.getElementById(valId);
+  const ph = document.getElementById(phaseId);
+  if (el) { el.textContent = '—'; el.className = 'rt-val'; }
+  if (ph)   ph.textContent = '';
 }
 
 // ════════════════════════════════════════════════

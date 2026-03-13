@@ -154,7 +154,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .round-target { font-size: 2rem; color: var(--dim); font-weight: 300; font-variant-numeric: tabular-nums; }
 
 .abc-scheme { font-size: 0.7rem; color: var(--abc); letter-spacing: 0.06em; margin-top: 0.15rem; }
-.abc-weight { font-size: 0.68rem; color: var(--dim); margin-top: 0.1rem; }
+.abc-weight { font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem; line-height: 1.45; }
 
 /* emom timer under round */
 .emom-timer-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.6rem; }
@@ -181,7 +181,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   transition: transform 0.08s, background 0.12s; border: none;
 }
 .tap-btn:active { transform: scale(0.97); }
-.tap-btn .tap-sub { font-size: 0.56rem; letter-spacing: 0.12em; opacity: 0.7; }
+.tap-btn .tap-sub { font-size: 0.88rem; letter-spacing: 0.04em; opacity: 0.92; font-weight: 500; }
 .tap-btn.go    { background: var(--go); color: var(--go-dark); }
 .tap-btn.active-set { background: var(--warn); color: var(--warn-dark); }
 
@@ -222,7 +222,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 .rung.current { background: var(--press); border-color: var(--press); color: #08121a; }
 .rung.pending { }
 
-.press-weight { font-size: 0.68rem; color: var(--dim); margin-top: 0.1rem; }
+.press-weight { font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem; line-height: 1.45; }
 .press-next   { font-size: 0.65rem; color: var(--dim); margin-top: 0.4rem; min-height: 1.1em; }
 .press-next strong { color: var(--press); }
 
@@ -248,6 +248,19 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   transition: color 0.15s, border-color 0.15s;
 }
 .btn-secondary:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ── REST TIMER ── */
+.rest-timer {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 0.35rem 0; flex-shrink: 0;
+  min-height: 28px;
+}
+.rt-label { font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.rt-val   { font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 3ch; text-align: center; }
+.rt-phase { font-size: 0.52rem; letter-spacing: 0.1em; color: var(--dim); }
+.rt-val.resting { color: var(--go); }
+.rt-val.working { color: var(--warn); }
+
 </style>
 </head>
 <body>
@@ -429,7 +442,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
   <button class="tap-btn go" id="press-tap" onclick="pressTap()">
     <span id="press-tap-label">START SET</span>
-    <span class="tap-sub" id="press-tap-sub">2 reps · double press</span>
+    <span class="tap-sub" id="press-tap-sub">2 reps · strict press</span>
   </button>
 
   <div class="log-strip">
@@ -618,6 +631,7 @@ function updateTodayCard() {
 }
 
 function startSession() {
+  requestWakeLock();
   S.wL = parseFloat(document.getElementById('wL').value) || 24;
   S.wR = parseFloat(document.getElementById('wR').value) || S.wL;
   S.emomSec = parseInt(document.getElementById('emom-sec').value) || 60;
@@ -631,6 +645,7 @@ function startSession() {
   } else {
     initPressSession();
     showScreen('session-press');
+  document.getElementById('abf-rt-row').style.display='flex';
   }
   startSessionClock();
 }
@@ -819,7 +834,7 @@ function updatePressTapLabel() {
   document.getElementById('press-tap-label').textContent =
     S.pressPhase === 'idle' ? 'START SET' : 'DONE SET';
   document.getElementById('press-tap-sub').textContent =
-    `${reps} rep${reps > 1 ? 's' : ''} · double press`;
+    `${reps} rep${reps > 1 ? 's' : ''} · strict press`;
 
   // next rung hint
   const nextPos = (rungPos + 1) % S.pressLadder.length;
@@ -901,6 +916,8 @@ function hideEndConfirm(type) {
 function endSession() {
   clearInterval(S.sessionInterval);
   stopEmomArc();
+  releaseWakeLock();
+  stopRestTimer();
   logSessionSummary();
 
   const elapsed = S.totalElapsed;
@@ -1028,6 +1045,75 @@ function logSessionSummary() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).catch(() => {});
+}
+
+
+// ── WAKE LOCK ────────────────────────────────────────────────
+let _wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch(e) {}
+}
+function releaseWakeLock() {
+  if (_wakeLock) { _wakeLock.release().catch(()=>{}); _wakeLock = null; }
+}
+document.addEventListener('visibilitychange', async () => {
+  if (_wakeLock && document.visibilityState === 'visible') {
+    await requestWakeLock();
+  }
+});
+
+// ── REST TIMER ENGINE ────────────────────────────────────────
+// call startSetTimer() when set begins, stopSetTimer() when set ends
+// call resetRestTimer() to clear
+let _rtInterval = null;
+let _rtStart    = null;
+let _rtPhase    = 'idle'; // 'working' | 'resting' | 'idle'
+
+function _rtTick(valId, phaseId) {
+  const elapsed = Math.round((Date.now() - _rtStart) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = String(elapsed % 60).padStart(2, '0');
+  const el = document.getElementById(valId);
+  const ph = document.getElementById(phaseId);
+  if (!el) return;
+  el.textContent = m > 0 ? `${m}:${s}` : `${elapsed}s`;
+  el.className = 'rt-val ' + _rtPhase;
+  if (ph) ph.textContent = _rtPhase === 'working' ? 'SET' : _rtPhase === 'resting' ? 'REST' : '';
+}
+
+function startSetTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtStart = Date.now();
+  _rtPhase = 'working';
+  _rtTick(valId, phaseId);
+  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
+}
+
+function startRestTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtStart = Date.now();
+  _rtPhase = 'resting';
+  _rtTick(valId, phaseId);
+  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
+}
+
+function stopRestTimer() {
+  clearInterval(_rtInterval);
+  _rtInterval = null;
+}
+
+function resetRestTimer(valId, phaseId) {
+  clearInterval(_rtInterval);
+  _rtInterval = null;
+  _rtPhase = 'idle';
+  const el = document.getElementById(valId);
+  const ph = document.getElementById(phaseId);
+  if (el) { el.textContent = '—'; el.className = 'rt-val'; }
+  if (ph)   ph.textContent = '';
 }
 
 // ═══════════════════════════════════════════════════
