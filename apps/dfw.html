@@ -114,11 +114,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .tap-zone.running{background:#1c3022;border:1.5px solid var(--go);color:var(--go)}
 
 .tap-main{font-size:.9rem;font-weight:500;letter-spacing:.1em}
-.tap-timer{font-size:2rem;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1;display:none}
 .tap-sub{font-size:.88rem;letter-spacing:.04em;opacity:.85;font-weight:500}
-
-/* progress shimmer along bottom */
-.tap-progress{position:absolute;bottom:0;left:0;height:3px;background:currentColor;opacity:.3;width:0%}
 
 /* ── LOG AREA ── */
 .log-area{padding:.75rem 1.5rem .5rem;flex-shrink:0}
@@ -248,9 +244,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
   <div class="tap-zone idle" id="tap-zone" onclick="handleTap()">
     <span class="tap-main" id="tap-main">START FIRST SET</span>
-    <span class="tap-timer" id="tap-timer">0s</span>
     <span class="tap-sub" id="tap-sub">C+P · then FSQ</span>
-    <div class="tap-progress" id="tap-progress"></div>
   </div>
 
   <div class="log-area">
@@ -332,9 +326,6 @@ const S = {
   workoutInterval:null,
   cadenceInterval:null,
   setStart:null,
-  // split timer
-  splitStart:null,
-  splitInterval:null,
 };
 
 // ════════════════════════════════════════════════════
@@ -471,41 +462,11 @@ function resetCadenceDisplay() {
 // ════════════════════════════════════════════════════
 // SPLIT TIMER (inside tap button)
 // ════════════════════════════════════════════════════
-function startSplitTimer() {
-  clearInterval(S.splitInterval);
-  S.splitStart = Date.now();
-  const timerEl = document.getElementById('tap-timer');
-  const progEl  = document.getElementById('tap-progress');
-  timerEl.style.display = 'block';
-  timerEl.textContent   = '0s';
-  progEl.style.width    = '0%';
-
-  S.splitInterval = setInterval(() => {
-    const el = (Date.now() - S.splitStart) / 1000;
-    const sc = Math.floor(el);
-    const m  = Math.floor(sc / 60);
-    timerEl.textContent = m > 0 ? `${m}:${String(sc%60).padStart(2,'0')}` : `${sc}s`;
-    // subtle 60s shimmer
-    progEl.style.width = ((el % 60) / 60 * 100) + '%';
-  }, 100);
-}
-
-function stopSplitTimer() {
-  clearInterval(S.splitInterval);
-  const el = Math.floor((Date.now() - S.splitStart) / 1000);
-  return el;
-}
-
 function resetTapBtn() {
-  clearInterval(S.splitInterval);
-  const timerEl = document.getElementById('tap-timer');
-  timerEl.style.display = 'none';
-  timerEl.textContent   = '0s';
-  document.getElementById('tap-progress').style.width = '0%';
   const zone = document.getElementById('tap-zone');
   zone.className = 'tap-zone idle';
   document.getElementById('tap-main').textContent = 'START FIRST SET';
-  document.getElementById('tap-sub').textContent  = `${currentReps()} rep${currentReps()>1?'s':''} · C+P then FSQ`;
+  document.getElementById('tap-sub').textContent  = tapSubText();
 }
 
 // ════════════════════════════════════════════════════
@@ -516,23 +477,21 @@ function handleTap() {
     // ── Start set ──
     S.setPhase = 'running';
     startCadenceClock();
-    startSplitTimer();
     document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
     const zone = document.getElementById('tap-zone');
     zone.className = 'tap-zone running';
     const setNum = S.sets.length + 1;
     document.getElementById('tap-main').textContent = `DONE SET ${setNum}`;
-    document.getElementById('tap-sub').textContent  = `${currentReps()} rep${currentReps()>1?'s':''} · C+P then FSQ`;
+    document.getElementById('tap-sub').textContent  = tapSubText();
     document.getElementById('last-row').innerHTML   = '';
 
   } else {
     // ── Log set ──
     const cadenceTime = stopCadenceClock();
-    const splitSec    = stopSplitTimer();
     const reps        = currentReps();
     const totalWeight = S.weights.reduce((a,b) => a+b, 0);
     const tonnage     = reps * totalWeight;
-    S.sets.push({ reps, tonnage, cycleTime: cadenceTime, splitSec });
+    S.sets.push({ reps, tonnage, cycleTime: cadenceTime });
     S.rungIdx++;
 
     const over = cadenceTime > S.targetCadence;
@@ -548,19 +507,34 @@ function handleTap() {
     // ── Immediately start next set ──
     S.setPhase = 'running';
     startCadenceClock();
-    startSplitTimer();   // resets to 0 for next set
     document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
     const zone = document.getElementById('tap-zone');
     zone.className = 'tap-zone running';
     const nextSetNum = S.sets.length + 1;
     document.getElementById('tap-main').textContent = `DONE SET ${nextSetNum}`;
-    document.getElementById('tap-sub').textContent  = `${currentReps()} rep${currentReps()>1?'s':''} · C+P then FSQ`;
+    document.getElementById('tap-sub').textContent  = tapSubText();
     document.getElementById('rep-badge').textContent = currentReps();
   }
 }
 
 function currentReps() {
   return S.scheme.rungs[S.rungIdx % S.scheme.rungs.length];
+}
+
+function tapSubLabel() {
+  const reps = currentReps();
+  // Within each ladder rung: C+P first, then FSQ same count
+  // Track position within rung cycle for label clarity
+  return `${reps} rep${reps>1?'s':''} · C+P → FSQ`;
+}
+
+function tapSubText() {
+  const reps = currentReps();
+  const rungs = S.scheme.rungs;
+  const pos   = S.rungIdx % rungs.length;
+  if (rungs.length === 1) return `${reps} rep${reps>1?'s':''} · C+P then FSQ`;
+  // ladder: show position e.g. "Rung 2 of 3 · ×2 C+P then FSQ"
+  return `Rung ${pos+1} of ${rungs.length} · ×${reps} C+P then FSQ`;
 }
 
 function updateStats() {
@@ -597,7 +571,6 @@ function hideEndConfirm() {
 function endSession() {
   clearInterval(S.workoutInterval);
   clearInterval(S.cadenceInterval);
-  clearInterval(S.splitInterval);
   hideEndConfirm();
   relWakeLock();
   logSessionToSheet();
@@ -635,7 +608,6 @@ function endSession() {
 function goSetup() {
   clearInterval(S.workoutInterval);
   clearInterval(S.cadenceInterval);
-  clearInterval(S.splitInterval);
   showScreen('setup');
 }
 
@@ -661,7 +633,7 @@ function logSessionToSheet() {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       type:'session', program:'DFW',
-      week:S.week, day:S.day, session:'C+P / FSQ',
+      week:S.week, day:S.day, session:`W${S.week}D${S.day} · ${S.scheme.name}`,
       weightL:S.weights[0], weightR:S.weights[1]||S.weights[0],
       reps:totalReps, kgMoved:totalKg,
       duration:elapsed, durationStr:`${m}:${String(sc).padStart(2,'0')}`,
@@ -676,7 +648,7 @@ function logSetToSheet(setNum, reps, cycleTime) {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       type:'set', program:'DFW',
-      week:S.week, day:S.day, session:'C+P / FSQ',
+      week:S.week, day:S.day, session:`W${S.week}D${S.day} · ${S.scheme.name}`,
       number:setNum, reps, seconds:cycleTime,
       weightL:S.weights[0], weightR:S.weights[1]||S.weights[0],
       onTarget: cycleTime <= S.targetCadence,
