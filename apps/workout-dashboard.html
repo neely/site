@@ -375,7 +375,7 @@ function renderSummaryCards(container) {
     </div>
     <div class="sum-card c-go">
       <div class="sum-val">${streak}</div>
-      <div class="sum-lbl">Day Streak</div>
+      <div class="sum-lbl">Session Streak</div>
     </div>
     <div class="sum-card c-ember">
       <div class="sum-val">${fmtKg(thisWeekKg)}</div>
@@ -386,13 +386,21 @@ function renderSummaryCards(container) {
 
 function computeStreak() {
   if (!dayData.length) return 0;
-  const dates = new Set(dayData.map(d=>d.date));
-  let streak = 0;
-  const today = new Date();
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today - i*86400000).toISOString().slice(0,10);
-    if (dates.has(d)) streak++;
-    else if (i > 0) break;
+  // Sort session dates descending
+  const sorted = [...dayData].sort((a,b) => b.date.localeCompare(a.date));
+  // Check if streak is still alive: most recent session must be within 3 days of today
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mostRecent = new Date(sorted[0].date + 'T00:00:00');
+  const daysSinceLast = Math.round((today - mostRecent) / 86400000);
+  if (daysSinceLast > 3) return 0;
+  // Count consecutive sessions where gap between each pair is ≤ 3 days
+  let streak = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i-1].date + 'T00:00:00');
+    const curr = new Date(sorted[i].date + 'T00:00:00');
+    const gap  = Math.round((prev - curr) / 86400000);
+    if (gap <= 3) streak++;
+    else break;
   }
   return streak;
 }
@@ -690,7 +698,7 @@ function renderHeatmap(container) {
       date.setDate(start.getDate() + w*7 + d);
       if (date > today) { col.appendChild(document.createElement('div')); continue; }
 
-      const ds   = date.toISOString().slice(0,10);
+      const ds   = toLocalYMD(date);
       const kg   = kgMap[ds] || 0;
       const cell = document.createElement('div');
       cell.className = 'hm-cell';
@@ -821,6 +829,14 @@ function renderError(type, msg) {
 // ══════════════════════════════════════════════════
 // DATE HELPERS
 // ══════════════════════════════════════════════════
+function toLocalYMD(date) {
+  // Serialize a Date to "YYYY-MM-DD" using LOCAL time (not UTC)
+  // toISOString() uses UTC and causes off-by-one in US timezones
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 function fmtDateShort(ds) {
   const d = new Date(ds + 'T00:00:00');
   return d.toLocaleDateString('en', { month:'short', day:'numeric' });
