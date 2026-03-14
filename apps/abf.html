@@ -146,6 +146,21 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .sum-chip{background:var(--surface2);border-radius:4px;padding:.15rem .4rem;font-size:.6rem;color:var(--dim)}
 .btn-secondary{width:100%;padding:.95rem;background:transparent;border:1px solid var(--border);border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:.78rem;letter-spacing:.1em;color:var(--dim);cursor:pointer;transition:color .15s,border-color .15s}
 .btn-secondary:hover{color:var(--ink);border-color:var(--ink)}
+
+/* ── PAUSE ── */
+.btn-pause {
+  padding: .4rem .7rem; background: transparent;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace; font-size: .55rem;
+  letter-spacing: .08em; color: var(--dim); cursor: pointer;
+  transition: color .15s, border-color .15s; flex-shrink: 0; opacity: .5;
+}
+.btn-pause:hover { opacity: 1; color: var(--gold, var(--accent, #e3b341)); border-color: var(--gold, var(--accent, #e3b341)); }
+.btn-pause.paused {
+  opacity: 1; color: var(--go); border-color: var(--go);
+  font-weight: 500; font-size: .6rem; letter-spacing: .06em;
+}
+
 </style>
 </head>
 <body>
@@ -260,6 +275,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div class="stat-pill"><div class="spv" id="abc-s-reps">0</div><div class="spl">Reps</div></div>
     <div class="stat-pill"><div class="spv" id="abc-s-tons">0</div><div class="spl">kg moved</div></div>
     <div class="end-wrap">
+      <button class="btn-pause" id="abc-pause-btn" onclick="pauseSession()">⏸ Pause</button>
       <button class="btn-end" id="abc-end-btn" onclick="showEndConfirm('abc')">End</button>
       <div class="end-confirm" id="abc-end-confirm">
         <span>done?</span>
@@ -310,6 +326,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div class="stat-pill"><div class="spv" id="press-s-reps">0</div><div class="spl">Reps</div></div>
     <div class="stat-pill"><div class="spv" id="press-s-tons">0</div><div class="spl">kg moved</div></div>
     <div class="end-wrap">
+      <button class="btn-pause" id="press-pause-btn" onclick="pauseSession()">⏸ Pause</button>
       <button class="btn-end" id="press-end-btn" onclick="showEndConfirm('press')">End</button>
       <div class="end-confirm" id="press-end-confirm">
         <span>done?</span>
@@ -785,6 +802,63 @@ function logSessionSummary() {
     method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload),
   }).catch(()=>{});
+}
+
+
+// ════════════════════════════════════════════════════
+// PAUSE / RESUME
+// ════════════════════════════════════════════════════
+let _paused           = false;
+let _pauseStart       = null;
+let _workoutAtPause   = 0;
+let _abcElapsedAtPause   = 0;
+let _pressElapsedAtPause = 0;
+
+function pauseSession() {
+  if (_paused) { resumeSession(); return; }
+  _paused = true;
+  _pauseStart = Date.now();
+  _workoutAtPause = S.totalElapsed;
+
+  if (S.abcPhase === 'running' && S.abcRoundStart) {
+    _abcElapsedAtPause = Math.floor((Date.now() - S.abcRoundStart) / 1000);
+  }
+  if (S.pressPhase === 'running' && S.pressSetStart) {
+    _pressElapsedAtPause = Math.floor((Date.now() - S.pressSetStart) / 1000);
+  }
+
+  clearInterval(S.sessionInterval);
+  clearInterval(arcInterval);
+  relWakeLock();
+
+  document.querySelectorAll('.btn-pause').forEach(btn => {
+    btn.textContent = '▶ RESUME'; btn.classList.add('paused');
+  });
+  document.querySelectorAll('.tap-btn').forEach(b => b.style.opacity = '0.4');
+}
+
+function resumeSession() {
+  if (!_paused) return;
+  const pausedMs = Date.now() - _pauseStart;
+  _paused = false;
+
+  S.sessionStart = Date.now() - _workoutAtPause * 1000;
+
+  if (S.abcPhase === 'running' && S.abcRoundStart) {
+    S.abcRoundStart = Date.now() - _abcElapsedAtPause * 1000;
+    startEmomArc();
+  }
+  if (S.pressPhase === 'running' && S.pressSetStart) {
+    S.pressSetStart = Date.now() - _pressElapsedAtPause * 1000;
+  }
+
+  startSessionClock();
+  reqWakeLock();
+
+  document.querySelectorAll('.btn-pause').forEach(btn => {
+    btn.textContent = '⏸ Pause'; btn.classList.remove('paused');
+  });
+  document.querySelectorAll('.tap-btn').forEach(b => b.style.opacity = '');
 }
 
 // ════════════════════════════════════════════════════

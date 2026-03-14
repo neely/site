@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>DFW</title>
+<title>DFW 2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -13,18 +13,14 @@
 :root{
   --bg:#0f0f10;--surface:#1a1a1c;--surface2:#242426;
   --border:#2e2e30;--ink:#ededea;--dim:#6b6b68;
-  --accent:#e8c547;--red:#e5837a;--go:#4caf7d;--go-dark:#0f1a13;
+  --accent:#c084fc;   /* purple — distinguishes from DFW gold */
+  --accent2:#e5837a;  /* red for over-target */
+  --go:#4caf7d;--go-dark:#0f1a13;
 }
 
 html,body{height:100%}
-body{
-  background:var(--bg);color:var(--ink);
-  font-family:'IBM Plex Mono',monospace;
-  min-height:100vh;display:flex;flex-direction:column;
-  max-width:480px;margin:0 auto;overflow-x:hidden;
-}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace;min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow-x:hidden}
 
-/* ── SCREENS ── */
 .screen{display:none;flex-direction:column;flex:1;padding:2rem 1.5rem;animation:fadeIn .25s ease}
 .screen.active{display:flex}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -37,7 +33,6 @@ body{
 
 .sel-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem}
 .sel-group label{display:block;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.4rem}
-
 .seg{display:flex;background:var(--surface);border-radius:6px;border:1px solid var(--border);overflow:hidden}
 .seg-btn{flex:1;padding:.5rem 0;font-family:'IBM Plex Mono',monospace;font-size:.8rem;background:transparent;border:none;color:var(--dim);cursor:pointer;transition:background .15s,color .15s}
 .seg-btn.active{background:var(--surface2);color:var(--ink)}
@@ -65,7 +60,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .btn-primary{width:100%;padding:1.1rem;background:var(--go);border:none;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:500;letter-spacing:.08em;color:var(--go-dark);cursor:pointer;transition:background .15s,transform .1s;margin-top:auto}
 .btn-primary:active{transform:scale(.98);background:#3d9e68}
 
-/* ── SESSION HEADER ── */
+/* ── SESSION ── */
 #session{padding:0;justify-content:stretch}
 .sess-hdr{padding:1rem 1.5rem .75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .wk-clock{display:flex;flex-direction:column}
@@ -76,14 +71,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .sess-info .scheme-big{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--accent)}
 
 /* ── CADENCE AREA ── */
-.cadence-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1.5rem;gap:.25rem;position:relative}
+.cadence-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1.5rem;gap:.25rem}
 .cadence-ctx{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
 .cadence-timer{font-family:'IBM Plex Mono',monospace;font-size:clamp(5rem,22vw,7rem);font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);transition:color .3s}
-.cadence-timer.over{color:var(--red)}
+.cadence-timer.over{color:var(--accent2)}
 .cadence-timer.idle{color:var(--dim)}
 .target-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem}
 .target-pip{width:6px;height:6px;border-radius:50%;background:var(--go);flex-shrink:0}
-.target-pip.over{background:var(--red)}
+.target-pip.over{background:var(--accent2)}
 .target-lbl{font-size:.65rem;color:var(--dim);letter-spacing:.08em}
 .rep-badge-row{display:flex;align-items:center;gap:1rem;margin-top:1rem}
 .rep-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem 1rem;font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--ink);line-height:1}
@@ -91,38 +86,23 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .rep-meta .wt{color:var(--accent);font-size:.72rem}
 .last-row{font-size:.65rem;color:var(--dim);margin-top:.75rem;min-height:1.2em;letter-spacing:.05em}
 .last-row .good{color:var(--go)}
-.last-row .slow{color:var(--red)}
+.last-row .slow{color:var(--accent2)}
 
 /* ── TAP BUTTON ── */
-.tap-zone{
-  margin:0 1.5rem;
-  border-radius:14px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:.15rem;
-  font-family:'IBM Plex Mono',monospace;
-  cursor:pointer;user-select:none;-webkit-user-select:none;
-  flex-shrink:0;
-  transition:background .15s,transform .08s;
-  padding:1.2rem;
-  min-height:100px;
-  position:relative;overflow:hidden;
-}
+.tap-zone{margin:0 1.5rem;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;font-family:'IBM Plex Mono',monospace;cursor:pointer;user-select:none;-webkit-user-select:none;flex-shrink:0;transition:background .15s,transform .08s;padding:1.2rem;min-height:100px}
 .tap-zone:active{transform:scale(.97)}
-/* idle state */
 .tap-zone.idle{background:var(--go);color:var(--go-dark)}
-/* running state */
-.tap-zone.running{background:#1c3022;border:1.5px solid var(--go);color:var(--go)}
-
+.tap-zone.running{background:#1f0f2e;color:var(--accent);border:1.5px solid var(--accent)}
 .tap-main{font-size:.9rem;font-weight:500;letter-spacing:.1em}
-.tap-sub{font-size:.88rem;letter-spacing:.04em;opacity:.85;font-weight:500}
+.tap-sub{font-size:.88rem;letter-spacing:.04em;opacity:.9;font-weight:500}
 
-/* ── LOG AREA ── */
+/* ── LOG ── */
 .log-area{padding:.75rem 1.5rem .5rem;flex-shrink:0}
 .log-lbl{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.4rem}
 .log-scroll{display:flex;gap:.35rem;flex-wrap:wrap}
 .set-chip{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;font-size:.62rem;color:var(--dim);transition:all .5s}
-.set-chip.fresh{border-color:#2d6b4a;color:var(--go)}
-.set-chip.slow{border-color:#6b2e2a;color:var(--red)}
+.set-chip.fresh{border-color:#4a2060;color:var(--accent)}
+.set-chip.slow{border-color:#6b2e2a;color:var(--accent2)}
 
 /* ── BOTTOM BAR ── */
 .sess-bottom{padding:.75rem 1.5rem 1.5rem;display:flex;gap:.6rem;border-top:1px solid var(--border)}
@@ -130,10 +110,10 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .stat-pill .val{font-size:1rem;font-weight:500;color:var(--ink)}
 .stat-pill .lbl{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 .btn-end{padding:.4rem .7rem;background:transparent;border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.55rem;letter-spacing:.08em;color:var(--dim);cursor:pointer;transition:color .15s,border-color .15s;flex-shrink:0;opacity:.5}
-.btn-end:hover{color:var(--red);border-color:var(--red);opacity:1}
+.btn-end:hover{color:var(--accent2);border-color:var(--accent2);opacity:1}
 .end-confirm-row{display:flex}
 .btn-end-yes,.btn-end-no{padding:.35rem .6rem;font-family:'IBM Plex Mono',monospace;font-size:.55rem;letter-spacing:.08em;border-radius:5px;cursor:pointer;border:1px solid var(--border);transition:all .15s}
-.btn-end-yes{background:var(--red);color:#1a0a08;border-color:var(--red)}
+.btn-end-yes{background:var(--accent2);color:#1a0a08;border-color:var(--accent2)}
 .btn-end-no{background:transparent;color:var(--dim)}
 
 /* ── SUMMARY ── */
@@ -170,7 +150,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <!-- SETUP -->
 <div id="setup" class="screen active">
   <div class="prog-badge">Neupert · Pavel</div>
-  <div class="prog-title">Dry <em>Fighting</em> Weight</div>
+  <div class="prog-title">DFW <em>2.0</em></div>
   <div class="prog-sub">30 min · C+P alternating FSQ · 5RM bells</div>
 
   <div class="sel-row">
@@ -195,7 +175,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
   <div class="scheme-card">
     <div class="scheme-lbl">Today's Scheme</div>
-    <div class="scheme-val" id="scheme-name">Ladders 1–2–3</div>
+    <div class="scheme-val" id="scheme-name">Ladders 2-3-4</div>
     <div class="scheme-desc" id="scheme-desc"></div>
   </div>
 
@@ -221,7 +201,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <span>sec</span>
       </div>
     </div>
-    <div class="cadence-hint">Full cycle: your work + rest combined. Tap start, tap when set is done.</div>
+    <div class="cadence-hint">Full cycle: work + rest combined. Tap start, tap when set is done.</div>
   </div>
 
   <button class="btn-primary" onclick="startSession()">Start Session →</button>
@@ -236,7 +216,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     </div>
     <div class="sess-info">
       <div class="day-lbl" id="sess-day-lbl">Week 1 · Day 1</div>
-      <div class="scheme-big" id="sess-scheme-name">Ladders 1–2–3</div>
+      <div class="scheme-big" id="sess-scheme-name">Ladders 2-3-4</div>
     </div>
   </div>
 
@@ -248,7 +228,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <div class="target-lbl" id="target-lbl">target: — s</div>
     </div>
     <div class="rep-badge-row">
-      <div class="rep-badge" id="rep-badge">1</div>
+      <div class="rep-badge" id="rep-badge">2</div>
       <div class="rep-meta">
         <div>reps each side</div>
         <div class="wt" id="weight-reminder">24 kg</div>
@@ -302,24 +282,25 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 <script>
 // ════════════════════════════════════════════════════
-// PROGRAM DATA
+// PROGRAM DATA  (from Neupert DFW 2.0 scheme)
 // ════════════════════════════════════════════════════
 const SCHEMES = {
-  '1-1':{ name:'Ladders 1–2–3',   rungs:[1,2,3],   type:'ladder' },
-  '1-2':{ name:'Sets of 1',        rungs:[1],        type:'fixed'  },
-  '1-3':{ name:'Sets of 2',        rungs:[2],        type:'fixed'  },
-  '2-1':{ name:'Ladders 1–2–3',   rungs:[1,2,3],   type:'ladder' },
-  '2-2':{ name:'Sets of 1',        rungs:[1],        type:'fixed'  },
-  '2-3':{ name:'Sets of 3',        rungs:[3],        type:'fixed'  },
-  '3-1':{ name:'Ladders 1–2–3–4', rungs:[1,2,3,4], type:'ladder' },
-  '3-2':{ name:'Sets of 2',        rungs:[2],        type:'fixed'  },
-  '3-3':{ name:'Sets of 3',        rungs:[3],        type:'fixed'  },
-  '4-1':{ name:'Ladders 1–2–3–4–5', rungs:[1,2,3,4,5], type:'ladder' },
-  '4-2':{ name:'Sets of 3',        rungs:[3],        type:'fixed'  },
-  '4-3':{ name:'Alt 3s & 4s',      rungs:[3,4],     type:'alt'    },
+  '1-1':{ name:'Ladders 2-3-4',     rungs:[2,3,4],     type:'ladder' },
+  '1-2':{ name:'Sets of 2',          rungs:[2],          type:'fixed'  },
+  '1-3':{ name:'Sets of 3',          rungs:[3],          type:'fixed'  },
+  '2-1':{ name:'Ladders 2-3-4',     rungs:[2,3,4],     type:'ladder' },
+  '2-2':{ name:'Sets of 2',          rungs:[2],          type:'fixed'  },
+  '2-3':{ name:'Sets of 4',          rungs:[4],          type:'fixed'  },
+  '3-1':{ name:'Ladders 2-3-4-6',   rungs:[2,3,4,6],   type:'ladder' },
+  '3-2':{ name:'Sets of 3',          rungs:[3],          type:'fixed'  },
+  '3-3':{ name:'Sets of 4',          rungs:[4],          type:'fixed'  },
+  '4-1':{ name:'Ladders 2-3-4-6-8', rungs:[2,3,4,6,8], type:'ladder' },
+  '4-2':{ name:'Sets of 4',          rungs:[4],          type:'fixed'  },
+  '4-3':{ name:'Alt 4s & 6s',        rungs:[4,6],        type:'alt'    },
 };
+
 const DESCS = {
-  ladder:'Complete each rung (1→2→3 reps) C+P then FSQ each rung. Repeat ladders for 30 min.',
+  ladder:'Complete each rung (C+P then FSQ for that rep count). Repeat ladders for 30 min.',
   fixed: 'Perform sets of the same rep count, C+P then FSQ each set. 30 min.',
   alt:   'Alternate between the two rep counts, C+P then FSQ each set. 30 min.',
 };
@@ -329,19 +310,12 @@ const DESCS = {
 // ════════════════════════════════════════════════════
 const S = {
   week:1, day:1,
-  bellMode:'single',
-  weights:[24],
+  bellMode:'single', weights:[24],
   targetCadence:60,
   scheme:null,
-  // session
-  sets:[],
-  rungIdx:0,
-  setPhase:'idle',    // 'idle' | 'running'
-  sessionStart:null,
-  totalElapsed:0,
-  workoutInterval:null,
-  cadenceInterval:null,
-  setStart:null,
+  sets:[], rungIdx:0, setPhase:'idle',
+  sessionStart:null, totalElapsed:0,
+  workoutInterval:null, cadenceInterval:null, setStart:null,
 };
 
 // ════════════════════════════════════════════════════
@@ -349,8 +323,7 @@ const S = {
 // ════════════════════════════════════════════════════
 let _wl = null;
 async function reqWakeLock() {
-  try { if ('wakeLock' in navigator) _wl = await navigator.wakeLock.request('screen'); }
-  catch(e) {}
+  try { if ('wakeLock' in navigator) _wl = await navigator.wakeLock.request('screen'); } catch(e) {}
 }
 function relWakeLock() { if (_wl) { _wl.release().catch(()=>{}); _wl = null; } }
 document.addEventListener('visibilitychange', async () => {
@@ -397,26 +370,24 @@ function setBellMode(mode) {
 function startSession() {
   const w1 = parseFloat(document.getElementById('w1')?.value) || 24;
   const w2 = parseFloat(document.getElementById('w2')?.value) || w1;
-  S.weights        = S.bellMode === 'single' ? [w1] : [w1, w2];
-  S.targetCadence  = parseInt(document.getElementById('cadence-target')?.value) || 60;
-  S.sets           = [];
-  S.rungIdx        = 0;
-  S.setPhase       = 'idle';
-  S.sessionStart   = Date.now();
-  S.totalElapsed   = 0;
-
+  S.weights       = S.bellMode === 'single' ? [w1] : [w1, w2];
+  S.targetCadence = parseInt(document.getElementById('cadence-target')?.value) || 60;
+  S.sets          = [];
+  S.rungIdx       = 0;
+  S.setPhase      = 'idle';
+  S.sessionStart  = Date.now();
+  S.totalElapsed  = 0;
   updateSchemeCard();
 
   const wLabel = S.weights.length === 1
     ? `${S.weights[0]} kg`
     : `${S.weights[0]} / ${S.weights[1]} kg`;
-
-  document.getElementById('sess-day-lbl').textContent     = `Week ${S.week} · Day ${S.day}`;
-  document.getElementById('sess-scheme-name').textContent  = S.scheme.name;
-  document.getElementById('weight-reminder').textContent   = wLabel;
-  document.getElementById('target-lbl').textContent        = `target: ${S.targetCadence}s`;
-  document.getElementById('set-log').innerHTML             = '';
-  document.getElementById('last-row').innerHTML            = '';
+  document.getElementById('sess-day-lbl').textContent    = `Week ${S.week} · Day ${S.day}`;
+  document.getElementById('sess-scheme-name').textContent = S.scheme.name;
+  document.getElementById('weight-reminder').textContent  = wLabel;
+  document.getElementById('target-lbl').textContent       = `target: ${S.targetCadence}s`;
+  document.getElementById('set-log').innerHTML            = '';
+  document.getElementById('last-row').innerHTML           = '';
   updateStats();
   resetTapBtn();
   showScreen('session');
@@ -425,7 +396,7 @@ function startSession() {
 }
 
 // ════════════════════════════════════════════════════
-// WORKOUT CLOCK (30 min countdown, top left)
+// WORKOUT CLOCK (30 min countdown)
 // ════════════════════════════════════════════════════
 function startWorkoutClock() {
   clearInterval(S.workoutInterval);
@@ -442,7 +413,7 @@ function startWorkoutClock() {
 }
 
 // ════════════════════════════════════════════════════
-// CADENCE CLOCK (big center number — counts up, turns red past target)
+// CADENCE CLOCK (big center — counts up, red past target)
 // ════════════════════════════════════════════════════
 function startCadenceClock() {
   clearInterval(S.cadenceInterval);
@@ -450,7 +421,6 @@ function startCadenceClock() {
   const timerEl = document.getElementById('cadence-timer');
   const pipEl   = document.getElementById('target-pip');
   timerEl.classList.remove('idle','over');
-
   S.cadenceInterval = setInterval(() => {
     const el = Math.floor((Date.now() - S.setStart) / 1000);
     const m  = Math.floor(el / 60);
@@ -466,23 +436,24 @@ function stopCadenceClock() {
   return Math.floor((Date.now() - S.setStart) / 1000);
 }
 
-function resetCadenceDisplay() {
-  const timerEl = document.getElementById('cadence-timer');
-  timerEl.textContent = '0';
-  timerEl.className   = 'cadence-timer idle';
-  document.getElementById('target-pip').classList.remove('over');
-  document.getElementById('rep-badge').textContent = currentReps();
-  document.getElementById('cadence-ctx').textContent = 'READY';
-}
-
 // ════════════════════════════════════════════════════
-// SPLIT TIMER (inside tap button)
+// TAP BUTTON
 // ════════════════════════════════════════════════════
 function resetTapBtn() {
   const zone = document.getElementById('tap-zone');
   zone.className = 'tap-zone idle';
   document.getElementById('tap-main').textContent = 'START FIRST SET';
-  document.getElementById('tap-sub').textContent  = tapSubText();
+  document.getElementById('tap-sub').textContent  = tapSubLabel();
+  document.getElementById('cadence-timer').textContent = '0';
+  document.getElementById('cadence-timer').className   = 'cadence-timer idle';
+  document.getElementById('target-pip').classList.remove('over');
+  document.getElementById('cadence-ctx').textContent   = 'READY';
+  document.getElementById('rep-badge').textContent     = currentReps();
+}
+
+function tapSubLabel() {
+  const reps = currentReps();
+  return `${reps} rep${reps>1?'s':''} · C+P → FSQ`;
 }
 
 // ════════════════════════════════════════════════════
@@ -490,19 +461,16 @@ function resetTapBtn() {
 // ════════════════════════════════════════════════════
 function handleTap() {
   if (S.setPhase === 'idle') {
-    // ── Start set ──
     S.setPhase = 'running';
     startCadenceClock();
     document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
-    const zone = document.getElementById('tap-zone');
-    zone.className = 'tap-zone running';
+    document.getElementById('tap-zone').className      = 'tap-zone running';
     const setNum = S.sets.length + 1;
     document.getElementById('tap-main').textContent = `DONE SET ${setNum}`;
-    document.getElementById('tap-sub').textContent  = tapSubText();
+    document.getElementById('tap-sub').textContent  = tapSubLabel();
     document.getElementById('last-row').innerHTML   = '';
 
   } else {
-    // ── Log set ──
     const cadenceTime = stopCadenceClock();
     const reps        = currentReps();
     const totalWeight = S.weights.reduce((a,b) => a+b, 0);
@@ -520,15 +488,14 @@ function handleTap() {
     addChip(reps, cadenceTime, over);
     logSetToSheet(S.sets.length, reps, cadenceTime);
 
-    // ── Immediately start next set ──
+    // auto-start next
     S.setPhase = 'running';
     startCadenceClock();
     document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
-    const zone = document.getElementById('tap-zone');
-    zone.className = 'tap-zone running';
+    document.getElementById('tap-zone').className      = 'tap-zone running';
     const nextSetNum = S.sets.length + 1;
     document.getElementById('tap-main').textContent = `DONE SET ${nextSetNum}`;
-    document.getElementById('tap-sub').textContent  = tapSubText();
+    document.getElementById('tap-sub').textContent  = tapSubLabel();
     document.getElementById('rep-badge').textContent = currentReps();
   }
 }
@@ -537,29 +504,10 @@ function currentReps() {
   return S.scheme.rungs[S.rungIdx % S.scheme.rungs.length];
 }
 
-function tapSubLabel() {
-  const reps = currentReps();
-  // Within each ladder rung: C+P first, then FSQ same count
-  // Track position within rung cycle for label clarity
-  return `${reps} rep${reps>1?'s':''} · C+P → FSQ`;
-}
-
-function tapSubText() {
-  const reps = currentReps();
-  const rungs = S.scheme.rungs;
-  const pos   = S.rungIdx % rungs.length;
-  if (rungs.length === 1) return `${reps} rep${reps>1?'s':''} · C+P then FSQ`;
-  // ladder: show position e.g. "Rung 2 of 3 · ×2 C+P then FSQ"
-  return `Rung ${pos+1} of ${rungs.length} · ×${reps} C+P then FSQ`;
-}
-
 function updateStats() {
-  const totalSets = S.sets.length;
-  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
-  const totalTons = S.sets.reduce((a,s) => a+s.tonnage, 0) / 1000;
-  document.getElementById('stat-sets').textContent = totalSets;
-  document.getElementById('stat-reps').textContent = totalReps;
-  document.getElementById('stat-tons').textContent = totalTons.toFixed(2);
+  document.getElementById('stat-sets').textContent = S.sets.length;
+  document.getElementById('stat-reps').textContent = S.sets.reduce((a,s)=>a+s.reps,0);
+  document.getElementById('stat-tons').textContent = (S.sets.reduce((a,s)=>a+s.tonnage,0)/1000).toFixed(2);
 }
 
 function addChip(reps, time, over) {
@@ -592,29 +540,28 @@ function endSession() {
   logSessionToSheet();
 
   const totalSets = S.sets.length;
-  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
-  const totalTons = S.sets.reduce((a,s) => a+s.tonnage, 0);
+  const totalReps = S.sets.reduce((a,s)=>a+s.reps,0);
+  const totalTons = S.sets.reduce((a,s)=>a+s.tonnage,0);
   const elapsed   = S.totalElapsed;
-  const m  = Math.floor(elapsed / 60);
-  const sc = elapsed % 60;
+  const m  = Math.floor(elapsed/60);
+  const sc = elapsed%60;
   const avgCadence = totalSets > 0
-    ? Math.round(S.sets.reduce((a,s) => a+s.cycleTime, 0) / totalSets)
+    ? Math.round(S.sets.reduce((a,s)=>a+s.cycleTime,0)/totalSets)
     : 0;
 
   document.getElementById('sum-sets').textContent = totalSets;
   document.getElementById('sum-reps').textContent = totalReps;
-  document.getElementById('sum-tons').textContent = totalTons.toLocaleString() + ' kg';
+  document.getElementById('sum-tons').textContent = totalTons.toLocaleString()+' kg';
   document.getElementById('sum-time').textContent = `${m}:${String(sc).padStart(2,'0')}`;
-  document.getElementById('sum-avg').textContent  = avgCadence + 's avg';
+  document.getElementById('sum-avg').textContent  = avgCadence+'s avg';
 
   const hist = document.getElementById('sum-history');
   hist.innerHTML = '';
-  S.sets.forEach((set, i) => {
+  S.sets.forEach((set,i) => {
     const chip = document.createElement('div');
-    const over = set.cycleTime > S.targetCadence;
     chip.className   = 'h-chip';
     chip.textContent = `${i+1}: ×${set.reps} ${set.cycleTime}s`;
-    if (over) chip.style.color = 'var(--red)';
+    if (set.cycleTime > S.targetCadence) chip.style.color = 'var(--accent2)';
     hist.appendChild(chip);
   });
 
@@ -628,7 +575,7 @@ function goSetup() {
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
@@ -640,16 +587,17 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5
 function logSessionToSheet() {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
   const elapsed   = S.totalElapsed;
-  const m  = Math.floor(elapsed / 60);
-  const sc = elapsed % 60;
-  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
-  const totalKg   = S.sets.reduce((a,s) => a+s.tonnage, 0);
+  const m  = Math.floor(elapsed/60);
+  const sc = elapsed%60;
+  const totalReps = S.sets.reduce((a,s)=>a+s.reps,0);
+  const totalKg   = S.sets.reduce((a,s)=>a+s.tonnage,0);
   fetch(APPS_SCRIPT_URL, {
     method:'POST', mode:'no-cors',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      type:'session', program:'DFW',
-      week:S.week, day:S.day, session:`W${S.week}D${S.day} · ${S.scheme.name}`,
+      type:'session', program:'DFW2',
+      week:S.week, day:S.day,
+      session:`W${S.week}D${S.day} · ${S.scheme.name}`,
       weightL:S.weights[0], weightR:S.weights[1]||S.weights[0],
       reps:totalReps, kgMoved:totalKg,
       duration:elapsed, durationStr:`${m}:${String(sc).padStart(2,'0')}`,
@@ -663,8 +611,9 @@ function logSetToSheet(setNum, reps, cycleTime) {
     method:'POST', mode:'no-cors',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      type:'set', program:'DFW',
-      week:S.week, day:S.day, session:`W${S.week}D${S.day} · ${S.scheme.name}`,
+      type:'set', program:'DFW2',
+      week:S.week, day:S.day,
+      session:`W${S.week}D${S.day} · ${S.scheme.name}`,
       number:setNum, reps, seconds:cycleTime,
       weightL:S.weights[0], weightR:S.weights[1]||S.weights[0],
       onTarget: cycleTime <= S.targetCadence,
@@ -740,7 +689,7 @@ function resumeSession() {
 // INIT
 // ════════════════════════════════════════════════════
 segInit('week-seg', 'week');
-segInit('day-seg', 'day');
+segInit('day-seg',  'day');
 updateSchemeCard();
 </script>
 </body>

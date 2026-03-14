@@ -161,6 +161,21 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
 .elbow-banner strong{color:var(--warn)}
 .btn-back{width:100%;padding:.9rem;background:transparent;border:1px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.1em;color:var(--dim);cursor:pointer;transition:all .15s}
 .btn-back:hover{color:var(--ink);border-color:var(--ink)}
+
+/* ── PAUSE ── */
+.btn-pause {
+  padding: .4rem .7rem; background: transparent;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace; font-size: .55rem;
+  letter-spacing: .08em; color: var(--dim); cursor: pointer;
+  transition: color .15s, border-color .15s; flex-shrink: 0; opacity: .5;
+}
+.btn-pause:hover { opacity: 1; color: var(--gold, var(--accent, #e3b341)); border-color: var(--gold, var(--accent, #e3b341)); }
+.btn-pause.paused {
+  opacity: 1; color: var(--go); border-color: var(--go);
+  font-weight: 500; font-size: .6rem; letter-spacing: .06em;
+}
+
 </style>
 </head>
 <body>
@@ -281,6 +296,7 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
       <div class="sp"><div class="sv" id="abc-s-reps">0</div><div class="sl">Reps</div></div>
       <div class="sp"><div class="sv" id="abc-s-kg">0</div><div class="sl">kg</div></div>
       <div class="end-wrap">
+        <button class="btn-pause" id="a-pause-btn" onclick="pauseSession()">⏸ Pause</button>
         <button class="btn-end" id="a-end-btn" onclick="showEnd('a')">End</button>
         <div class="end-confirm" id="a-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('a')">No</button></div>
       </div>
@@ -291,18 +307,20 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
   <!-- CARRIES -->
   <div class="phase-panel" id="a-p1">
     <div class="big-num-area">
-      <div class="bna-ctx">FARMER CARRY FINISHER</div>
+      <div class="bna-ctx" id="carry-ctx">FARMER CARRY FINISHER</div>
       <div class="bna-display">
-        <div class="bna-main" id="carry-done">0</div>
-        <div class="bna-sep">/</div>
-        <div class="bna-sub">6</div>
+        <div class="bna-main" id="carry-timer" style="color:var(--dim)">0</div>
       </div>
-      <div class="bna-detail">Single-arm · 3 lengths each side · <strong id="carry-wt">16 kg</strong></div>
-      <div class="bna-last" style="margin-top:.75rem"><span class="note">Heavy as possible with perfect posture.<br>Switch arm each tap. Posterior chain · lat · oblique.</span></div>
+      <div class="bna-detail">Single-arm · 3 lengths each side · <strong id="carry-wt">16 kg</strong><br>
+        <span style="font-size:.75rem;color:var(--dim)">Suitcase or rack — your call. Switch arm each carry.</span>
+      </div>
+      <div class="bna-last" style="margin-top:.5rem">
+        <span class="note" id="carry-progress">0 / 6 carries done</span>
+      </div>
     </div>
     <button class="tap-btn tide-go" id="carry-tap" onclick="carryTap()">
       <span id="carry-tap-lbl">START — LEFT ARM</span>
-      <span class="tb-sub">walk 3 lengths, tap when done</span>
+      <span class="tb-sub" id="carry-tap-sub">walk 3 lengths, tap when done</span>
     </button>
     <div class="log-strip"><div class="log-label">Carries</div><div class="log-chips" id="carry-chips"></div></div>
     <div class="stat-bar">
@@ -310,6 +328,7 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
       <div class="sp"><div class="sv" id="abc-s-rounds-2">0</div><div class="sl">ABC Rounds</div></div>
       <div class="sp"><div class="sv" id="abc-s-kg-2">0</div><div class="sl">kg moved</div></div>
       <div class="end-wrap">
+        <button class="btn-pause" id="a2-pause-btn" onclick="pauseSession()">⏸ Pause</button>
         <button class="btn-end" id="a2-end-btn" onclick="showEnd('a2')">End</button>
         <div class="end-confirm" id="a2-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('a2')">No</button></div>
       </div>
@@ -359,6 +378,7 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
       <div class="sp"><div class="sv" id="press-s-reps">0</div><div class="sl">Reps</div></div>
       <div class="sp"><div class="sv" id="press-s-kg">0</div><div class="sl">kg</div></div>
       <div class="end-wrap">
+        <button class="btn-pause" id="b-pause-btn" onclick="pauseSession()">⏸ Pause</button>
         <button class="btn-end" id="b-end-btn" onclick="showEnd('b')">End</button>
         <div class="end-confirm" id="b-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('b')">No</button></div>
       </div>
@@ -388,6 +408,7 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
       <div class="sp"><div class="sv" id="snatch-s-reps">0</div><div class="sl">Reps</div></div>
       <div class="sp"><div class="sv" id="press-s-reps-2">0</div><div class="sl">Press Reps</div></div>
       <div class="end-wrap">
+        <button class="btn-pause" id="b2-pause-btn" onclick="pauseSession()">⏸ Pause</button>
         <button class="btn-end" id="b2-end-btn" onclick="showEnd('b2')">End</button>
         <div class="end-confirm" id="b2-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('b2')">No</button></div>
       </div>
@@ -417,6 +438,7 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
       <div class="sp"><div class="sv" id="pp-s-push">0</div><div class="sl">Pushups</div></div>
       <div class="sp"><div class="sv" id="pp-s-pull">0</div><div class="sl">Pullups</div></div>
       <div class="end-wrap">
+        <button class="btn-pause" id="b3-pause-btn" onclick="pauseSession()">⏸ Pause</button>
         <button class="btn-end" id="b3-end-btn" onclick="showEnd('b3')">End</button>
         <div class="end-confirm" id="b3-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('b3')">No</button></div>
       </div>
@@ -480,7 +502,7 @@ const S = {
   wL:16, wR:16, wSnatch:16, emomSec:90,
   sessionStart:null, sessionInterval:null, totalElapsed:0,
   abcRounds:0, abcTarget:10, abcPhase:'idle', abcStart:null, abcLog:[],
-  carryDone:0, phaseA:0,
+  carryDone:0, carryPhase:'idle', carryStart:null, carryInterval:null, phaseA:0,
   pressReps:0, pressSets:0, pressRungIdx:0, pressTarget:30,
   pressLadder:[2,3,5], pressPhase:'idle', pressSetStart:null, pressLog:[],
   snatchSets:0, snatchTarget:3, snatchPhase:'idle', snatchStart:null,
@@ -615,6 +637,12 @@ function initDayA() {
   document.getElementById('carry-done').textContent = '0';
   document.getElementById('carry-tap').className = 'tap-btn tide-go';
   document.getElementById('carry-tap-lbl').textContent = 'START — LEFT ARM';
+  document.getElementById('carry-tap-sub').textContent = 'walk 3 lengths, tap when done';
+  document.getElementById('carry-timer').textContent = '0';
+  document.getElementById('carry-timer').style.color = 'var(--dim)';
+  document.getElementById('carry-ctx').textContent = 'FARMER CARRY FINISHER';
+  document.getElementById('carry-progress').textContent = '0 / 6 carries done';
+  S.carryPhase = 'idle'; S.carryStart = null; clearInterval(S.carryInterval);
   resetArc();
   ['abc-s-rounds','abc-s-reps','abc-s-kg','abc-s-rounds-2','abc-s-kg-2','carry-s-done'].forEach(id=>{
     document.getElementById(id).textContent='0';
@@ -705,18 +733,66 @@ function abcTap() {
 // DAY A — CARRIES
 // ════════════════════════════════════════════════
 const CARRY_SIDES = ['LEFT','RIGHT','LEFT','RIGHT','LEFT','RIGHT'];
+
+function startCarryClock() {
+  clearInterval(S.carryInterval);
+  S.carryStart = Date.now();
+  const timerEl = document.getElementById('carry-timer');
+  timerEl.style.color = 'var(--tide)';
+  S.carryInterval = setInterval(() => {
+    const el = Math.floor((Date.now() - S.carryStart) / 1000);
+    const m  = Math.floor(el / 60);
+    timerEl.textContent = m > 0 ? `${m}:${String(el%60).padStart(2,'0')}` : `${el}`;
+  }, 200);
+}
+
+function stopCarryClock() {
+  clearInterval(S.carryInterval);
+  const el = Math.floor((Date.now() - S.carryStart) / 1000);
+  document.getElementById('carry-timer').style.color = 'var(--dim)';
+  return el;
+}
+
 function carryTap() {
+  if (S.carryPhase === 'idle') {
+    // start carry
+    S.carryPhase = 'running';
+    startCarryClock();
+    const side = CARRY_SIDES[S.carryDone % 6];
+    document.getElementById('carry-tap').className = 'tap-btn tide-live';
+    document.getElementById('carry-tap-lbl').textContent = `DONE — ${side} ARM`;
+    document.getElementById('carry-tap-sub').textContent = 'walking… tap when done';
+    document.getElementById('carry-ctx').textContent = `CARRY ${S.carryDone + 1} IN PROGRESS`;
+    return;
+  }
+
+  // log carry
+  const sec = stopCarryClock();
+  const side = CARRY_SIDES[S.carryDone % 6];
   S.carryDone++;
+  S.carryPhase = 'idle';
   document.getElementById('carry-done').textContent = S.carryDone;
   document.getElementById('carry-s-done').textContent = S.carryDone;
-  addChip('carry-chips', CARRY_SIDES[(S.carryDone-1)%6]+' ✓', 'done-g');
-  const next = S.carryDone < 6 ? CARRY_SIDES[S.carryDone] : null;
-  if (next) {
-    document.getElementById('carry-tap-lbl').textContent = `NEXT — ${next} ARM`;
-  } else {
-    document.getElementById('carry-tap-lbl').textContent = 'ALL CARRIES DONE ✓';
+  document.getElementById('carry-progress').textContent = `${S.carryDone} / 6 carries done`;
+  addChip('carry-chips', `${side} ${sec}s`, 'done-g');
+
+  if (S.carryDone >= 6) {
+    // all done
     document.getElementById('carry-tap').className = 'tap-btn neutral';
+    document.getElementById('carry-tap-lbl').textContent = 'ALL CARRIES DONE ✓';
+    document.getElementById('carry-tap-sub').textContent = 'Great work — session complete';
+    document.getElementById('carry-ctx').textContent = 'FINISHER COMPLETE 🎯';
+    document.getElementById('carry-timer').textContent = '✓';
+    return;
   }
+
+  // ready for next
+  const nextSide = CARRY_SIDES[S.carryDone % 6];
+  document.getElementById('carry-tap').className = 'tap-btn tide-go';
+  document.getElementById('carry-tap-lbl').textContent = `START — ${nextSide} ARM`;
+  document.getElementById('carry-tap-sub').textContent = 'walk 3 lengths, tap when done';
+  document.getElementById('carry-ctx').textContent = 'READY';
+  document.getElementById('carry-timer').textContent = '0';
 }
 
 function goPhaseA(idx) {
@@ -928,6 +1004,7 @@ function hideEnd(id) {
 function endSession() {
   clearInterval(S.sessionInterval);
   clearInterval(arcInterval);
+  clearInterval(S.carryInterval);
   relWakeLock();
   logSessionToSheet();
   buildSummary();
@@ -987,6 +1064,7 @@ function buildSummary() {
 function goSetup() {
   clearInterval(S.sessionInterval);
   clearInterval(arcInterval);
+  clearInterval(S.carryInterval);
   showScreen('setup');
 }
 
@@ -1035,6 +1113,79 @@ function logSessionToSheet() {
       duration:elapsed, durationStr:`${m}:${String(sc).padStart(2,'0')}`,
     }),
   }).catch(()=>{});
+}
+
+
+// ════════════════════════════════════════════════════
+// PAUSE / RESUME
+// ════════════════════════════════════════════════════
+let _paused = false;
+let _pauseStart = null;
+let _workoutAtPause = 0;
+let _abcElapsed = 0, _pressElapsed = 0, _snatchElapsed = 0;
+let _ppElapsed = 0, _carryElapsed = 0;
+
+function pauseSession() {
+  if (_paused) { resumeSession(); return; }
+  _paused = true;
+  _pauseStart = Date.now();
+  _workoutAtPause = S.totalElapsed;
+
+  if (S.abcPhase === 'running' && S.abcStart)
+    _abcElapsed = Math.floor((Date.now() - S.abcStart) / 1000);
+  if (S.pressPhase === 'running' && S.pressSetStart)
+    _pressElapsed = Math.floor((Date.now() - S.pressSetStart) / 1000);
+  if (S.snatchPhase === 'running' && S.snatchStart)
+    _snatchElapsed = Math.floor((Date.now() - S.snatchStart) / 1000);
+  if (S.ppPhase === 'running' && S.ppStart)
+    _ppElapsed = Math.floor((Date.now() - S.ppStart) / 1000);
+  if (S.carryPhase === 'running' && S.carryStart)
+    _carryElapsed = Math.floor((Date.now() - S.carryStart) / 1000);
+
+  clearInterval(S.sessionInterval);
+  clearInterval(arcInterval);
+  clearInterval(S.carryInterval);
+  relWakeLock();
+
+  document.querySelectorAll('.btn-pause').forEach(btn => {
+    btn.textContent = '\u25b6 RESUME'; btn.classList.add('paused');
+  });
+  ['abc-tap','carry-tap','press-tap','snatch-tap','pp-tap'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '0.4';
+  });
+}
+
+function resumeSession() {
+  if (!_paused) return;
+  _paused = false;
+  S.sessionStart = Date.now() - _workoutAtPause * 1000;
+
+  if (S.abcPhase === 'running' && S.abcStart) {
+    S.abcStart = Date.now() - _abcElapsed * 1000;
+    startArc();
+  }
+  if (S.pressPhase === 'running' && S.pressSetStart)
+    S.pressSetStart = Date.now() - _pressElapsed * 1000;
+  if (S.snatchPhase === 'running' && S.snatchStart)
+    S.snatchStart = Date.now() - _snatchElapsed * 1000;
+  if (S.ppPhase === 'running' && S.ppStart)
+    S.ppStart = Date.now() - _ppElapsed * 1000;
+  if (S.carryPhase === 'running' && S.carryStart) {
+    S.carryStart = Date.now() - _carryElapsed * 1000;
+    startCarryClock();
+  }
+
+  startClock();
+  reqWakeLock();
+
+  document.querySelectorAll('.btn-pause').forEach(btn => {
+    btn.textContent = '\u23f8 Pause'; btn.classList.remove('paused');
+  });
+  ['abc-tap','carry-tap','press-tap','snatch-tap','pp-tap'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '';
+  });
 }
 
 // ════════════════════════════════════════════════
