@@ -8,338 +8,164 @@
 <title>Iron Tide</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:        #0d1117;
-  --surface:   #161b22;
-  --surface2:  #21262d;
-  --border:    #30363d;
-  --ink:       #e6edf3;
-  --dim:       #656d76;
-  --tide:      #58a6ff;   /* ocean blue — Day A */
-  --ember:     #f0883e;   /* warm ember — Day B */
-  --go:        #3fb950;
-  --go-dark:   #0a1f0d;
-  --warn:      #f85149;
-  --warn-dim:  #3d1a1a;
-  --gold:      #e3b341;
-  --radius:    12px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --ink:#e6edf3;--dim:#656d76;
+  --tide:#58a6ff;--ember:#f0883e;
+  --go:#3fb950;--go-dark:#0a1f0d;
+  --warn:#f85149;--gold:#e3b341;--radius:12px;
 }
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace;min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow-x:hidden}
+.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .22s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-html, body { height: 100%; }
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'IBM Plex Mono', monospace;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  max-width: 480px;
-  margin: 0 auto;
-  overflow-x: hidden;
-}
+/* ── SETUP ── */
+#setup{padding:0;overflow-y:auto}
+.setup-hero{padding:2rem 1.5rem 1.5rem;border-bottom:1px solid var(--border);background:linear-gradient(160deg,#0d1117 60%,#0a1a2e);position:relative;overflow:hidden}
+.setup-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(88,166,255,.08) 0%,transparent 70%);pointer-events:none}
+.hero-badge{font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--tide);margin-bottom:.4rem}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,9vw,3.8rem);font-weight:700;line-height:.95;color:var(--ink);margin-bottom:.2rem}
+.hero-title em{font-style:italic;color:var(--tide)}
+.hero-sub{font-size:.65rem;color:var(--dim);letter-spacing:.05em;margin-bottom:1rem}
+.hero-pills{display:flex;gap:.4rem;flex-wrap:wrap}
+.hero-pill{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .6rem;border-radius:20px;border:1px solid var(--border);color:var(--dim)}
+.hero-pill.a{border-color:rgba(88,166,255,.4);color:var(--tide)}
+.hero-pill.b{border-color:rgba(240,136,62,.4);color:var(--ember)}
+.setup-body{padding:1.25rem 1.5rem 2rem;display:flex;flex-direction:column;gap:1.1rem}
+.fl{font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.45rem;display:block}
+.seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.seg-btn{flex:1;padding:.5rem 0;font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:transparent;border:none;color:var(--dim);cursor:pointer;transition:background .12s,color .12s}
+.seg-btn.active{background:var(--surface2);color:var(--ink)}
+.week-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.today-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.15rem;position:relative;overflow:hidden}
+.today-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.today-card.day-a::before{background:var(--tide)}
+.today-card.day-b::before{background:var(--ember)}
+.tc-eyebrow{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.tc-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;margin-bottom:.3rem}
+.today-card.day-a .tc-title{color:var(--tide)}
+.today-card.day-b .tc-title{color:var(--ember)}
+.tc-body{font-size:.67rem;color:var(--dim);line-height:1.6}
+.tc-body strong{color:var(--ink)}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.iw{position:relative}
+.iw span{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);font-size:.58rem;color:var(--dim);pointer-events:none}
+input[type=number]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:1rem;padding:.6rem 2.3rem .6rem .8rem;outline:none;-moz-appearance:textfield;appearance:textfield}
+input[type=number]:focus{border-color:var(--tide)}
+input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none}
+.uneven-warn{font-size:.58rem;color:var(--gold);margin-top:.35rem;display:none}
+.elbow-card{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:var(--radius);padding:.75rem 1rem;font-size:.62rem;color:var(--dim);line-height:1.55}
+.elbow-card strong{color:var(--warn)}
+.btn-start{width:100%;padding:1.05rem;border:none;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.92rem;font-weight:500;letter-spacing:.08em;cursor:pointer;transition:opacity .12s,transform .08s}
+.btn-start:active{transform:scale(.98)}
+.btn-start.day-a{background:var(--tide);color:#071220}
+.btn-start.day-b{background:var(--ember);color:#1a0c04}
 
-/* ── SCREENS ── */
-.screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.22s ease; }
-.screen.active { display: flex; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+/* ── SESSION SHARED ── */
+.sess-header{padding:.85rem 1.5rem .75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sh-left .sh-eyebrow{font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.sh-left .sh-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;line-height:1.1}
+.sh-left .sh-title.tide{color:var(--tide)}
+.sh-left .sh-title.ember{color:var(--ember)}
+.sh-right{text-align:right}
+.sh-right .sh-clock-label{font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sh-right .sh-clock{font-size:1.3rem;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+.phase-nav{display:flex;justify-content:center;gap:.5rem;padding:.6rem 0 .2rem;flex-shrink:0}
+.phase-dot{width:7px;height:7px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);transition:background .2s,border-color .2s;cursor:pointer}
+.phase-dot.active-a{background:var(--tide);border-color:var(--tide)}
+.phase-dot.active-b{background:var(--ember);border-color:var(--ember)}
+.phase-dot.done{background:var(--surface2);border-color:var(--go)}
+.phase-panel{display:none;flex-direction:column;flex:1}
+.phase-panel.active{display:flex}
+.big-num-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.75rem 1.5rem;gap:.15rem}
+.bna-ctx{font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem}
+.bna-display{display:flex;align-items:baseline;gap:.45rem}
+.bna-main{font-family:'Playfair Display',serif;font-size:clamp(5rem,20vw,6.5rem);font-weight:700;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.bna-sep{font-size:2rem;color:var(--dim);font-weight:300}
+.bna-sub{font-size:2rem;color:var(--dim);font-weight:300;font-variant-numeric:tabular-nums}
+.bna-detail{font-size:.85rem;color:var(--dim);margin-top:.25rem;line-height:1.45}
+.bna-detail strong{color:var(--ink)}
+.bna-last{font-size:.75rem;min-height:1.2em;margin-top:.4rem}
+.bna-last .good{color:var(--go)}
+.bna-last .late{color:var(--warn)}
+.bna-last .note{color:var(--dim)}
+.emom-row{display:flex;align-items:center;gap:.65rem;margin-top:.5rem}
+.arc-wrap{position:relative;width:48px;height:48px;flex-shrink:0}
+.arc-wrap svg{transform:rotate(-90deg)}
+.arc-bg{fill:none;stroke:var(--surface2);stroke-width:3.5}
+.arc-fg{fill:none;stroke-width:3.5;stroke-linecap:round;transition:stroke-dashoffset .22s linear}
+.arc-fg.tide{stroke:var(--tide)}
+.arc-fg.warn{stroke:var(--warn)}
+.arc-time{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:500;font-variant-numeric:tabular-nums}
+.arc-label{font-size:.58rem;color:var(--dim);line-height:1.45}
+.arc-label strong{color:var(--ink)}
+.ladder-row{display:flex;gap:.4rem;margin:.4rem 0;flex-wrap:wrap;justify-content:center}
+.rung{width:38px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:500;border:1.5px solid var(--border);color:var(--dim);transition:all .15s}
+.rung.done{background:var(--surface2);border-color:var(--ember);color:var(--ember)}
+.rung.current{background:var(--ember);border-color:var(--ember);color:#1a0c04}
 
-/* ════════════════════════════════════════
-   SPLASH / SETUP
-════════════════════════════════════════ */
-#setup {
-  padding: 0;
-  overflow-y: auto;
-}
+/* ── TAP BUTTON ── */
+.tap-btn{margin:0 1.5rem;flex-shrink:0;height:96px;border-radius:var(--radius);border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:500;letter-spacing:.1em;cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .08s,opacity .12s}
+.tap-btn:active{transform:scale(.97)}
+.tap-btn .tb-sub{font-size:.88rem;letter-spacing:.04em;opacity:.9;font-weight:500}
+.tap-btn.tide-go{background:var(--tide);color:#071220}
+.tap-btn.tide-live{background:#1a3a5a;color:var(--tide);border:1px solid var(--tide)}
+.tap-btn.ember-go{background:var(--ember);color:#1a0c04}
+.tap-btn.ember-live{background:#2a1800;color:var(--ember);border:1px solid var(--ember)}
+.tap-btn.go-green{background:var(--go);color:var(--go-dark)}
+.tap-btn.neutral{background:var(--surface2);color:var(--dim);border:1px solid var(--border)}
 
-.setup-hero {
-  padding: 2rem 1.5rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(160deg, #0d1117 60%, #0a1a2e);
-  position: relative;
-  overflow: hidden;
-}
+/* ── LOG / STAT ── */
+.log-strip{padding:.5rem 1.5rem 0;flex-shrink:0}
+.log-label{font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.log-chips{display:flex;flex-wrap:wrap;gap:.28rem;max-height:48px;overflow:hidden}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.12rem .38rem;font-size:.58rem;color:var(--dim);transition:all .5s}
+.chip.fresh-a{border-color:rgba(88,166,255,.5);color:var(--tide)}
+.chip.fresh-b{border-color:rgba(240,136,62,.5);color:var(--ember)}
+.chip.late{border-color:rgba(248,81,73,.4);color:var(--warn)}
+.chip.done-g{border-color:rgba(63,185,80,.4);color:var(--go)}
+.stat-bar{padding:.6rem 1.5rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:.45rem;align-items:center;flex-shrink:0}
+.sp{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.38rem .35rem;text-align:center}
+.sp .sv{font-size:.92rem;font-weight:500;color:var(--ink)}
+.sp .sl{font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.end-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:.28rem}
+.btn-end{padding:.32rem .6rem;background:transparent;border:1px solid var(--border);border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:.5rem;letter-spacing:.08em;color:var(--dim);cursor:pointer;opacity:.4;transition:all .15s}
+.btn-end:hover{opacity:1;color:var(--warn);border-color:var(--warn)}
+.end-confirm{display:none;gap:.28rem;align-items:center}
+.end-confirm.vis{display:flex}
+.end-confirm span{font-size:.48rem;color:var(--dim)}
+.ecy{padding:.28rem .52rem;background:var(--warn);border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.48rem;color:#fff;cursor:pointer}
+.ecn{padding:.28rem .52rem;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.48rem;color:var(--dim);cursor:pointer}
+.next-phase-btn{margin:.5rem 1.5rem 0;flex-shrink:0;padding:.75rem;border:none;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:500;letter-spacing:.08em;cursor:pointer;transition:opacity .12s,transform .08s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.next-phase-btn:active{transform:scale(.98)}
+.next-phase-btn.to-b{background:var(--ember);color:#1a0c04}
+.next-phase-btn.to-a{background:var(--tide);color:#071220}
+.next-phase-btn.to-end{background:var(--go);color:var(--go-dark)}
 
-.setup-hero::before {
-  content: '';
-  position: absolute;
-  top: -40px; right: -40px;
-  width: 180px; height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.hero-badge { font-size: 0.56rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--tide); margin-bottom: 0.4rem; }
-.hero-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2.8rem, 9vw, 3.8rem);
-  font-weight: 700; line-height: 0.95;
-  color: var(--ink); margin-bottom: 0.2rem;
-}
-.hero-title em { font-style: italic; color: var(--tide); }
-.hero-sub { font-size: 0.65rem; color: var(--dim); letter-spacing: 0.05em; margin-bottom: 1rem; }
-
-.hero-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.hero-pill {
-  font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 0.25rem 0.6rem; border-radius: 20px;
-  border: 1px solid var(--border); color: var(--dim);
-}
-.hero-pill.a { border-color: rgba(88,166,255,0.4); color: var(--tide); }
-.hero-pill.b { border-color: rgba(240,136,62,0.4); color: var(--ember); }
-
-.setup-body { padding: 1.25rem 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.1rem; }
-
-/* field label */
-.fl { font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.45rem; display: block; }
-
-/* segmented controls */
-.seg { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
-.seg-btn { flex:1; padding: 0.5rem 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; background: transparent; border: none; color: var(--dim); cursor: pointer; transition: background 0.12s, color 0.12s; }
-.seg-btn.active { background: var(--surface2); color: var(--ink); }
-
-.week-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-
-/* today card */
-.today-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.15rem;
-  position: relative; overflow: hidden;
-}
-.today-card::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  border-radius: 3px 0 0 3px;
-}
-.today-card.day-a::before { background: var(--tide); }
-.today-card.day-b::before { background: var(--ember); }
-.tc-eyebrow { font-size: 0.52rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.3rem; }
-.tc-title { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.3rem; }
-.today-card.day-a .tc-title { color: var(--tide); }
-.today-card.day-b .tc-title { color: var(--ember); }
-.tc-body { font-size: 0.67rem; color: var(--dim); line-height: 1.6; }
-.tc-body strong { color: var(--ink); }
-
-/* inputs */
-.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-.iw { position: relative; }
-.iw span { position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); font-size: 0.58rem; color: var(--dim); pointer-events: none; }
-input[type="number"] {
-  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
-  color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 1rem;
-  padding: 0.6rem 2.3rem 0.6rem 0.8rem; outline: none;
-  -moz-appearance: textfield; appearance: textfield;
-}
-input[type="number"]:focus { border-color: var(--tide); }
-input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-.uneven-warn { font-size: 0.58rem; color: var(--gold); margin-top: 0.35rem; display: none; }
-
-/* elbow reminder card */
-.elbow-card {
-  background: rgba(248,81,73,0.07);
-  border: 1px solid rgba(248,81,73,0.2);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  font-size: 0.62rem; color: var(--dim); line-height: 1.55;
-}
-.elbow-card strong { color: var(--warn); }
-
-.btn-start {
-  width: 100%; padding: 1.05rem; border: none; border-radius: var(--radius);
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.92rem; font-weight: 500;
-  letter-spacing: 0.08em; cursor: pointer; transition: opacity 0.12s, transform 0.08s;
-}
-.btn-start:active { transform: scale(0.98); }
-.btn-start.day-a { background: var(--tide); color: #071220; }
-.btn-start.day-b { background: var(--ember); color: #1a0c04; }
-
-/* ════════════════════════════════════════
-   SHARED SESSION CHROME
-════════════════════════════════════════ */
-.sess-header {
-  padding: 0.85rem 1.5rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-  display: flex; justify-content: space-between; align-items: center;
-  flex-shrink: 0;
-}
-.sh-left .sh-eyebrow { font-size: 0.5rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
-.sh-left .sh-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; line-height: 1.1; }
-.sh-left .sh-title.tide  { color: var(--tide); }
-.sh-left .sh-title.ember { color: var(--ember); }
-.sh-right { text-align: right; }
-.sh-right .sh-clock-label { font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
-.sh-right .sh-clock { font-size: 1.3rem; font-weight: 400; font-variant-numeric: tabular-nums; line-height: 1.1; }
-
-/* phase nav dots */
-.phase-nav {
-  display: flex; justify-content: center; gap: 0.5rem;
-  padding: 0.6rem 0 0.2rem; flex-shrink: 0;
-}
-.phase-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--surface2); border: 1px solid var(--border);
-  transition: background 0.2s, border-color 0.2s;
-  cursor: pointer;
-}
-.phase-dot.active-a { background: var(--tide); border-color: var(--tide); }
-.phase-dot.active-b { background: var(--ember); border-color: var(--ember); }
-.phase-dot.done   { background: var(--surface2); border-color: var(--go); }
-
-/* phase panels */
-.phase-panel { display: none; flex-direction: column; flex: 1; }
-.phase-panel.active { display: flex; }
-
-/* big number display */
-.big-num-area {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 0.75rem 1.5rem; gap: 0.15rem;
-}
-.bna-ctx { font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.2rem; }
-.bna-display { display: flex; align-items: baseline; gap: 0.45rem; }
-.bna-main { font-family: 'Playfair Display', serif; font-size: clamp(5rem,20vw,6.5rem); font-weight: 700; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
-.bna-sep   { font-size: 2rem; color: var(--dim); font-weight: 300; }
-.bna-sub   { font-size: 2rem; color: var(--dim); font-weight: 300; font-variant-numeric: tabular-nums; }
-.bna-detail { font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem; line-height: 1.45; }
-.bna-detail strong { color: var(--ink); }
-.bna-last { font-size: 0.75rem; min-height: 1.2em; margin-top: 0.4rem; }
-.bna-last .good { color: var(--go); }
-.bna-last .late { color: var(--warn); }
-.bna-last .note { color: var(--dim); }
-
-/* EMOM arc */
-.emom-row { display: flex; align-items: center; gap: 0.65rem; margin-top: 0.5rem; }
-.arc-wrap { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
-.arc-wrap svg { transform: rotate(-90deg); }
-.arc-bg { fill: none; stroke: var(--surface2); stroke-width: 3.5; }
-.arc-fg { fill: none; stroke-width: 3.5; stroke-linecap: round; transition: stroke-dashoffset 0.22s linear; }
-.arc-fg.tide  { stroke: var(--tide); }
-.arc-fg.warn  { stroke: var(--warn); }
-.arc-time { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 500; font-variant-numeric: tabular-nums; }
-.arc-label { font-size: 0.58rem; color: var(--dim); line-height: 1.45; }
-.arc-label strong { color: var(--ink); }
-
-/* ladder rungs */
-.ladder-row { display: flex; gap: 0.4rem; margin: 0.4rem 0; flex-wrap: wrap; justify-content: center; }
-.rung {
-  width: 38px; height: 38px; border-radius: 7px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.85rem; font-weight: 500;
-  border: 1.5px solid var(--border); color: var(--dim);
-  transition: all 0.15s;
-}
-.rung.done    { background: var(--surface2); border-color: var(--ember); color: var(--ember); }
-.rung.current { background: var(--ember); border-color: var(--ember); color: #1a0c04; }
-
-/* tap button */
-.tap-btn {
-  margin: 0 1.5rem; flex-shrink: 0;
-  height: 96px; border-radius: var(--radius); border: none;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.88rem; font-weight: 500;
-  letter-spacing: 0.1em; cursor: pointer; user-select: none; -webkit-user-select: none;
-  transition: transform 0.08s, opacity 0.12s;
-}
-.tap-btn:active { transform: scale(0.97); }
-.tap-btn .tb-sub { font-size: 0.88rem; letter-spacing: 0.04em; opacity: 0.92; font-weight: 500; }
-.tap-btn.tide-go   { background: var(--tide); color: #071220; }
-.tap-btn.tide-live { background: #1a3a5a; color: var(--tide); border: 1px solid var(--tide); }
-.tap-btn.ember-go  { background: var(--ember); color: #1a0c04; }
-.tap-btn.ember-live{ background: #2a1800; color: var(--ember); border: 1px solid var(--ember); }
-.tap-btn.go-green  { background: var(--go); color: var(--go-dark); }
-.tap-btn.neutral   { background: var(--surface2); color: var(--dim); border: 1px solid var(--border); }
-
-/* log strip */
-.log-strip { padding: 0.5rem 1.5rem 0; flex-shrink: 0; }
-.log-label { font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.3rem; }
-.log-chips { display: flex; flex-wrap: wrap; gap: 0.28rem; max-height: 48px; overflow: hidden; }
-.chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.12rem 0.38rem; font-size: 0.58rem; color: var(--dim); transition: all 0.5s; }
-.chip.fresh-a { border-color: rgba(88,166,255,0.5); color: var(--tide); }
-.chip.fresh-b { border-color: rgba(240,136,62,0.5); color: var(--ember); }
-.chip.late    { border-color: rgba(248,81,73,0.4); color: var(--warn); }
-.chip.done-g  { border-color: rgba(63,185,80,0.4); color: var(--go); }
-
-/* stat bar */
-.stat-bar {
-  padding: 0.6rem 1.5rem 1.2rem;
-  border-top: 1px solid var(--border);
-  display: flex; gap: 0.45rem; align-items: center;
-  flex-shrink: 0;
-}
-.sp { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 0.38rem 0.35rem; text-align: center; }
-.sp .sv { font-size: 0.92rem; font-weight: 500; color: var(--ink); }
-.sp .sl { font-size: 0.46rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
-.end-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 0.28rem; }
-.btn-end { padding: 0.32rem 0.6rem; background: transparent; border: 1px solid var(--border); border-radius: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 0.5rem; letter-spacing: 0.08em; color: var(--dim); cursor: pointer; opacity: 0.4; transition: all 0.15s; }
-.btn-end:hover { opacity: 1; color: var(--warn); border-color: var(--warn); }
-.end-confirm { display: none; gap: 0.28rem; align-items: center; }
-.end-confirm.vis { display: flex; }
-.end-confirm span { font-size: 0.48rem; color: var(--dim); }
-.ecy { padding: 0.28rem 0.52rem; background: var(--warn); border: none; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem; color: #fff; cursor: pointer; }
-.ecn { padding: 0.28rem 0.52rem; background: transparent; border: 1px solid var(--border); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem; color: var(--dim); cursor: pointer; }
-
-/* next phase button */
-.next-phase-btn {
-  margin: 0.5rem 1.5rem 0; flex-shrink: 0;
-  padding: 0.75rem; border: none; border-radius: var(--radius);
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; font-weight: 500;
-  letter-spacing: 0.08em; cursor: pointer; transition: opacity 0.12s, transform 0.08s;
-  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-}
-.next-phase-btn:active { transform: scale(0.98); }
-.next-phase-btn.to-b { background: var(--ember); color: #1a0c04; }
-.next-phase-btn.to-a { background: var(--tide); color: #071220; }
-.next-phase-btn.to-end { background: var(--go); color: var(--go-dark); }
-
-/* ════════════════════════════════════════
-   SUMMARY
-════════════════════════════════════════ */
-#summary { padding: 1.75rem 1.5rem 2.5rem; justify-content: center; gap: 1.1rem; overflow-y: auto; }
-.sum-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; }
-.sum-title.a { color: var(--tide); }
-.sum-title.b { color: var(--ember); }
-.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.sc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 0.9rem; }
-.sc.full { grid-column: span 2; }
-.sc .scv { font-size: 1.6rem; font-weight: 400; color: var(--ink); }
-.sc .scl { font-size: 0.5rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--dim); margin-top: 0.12rem; }
-.sum-chips { display: flex; flex-wrap: wrap; gap: 0.28rem; margin-top: 0.45rem; }
-.sum-chip { background: var(--surface2); border-radius: 4px; padding: 0.12rem 0.38rem; font-size: 0.58rem; color: var(--dim); }
-.btn-back { width: 100%; padding: 0.9rem; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--dim); cursor: pointer; transition: all 0.15s; }
-.btn-back:hover { color: var(--ink); border-color: var(--ink); }
-
-/* elbow check banner (shown at session end) */
-.elbow-banner {
-  background: rgba(248,81,73,0.07); border: 1px solid rgba(248,81,73,0.2);
-  border-radius: 9px; padding: 0.7rem 0.9rem;
-  font-size: 0.6rem; color: var(--dim); line-height: 1.55;
-}
-.elbow-banner strong { color: var(--warn); }
-
-/* ── REST TIMER ── */
-.rest-timer {
-  display: flex; align-items: center; justify-content: center;
-  gap: 0.5rem; padding: 0.35rem 0; flex-shrink: 0;
-  min-height: 28px;
-}
-.rt-label { font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
-.rt-val   { font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 3ch; text-align: center; }
-.rt-phase { font-size: 0.52rem; letter-spacing: 0.1em; color: var(--dim); }
-.rt-val.resting { color: var(--go); }
-.rt-val.working { color: var(--warn); }
-
+/* ── SUMMARY ── */
+#summary{padding:1.75rem 1.5rem 2.5rem;justify-content:center;gap:1.1rem;overflow-y:auto}
+.sum-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700}
+.sum-title.a{color:var(--tide)}
+.sum-title.b{color:var(--ember)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem .9rem}
+.sc.full{grid-column:span 2}
+.sc .scv{font-size:1.6rem;font-weight:400;color:var(--ink)}
+.sc .scl{font-size:.5rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-top:.12rem}
+.sum-chips{display:flex;flex-wrap:wrap;gap:.28rem;margin-top:.45rem}
+.sum-chip{background:var(--surface2);border-radius:4px;padding:.12rem .38rem;font-size:.58rem;color:var(--dim)}
+.elbow-banner{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:9px;padding:.7rem .9rem;font-size:.6rem;color:var(--dim);line-height:1.55}
+.elbow-banner strong{color:var(--warn)}
+.btn-back{width:100%;padding:.9rem;background:transparent;border:1px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.1em;color:var(--dim);cursor:pointer;transition:all .15s}
+.btn-back:hover{color:var(--ink);border-color:var(--ink)}
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════
-     SETUP
-════════════════════════════════════ -->
+<!-- SETUP -->
 <div id="setup" class="screen active">
   <div class="setup-hero">
     <div class="hero-badge">8-Week Kettlebell Program</div>
@@ -350,9 +176,7 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       <div class="hero-pill b">Day B · Press + Snatch + Push/Pull</div>
     </div>
   </div>
-
   <div class="setup-body">
-    <!-- Week -->
     <div>
       <label class="fl">Week</label>
       <div class="week-grid">
@@ -370,25 +194,19 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
         </div>
       </div>
     </div>
-
-    <!-- Day -->
     <div>
       <label class="fl">Day</label>
-      <div class="seg" id="day-seg" style="max-width:200px;">
+      <div class="seg" id="day-seg" style="max-width:200px">
         <button class="seg-btn active" data-val="1">1</button>
         <button class="seg-btn" data-val="2">2</button>
         <button class="seg-btn" data-val="3">3</button>
       </div>
     </div>
-
-    <!-- Today card -->
     <div class="today-card day-a" id="today-card">
       <div class="tc-eyebrow">Today's Session</div>
       <div class="tc-title" id="tc-title">Day A — Tide</div>
       <div class="tc-body" id="tc-body">—</div>
     </div>
-
-    <!-- Bells -->
     <div>
       <label class="fl">Double Kettlebells</label>
       <div class="input-grid">
@@ -397,41 +215,24 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       </div>
       <div class="uneven-warn" id="uneven-warn">⚠ Uneven bells — switch sides each round</div>
     </div>
-
-    <!-- Snatch weight (Day B only) -->
-    <div id="snatch-weight-field">
+    <div id="snatch-weight-field" style="display:none">
       <label class="fl">Snatch Bell (single)</label>
-      <div class="iw" style="max-width:140px;">
-        <input type="number" id="wSnatch" placeholder="16" min="4" max="100" step="2">
-        <span>kg</span>
-      </div>
+      <div class="iw" style="max-width:140px"><input type="number" id="wSnatch" placeholder="16" min="4" max="100" step="2"><span>kg</span></div>
     </div>
-
-    <!-- EMOM (Day A only) -->
     <div id="emom-field">
       <label class="fl">EMOM interval (seconds)</label>
-      <div class="iw" style="max-width:140px;">
-        <input type="number" id="emom-in" placeholder="90" min="30" max="180" step="5" value="90">
-        <span>sec</span>
-      </div>
+      <div class="iw" style="max-width:140px"><input type="number" id="emom-in" placeholder="90" min="30" max="180" step="5" value="90"><span>sec</span></div>
     </div>
-
-    <!-- Elbow reminder -->
     <div class="elbow-card">
-      <strong>Elbow check</strong> — keep wrist neutral in rack &amp; snatch catch.
-      Pain 3/10 or lower during work. If worse next day, back off volume.
-      Fist pushups if wrist position flares it.
+      <strong>Elbow check</strong> — wrist neutral in rack &amp; snatch catch.
+      Pain 3/10 or lower. If worse next day, back off 20%.
+      Fist pushups if wrist flares it.
     </div>
-
-    <button class="btn-start day-a" id="btn-start" onclick="startSession()">
-      Start Session →
-    </button>
+    <button class="btn-start day-a" id="btn-start" onclick="startSession()">Start Session →</button>
   </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SESSION — DAY A  (ABC → Carries)
-════════════════════════════════════ -->
+<!-- SESSION A -->
 <div id="session-a" class="screen">
   <div class="sess-header">
     <div class="sh-left">
@@ -443,14 +244,12 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       <div class="sh-clock" id="a-clock">0:00</div>
     </div>
   </div>
-
-  <!-- phase nav: ABC · Carries -->
   <div class="phase-nav" id="a-phase-nav">
-    <div class="phase-dot active-a" data-phase="0" onclick="goPhaseA(0)" title="ABC"></div>
-    <div class="phase-dot" data-phase="1" onclick="goPhaseA(1)" title="Carries"></div>
+    <div class="phase-dot active-a" onclick="goPhaseA(0)" title="ABC"></div>
+    <div class="phase-dot" onclick="goPhaseA(1)" title="Carries"></div>
   </div>
 
-  <!-- ── PHASE 0: ABC ── -->
+  <!-- ABC -->
   <div class="phase-panel active" id="a-p0">
     <div class="big-num-area">
       <div class="bna-ctx" id="abc-ctx">READY</div>
@@ -464,8 +263,7 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
         <div class="arc-wrap">
           <svg width="48" height="48" viewBox="0 0 48 48">
             <circle class="arc-bg" cx="24" cy="24" r="20"/>
-            <circle class="arc-fg tide" id="abc-arc" cx="24" cy="24" r="20"
-              stroke-dasharray="125.7" stroke-dashoffset="125.7"/>
+            <circle class="arc-fg tide" id="abc-arc" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="125.7"/>
           </svg>
           <div class="arc-time" id="abc-arc-time">—</div>
         </div>
@@ -473,37 +271,24 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       </div>
       <div class="bna-last" id="abc-last"></div>
     </div>
-
     <button class="tap-btn tide-go" id="abc-tap" onclick="abcTap()">
       <span id="abc-tap-lbl">START ROUND 1</span>
       <span class="tb-sub">2 cleans · 1 press · 3 FSQ</span>
     </button>
-
-    <div class="log-strip">
-      <div class="log-label">Rounds</div>
-      <div class="log-chips" id="abc-chips"></div>
-    </div>
-
+    <div class="log-strip"><div class="log-label">Rounds</div><div class="log-chips" id="abc-chips"></div></div>
     <div class="stat-bar">
       <div class="sp"><div class="sv" id="abc-s-rounds">0</div><div class="sl">Rounds</div></div>
       <div class="sp"><div class="sv" id="abc-s-reps">0</div><div class="sl">Reps</div></div>
       <div class="sp"><div class="sv" id="abc-s-kg">0</div><div class="sl">kg</div></div>
       <div class="end-wrap">
         <button class="btn-end" id="a-end-btn" onclick="showEnd('a')">End</button>
-        <div class="end-confirm" id="a-end-conf">
-          <span>done?</span>
-          <button class="ecy" onclick="endSession()">Yes</button>
-          <button class="ecn" onclick="hideEnd('a')">No</button>
-        </div>
+        <div class="end-confirm" id="a-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('a')">No</button></div>
       </div>
     </div>
-
-    <button class="next-phase-btn to-b" onclick="goPhaseA(1)" style="margin-bottom:0.75rem;">
-      ABC done → Carries ›
-    </button>
+    <button class="next-phase-btn to-b" onclick="goPhaseA(1)" style="margin-bottom:.75rem">ABC done → Carries ›</button>
   </div>
 
-  <!-- ── PHASE 1: CARRIES ── -->
+  <!-- CARRIES -->
   <div class="phase-panel" id="a-p1">
     <div class="big-num-area">
       <div class="bna-ctx">FARMER CARRY FINISHER</div>
@@ -513,44 +298,27 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
         <div class="bna-sub">6</div>
       </div>
       <div class="bna-detail">Single-arm · 3 lengths each side · <strong id="carry-wt">16 kg</strong></div>
-      <div class="bna-last" style="margin-top:0.75rem;">
-        <span class="note">Heavy as possible with perfect posture.<br>Switch arm each tap. Posterior chain · lat · oblique.</span>
-      </div>
+      <div class="bna-last" style="margin-top:.75rem"><span class="note">Heavy as possible with perfect posture.<br>Switch arm each tap. Posterior chain · lat · oblique.</span></div>
     </div>
-
     <button class="tap-btn tide-go" id="carry-tap" onclick="carryTap()">
       <span id="carry-tap-lbl">START — LEFT ARM</span>
       <span class="tb-sub">walk 3 lengths, tap when done</span>
     </button>
-
-    <div class="log-strip">
-      <div class="log-label">Carries completed</div>
-      <div class="log-chips" id="carry-chips"></div>
-    </div>
-
+    <div class="log-strip"><div class="log-label">Carries</div><div class="log-chips" id="carry-chips"></div></div>
     <div class="stat-bar">
       <div class="sp"><div class="sv" id="carry-s-done">0</div><div class="sl">Sets</div></div>
       <div class="sp"><div class="sv" id="abc-s-rounds-2">0</div><div class="sl">ABC Rounds</div></div>
       <div class="sp"><div class="sv" id="abc-s-kg-2">0</div><div class="sl">kg moved</div></div>
       <div class="end-wrap">
-        <button class="btn-end" id="a2-end-btn" onclick="showEnd('a')">End</button>
-        <div class="end-confirm" id="a2-end-conf">
-          <span>done?</span>
-          <button class="ecy" onclick="endSession()">Yes</button>
-          <button class="ecn" onclick="hideEnd('a')">No</button>
-        </div>
+        <button class="btn-end" id="a2-end-btn" onclick="showEnd('a2')">End</button>
+        <div class="end-confirm" id="a2-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('a2')">No</button></div>
       </div>
     </div>
-
-    <button class="next-phase-btn to-end" onclick="endSession()" style="margin-bottom:0.75rem;">
-      Session Complete ✓
-    </button>
+    <button class="next-phase-btn to-end" onclick="endSession()" style="margin-bottom:.75rem">Session Complete ✓</button>
   </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SESSION — DAY B  (Press → Snatch → Push/Pull)
-════════════════════════════════════ -->
+<!-- SESSION B -->
 <div id="session-b" class="screen">
   <div class="sess-header">
     <div class="sh-left">
@@ -562,15 +330,13 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
       <div class="sh-clock" id="b-clock">0:00</div>
     </div>
   </div>
-
-  <!-- phase nav: Press · Snatch · Push/Pull -->
   <div class="phase-nav" id="b-phase-nav">
-    <div class="phase-dot active-b" data-phase="0" onclick="goPhaseB(0)" title="Press"></div>
-    <div class="phase-dot" data-phase="1" onclick="goPhaseB(1)" title="Snatch"></div>
-    <div class="phase-dot" data-phase="2" onclick="goPhaseB(2)" title="Push/Pull"></div>
+    <div class="phase-dot active-b" onclick="goPhaseB(0)" title="Press"></div>
+    <div class="phase-dot" onclick="goPhaseB(1)" title="Snatch"></div>
+    <div class="phase-dot" onclick="goPhaseB(2)" title="Push/Pull"></div>
   </div>
 
-  <!-- ── PHASE 0: PRESS ── -->
+  <!-- PRESS -->
   <div class="phase-panel active" id="b-p0">
     <div class="big-num-area">
       <div class="bna-ctx" id="press-ctx">LADDER</div>
@@ -580,94 +346,56 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
         <div class="bna-sub" id="press-target">30</div>
       </div>
       <div class="ladder-row" id="press-ladder"></div>
-      <div class="bna-detail" id="press-detail">24/24 kg · target 30 reps</div>
+      <div class="bna-detail" id="press-detail">16/16 kg · target 20–30 reps</div>
       <div class="bna-last" id="press-last"></div>
     </div>
-
     <button class="tap-btn ember-go" id="press-tap" onclick="pressTap()">
-      <span id="press-tap-lbl">START SET</span>
-      <span class="tb-sub" id="press-tap-sub">2 reps · double press</span>
+      <span id="press-tap-lbl">START SET 1</span>
+      <span class="tb-sub" id="press-tap-sub">2 reps · strict press</span>
     </button>
-
-    <div class="rest-timer" id="it-press-rt-row" style="display:none">
-      <span class="rt-label">Timer</span>
-      <span class="rt-val" id="it-press-rt-val">—</span>
-      <span class="rt-phase" id="it-press-rt-phase"></span>
-    </div>
-    <div class="log-strip">
-      <div class="log-label">Sets</div>
-      <div class="log-chips" id="press-chips"></div>
-    </div>
-
+    <div class="log-strip"><div class="log-label">Sets</div><div class="log-chips" id="press-chips"></div></div>
     <div class="stat-bar">
       <div class="sp"><div class="sv" id="press-s-sets">0</div><div class="sl">Sets</div></div>
       <div class="sp"><div class="sv" id="press-s-reps">0</div><div class="sl">Reps</div></div>
       <div class="sp"><div class="sv" id="press-s-kg">0</div><div class="sl">kg</div></div>
       <div class="end-wrap">
         <button class="btn-end" id="b-end-btn" onclick="showEnd('b')">End</button>
-        <div class="end-confirm" id="b-end-conf">
-          <span>done?</span>
-          <button class="ecy" onclick="endSession()">Yes</button>
-          <button class="ecn" onclick="hideEnd('b')">No</button>
-        </div>
+        <div class="end-confirm" id="b-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('b')">No</button></div>
       </div>
     </div>
-
-    <button class="next-phase-btn to-a" onclick="goPhaseB(1)" style="margin-bottom:0.75rem;">
-      Press done → Half Snatches ›
-    </button>
+    <button class="next-phase-btn to-a" onclick="goPhaseB(1)" style="margin-bottom:.75rem">Press done → Half Snatches ›</button>
   </div>
 
-  <!-- ── PHASE 1: HALF SNATCH ── -->
+  <!-- SNATCH -->
   <div class="phase-panel" id="b-p1">
     <div class="big-num-area">
-      <div class="bna-ctx" id="snatch-ctx">HALF SNATCH</div>
+      <div class="bna-ctx">HALF SNATCH</div>
       <div class="bna-display">
         <div class="bna-main" id="snatch-sets">0</div>
         <div class="bna-sep">/</div>
         <div class="bna-sub" id="snatch-target">4</div>
       </div>
       <div class="bna-detail">8 reps/side · single bell · <strong id="snatch-wt">16 kg</strong></div>
-      <div class="bna-last" style="margin-top:0.6rem;">
-        <span class="note">Wrist neutral at catch. Hip snap = surf pop-up.<br>If elbow flares → swap to single swings.</span>
-      </div>
+      <div class="bna-last" style="margin-top:.6rem"><span class="note">Wrist neutral at catch. Hip snap = surf pop-up.<br>If elbow flares → swap to single swings.</span></div>
     </div>
-
     <button class="tap-btn ember-go" id="snatch-tap" onclick="snatchTap()">
       <span id="snatch-tap-lbl">START SET 1</span>
       <span class="tb-sub" id="snatch-tap-sub">8 L · rest · 8 R</span>
     </button>
-
-    <div class="rest-timer" id="it-snatch-rt-row" style="display:none">
-      <span class="rt-label">Timer</span>
-      <span class="rt-val" id="it-snatch-rt-val">—</span>
-      <span class="rt-phase" id="it-snatch-rt-phase"></span>
-    </div>
-    <div class="log-strip">
-      <div class="log-label">Sets done</div>
-      <div class="log-chips" id="snatch-chips"></div>
-    </div>
-
+    <div class="log-strip"><div class="log-label">Sets done</div><div class="log-chips" id="snatch-chips"></div></div>
     <div class="stat-bar">
       <div class="sp"><div class="sv" id="snatch-s-sets">0</div><div class="sl">Sets</div></div>
       <div class="sp"><div class="sv" id="snatch-s-reps">0</div><div class="sl">Reps</div></div>
       <div class="sp"><div class="sv" id="press-s-reps-2">0</div><div class="sl">Press Reps</div></div>
       <div class="end-wrap">
         <button class="btn-end" id="b2-end-btn" onclick="showEnd('b2')">End</button>
-        <div class="end-confirm" id="b2-end-conf">
-          <span>done?</span>
-          <button class="ecy" onclick="endSession()">Yes</button>
-          <button class="ecn" onclick="hideEnd('b2')">No</button>
-        </div>
+        <div class="end-confirm" id="b2-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('b2')">No</button></div>
       </div>
     </div>
-
-    <button class="next-phase-btn to-a" onclick="goPhaseB(2)" style="margin-bottom:0.75rem;">
-      Snatches done → Push / Pull ›
-    </button>
+    <button class="next-phase-btn to-a" onclick="goPhaseB(2)" style="margin-bottom:.75rem">Snatches done → Push / Pull ›</button>
   </div>
 
-  <!-- ── PHASE 2: PUSH / PULL ── -->
+  <!-- PUSH/PULL -->
   <div class="phase-panel" id="b-p2">
     <div class="big-num-area">
       <div class="bna-ctx">PUSH / PULL FINISHER</div>
@@ -676,50 +404,28 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
         <div class="bna-sep">/</div>
         <div class="bna-sub">3</div>
       </div>
-      <div class="bna-detail" id="pp-detail">Pushups × <strong id="pp-push-target">—</strong> · Pullups × <strong id="pp-pull-target">—</strong></div>
-      <div class="bna-last" style="margin-top:0.5rem;">
-        <span class="note">Superset: pushups then pullups, no rest between.<br>Rest 90s between sets. Stop 2 reps before failure.<br>Fist pushups if wrist bothers elbow.</span>
-      </div>
+      <div class="bna-detail">Pushups × <strong id="pp-push-target">—</strong> · Pullups × <strong id="pp-pull-target">—</strong></div>
+      <div class="bna-last" style="margin-top:.5rem"><span class="note">Superset: pushups then pullups, no rest between.<br>Rest 90s between sets. Stop 2 reps before failure.<br>Fist pushups if wrist bothers elbow.</span></div>
     </div>
-
     <button class="tap-btn go-green" id="pp-tap" onclick="ppTap()">
       <span id="pp-tap-lbl">START SUPERSET 1</span>
       <span class="tb-sub" id="pp-tap-sub">pushups · then pullups</span>
     </button>
-
-    <div class="rest-timer" id="it-pp-rt-row" style="display:none">
-      <span class="rt-label">Timer</span>
-      <span class="rt-val" id="it-pp-rt-val">—</span>
-      <span class="rt-phase" id="it-pp-rt-phase"></span>
-    </div>
-    <div class="log-strip">
-      <div class="log-label">Supersets</div>
-      <div class="log-chips" id="pp-chips"></div>
-    </div>
-
+    <div class="log-strip"><div class="log-label">Supersets</div><div class="log-chips" id="pp-chips"></div></div>
     <div class="stat-bar">
       <div class="sp"><div class="sv" id="pp-s-sets">0</div><div class="sl">Sets</div></div>
       <div class="sp"><div class="sv" id="pp-s-push">0</div><div class="sl">Pushups</div></div>
       <div class="sp"><div class="sv" id="pp-s-pull">0</div><div class="sl">Pullups</div></div>
       <div class="end-wrap">
         <button class="btn-end" id="b3-end-btn" onclick="showEnd('b3')">End</button>
-        <div class="end-confirm" id="b3-end-conf">
-          <span>done?</span>
-          <button class="ecy" onclick="endSession()">Yes</button>
-          <button class="ecn" onclick="hideEnd('b3')">No</button>
-        </div>
+        <div class="end-confirm" id="b3-end-conf"><span>done?</span><button class="ecy" onclick="endSession()">Yes</button><button class="ecn" onclick="hideEnd('b3')">No</button></div>
       </div>
     </div>
-
-    <button class="next-phase-btn to-end" onclick="endSession()" style="margin-bottom:0.75rem;">
-      Session Complete ✓
-    </button>
+    <button class="next-phase-btn to-end" onclick="endSession()" style="margin-bottom:.75rem">Session Complete ✓</button>
   </div>
 </div>
 
-<!-- ════════════════════════════════════
-     SUMMARY
-════════════════════════════════════ -->
+<!-- SUMMARY -->
 <div id="summary" class="screen">
   <div class="sum-title" id="sum-title">Session Complete</div>
   <div class="sum-grid" id="sum-grid"></div>
@@ -735,42 +441,35 @@ input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-app
 // ════════════════════════════════════════════════
 // PROGRAM DATA
 // ════════════════════════════════════════════════
-
-// odd weeks: A B A   even weeks: B A B
 function dayType(week, day) {
-  return (week % 2 === 1)
-    ? (day === 2 ? 'b' : 'a')
-    : (day === 2 ? 'a' : 'b');
+  return (week % 2 === 1) ? (day === 2 ? 'b' : 'a') : (day === 2 ? 'a' : 'b');
 }
 
 const ABC_PLAN = {
-  1: { min:8,  max:10, emom:90 },
-  2: { min:10, max:12, emom:90 },
-  3: { min:12, max:15, emom:75 },
-  4: { min:15, max:18, emom:75 },
-  5: { min:18, max:22, emom:60 },
-  6: { min:20, max:25, emom:60 },
-  7: { min:25, max:28, emom:60 },
-  8: { min:28, max:30, emom:60 },
+  1:{min:8,  max:10, emom:90},
+  2:{min:10, max:12, emom:90},
+  3:{min:12, max:15, emom:75},
+  4:{min:15, max:18, emom:75},
+  5:{min:18, max:22, emom:60},
+  6:{min:20, max:25, emom:60},
+  7:{min:25, max:28, emom:60},
+  8:{min:28, max:30, emom:60},
 };
 
 const PRESS_PLAN = {
-  1: { min:20, max:30,  ladder:[2,3,5],    scheme:'2-3-5' },
-  2: { min:20, max:30,  ladder:[2,3,5],    scheme:'2-3-5' },
-  3: { min:30, max:40,  ladder:[2,3,5],    scheme:'2-3-5' },
-  4: { min:30, max:40,  ladder:[2,3,5],    scheme:'2-3-5' },
-  5: { min:40, max:50,  ladder:[2,3,5,10], scheme:'2-3-5-10' },
-  6: { min:40, max:60,  ladder:[2,3,5,10], scheme:'2-3-5-10' },
-  7: { min:60, max:80,  ladder:[2,3,5,10], scheme:'2-3-5-10' },
-  8: { min:80, max:100, ladder:[2,3,5,10], scheme:'2-3-5-10' },
+  1:{min:20, max:30,  ladder:[2,3,5],    scheme:'2-3-5'},
+  2:{min:20, max:30,  ladder:[2,3,5],    scheme:'2-3-5'},
+  3:{min:30, max:40,  ladder:[2,3,5],    scheme:'2-3-5'},
+  4:{min:30, max:40,  ladder:[2,3,5],    scheme:'2-3-5'},
+  5:{min:40, max:50,  ladder:[2,3,5,10], scheme:'2-3-5-10'},
+  6:{min:40, max:60,  ladder:[2,3,5,10], scheme:'2-3-5-10'},
+  7:{min:60, max:80,  ladder:[2,3,5,10], scheme:'2-3-5-10'},
+  8:{min:80, max:100, ladder:[2,3,5,10], scheme:'2-3-5-10'},
 };
 
-// Snatch sets progress week by week
-const SNATCH_SETS = { 1:3, 2:3, 3:3, 4:4, 5:4, 6:4, 7:4, 8:4 };
-
-// Push/pull targets progress by week (add 1 rep/week)
+const SNATCH_SETS = {1:3,2:3,3:3,4:4,5:4,6:4,7:4,8:4};
 function ppTargets(week) {
-  return { push: Math.min(8 + week, 15), pull: Math.min(4 + Math.floor(week/2), 8) };
+  return {push: Math.min(8+week,15), pull: Math.min(4+Math.floor(week/2),8)};
 }
 
 // ════════════════════════════════════════════════
@@ -780,22 +479,27 @@ const S = {
   week:1, day:1, type:'a',
   wL:16, wR:16, wSnatch:16, emomSec:90,
   sessionStart:null, sessionInterval:null, totalElapsed:0,
-  // ABC
   abcRounds:0, abcTarget:10, abcPhase:'idle', abcStart:null, abcLog:[],
-  // Carries
-  carryDone:0,
-  // Press
+  carryDone:0, phaseA:0,
   pressReps:0, pressSets:0, pressRungIdx:0, pressTarget:30,
   pressLadder:[2,3,5], pressPhase:'idle', pressSetStart:null, pressLog:[],
-  // Snatch
   snatchSets:0, snatchTarget:3, snatchPhase:'idle', snatchStart:null,
-  // Push/pull
   ppSets:0, ppPhase:'idle', ppStart:null,
-  ppPushTarget:9, ppPullTarget:4,
-  ppTotalPush:0, ppTotalPull:0,
-  // phase tracking
-  phaseA:0, phaseB:0,
+  ppPushTarget:9, ppPullTarget:4, ppTotalPush:0, ppTotalPull:0,
+  phaseB:0,
 };
+
+// ════════════════════════════════════════════════
+// WAKE LOCK
+// ════════════════════════════════════════════════
+let _wl = null;
+async function reqWakeLock() {
+  try { if ('wakeLock' in navigator) _wl = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+function relWakeLock() { if (_wl) { _wl.release().catch(()=>{}); _wl = null; } }
+document.addEventListener('visibilitychange', async () => {
+  if (_wl && document.visibilityState === 'visible') await reqWakeLock();
+});
 
 // ════════════════════════════════════════════════
 // SETUP
@@ -804,8 +508,9 @@ function initSegs() {
   ['week-seg1','week-seg2'].forEach(id => {
     document.getElementById(id).querySelectorAll('.seg-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.getElementById('week-seg1').querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
-        document.getElementById('week-seg2').querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+        ['week-seg1','week-seg2'].forEach(s =>
+          document.getElementById(s).querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'))
+        );
         btn.classList.add('active');
         S.week = parseInt(btn.dataset.val);
         refreshSetup();
@@ -820,34 +525,27 @@ function initSegs() {
       refreshSetup();
     });
   });
-  ['wL','wR'].forEach(id => document.getElementById(id).addEventListener('input', checkUneven));
-}
-
-function checkUneven() {
-  const l = parseFloat(document.getElementById('wL').value)||0;
-  const r = parseFloat(document.getElementById('wR').value)||0;
-  document.getElementById('uneven-warn').style.display = (l && r && l!==r) ? 'block' : 'none';
+  ['wL','wR'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+    const l = parseFloat(document.getElementById('wL').value)||0;
+    const r = parseFloat(document.getElementById('wR').value)||0;
+    document.getElementById('uneven-warn').style.display = (l && r && l!==r) ? 'block' : 'none';
+  }));
 }
 
 function refreshSetup() {
   const type = dayType(S.week, S.day);
   S.type = type;
   const card = document.getElementById('today-card');
-  const title = document.getElementById('tc-title');
-  const body  = document.getElementById('tc-body');
   const startBtn = document.getElementById('btn-start');
-  const emomField = document.getElementById('emom-field');
-
   if (type === 'a') {
     const p = ABC_PLAN[S.week];
     card.className = 'today-card day-a';
-    title.textContent = 'Day A — Tide';
-    body.innerHTML = `<strong>${p.min}–${p.max} rounds</strong> ABC at ${p.emom}s EMOM<br>
-      2 cleans · 1 press · 3 front squats<br>
-      Finisher: single-arm farmer carries × 3 each side`;
+    document.getElementById('tc-title').textContent = 'Day A — Tide';
+    document.getElementById('tc-body').innerHTML =
+      `<strong>${p.min}–${p.max} rounds</strong> ABC at ${p.emom}s EMOM<br>2 cleans · 1 press · 3 front squats<br>Finisher: single-arm farmer carries × 3 each side`;
     startBtn.className = 'btn-start day-a';
     startBtn.textContent = 'Start Day A →';
-    emomField.style.display = 'block';
+    document.getElementById('emom-field').style.display = 'block';
     document.getElementById('snatch-weight-field').style.display = 'none';
     document.getElementById('emom-in').value = p.emom;
   } else {
@@ -855,59 +553,52 @@ function refreshSetup() {
     const sn = SNATCH_SETS[S.week];
     const pp = ppTargets(S.week);
     card.className = 'today-card day-b';
-    title.textContent = 'Day B — Ember';
-    body.innerHTML = `<strong>Press ladder ${p.scheme}</strong> · target ${p.min}–${p.max} reps<br>
-      Half snatches: 8/side × ${sn} sets<br>
-      Finish: pushups ×${pp.push} + pullups ×${pp.pull} · 3 supersets`;
+    document.getElementById('tc-title').textContent = 'Day B — Ember';
+    document.getElementById('tc-body').innerHTML =
+      `<strong>Press ladder ${p.scheme}</strong> · target ${p.min}–${p.max} reps<br>Half snatches: 8/side × ${sn} sets<br>Finish: pushups ×${pp.push} + pullups ×${pp.pull} · 3 supersets`;
     startBtn.className = 'btn-start day-b';
     startBtn.textContent = 'Start Day B →';
-    emomField.style.display = 'none';
+    document.getElementById('emom-field').style.display = 'none';
     document.getElementById('snatch-weight-field').style.display = 'block';
   }
 }
 
+// ════════════════════════════════════════════════
+// SESSION START
+// ════════════════════════════════════════════════
 function startSession() {
-  S.wL = parseFloat(document.getElementById('wL').value) || 16;
-  S.wR = parseFloat(document.getElementById('wR').value) || S.wL;
+  S.wL      = parseFloat(document.getElementById('wL').value) || 16;
+  S.wR      = parseFloat(document.getElementById('wR').value) || S.wL;
   S.wSnatch = parseFloat(document.getElementById('wSnatch').value) || S.wL;
   S.emomSec = parseInt(document.getElementById('emom-in').value) || 90;
-  S.type = dayType(S.week, S.day);
+  S.type    = dayType(S.week, S.day);
   S.sessionStart = Date.now();
-  requestWakeLock();
   S.totalElapsed = 0;
-
-  if (S.type === 'a') {
-    initDayA();
-    showScreen('session-a');
-  } else {
-    initDayB();
-    showScreen('session-b');
-    document.getElementById('it-press-rt-row').style.display='flex';
-    document.getElementById('it-snatch-rt-row').style.display='flex';
-    document.getElementById('it-pp-rt-row').style.display='flex';
-  }
+  reqWakeLock();
+  if (S.type === 'a') { initDayA(); showScreen('session-a'); }
+  else                { initDayB(); showScreen('session-b'); }
   startClock();
 }
 
-// ════════════════════════════════════════════════
-// SESSION CLOCK
-// ════════════════════════════════════════════════
 function startClock() {
   clearInterval(S.sessionInterval);
   const id = S.type === 'a' ? 'a-clock' : 'b-clock';
   S.sessionInterval = setInterval(() => {
     S.totalElapsed = Math.floor((Date.now() - S.sessionStart) / 1000);
-    const m = Math.floor(S.totalElapsed/60), s = S.totalElapsed%60;
-    document.getElementById(id).textContent = `${m}:${String(s).padStart(2,'0')}`;
+    const m = Math.floor(S.totalElapsed/60), sc = S.totalElapsed%60;
+    document.getElementById(id).textContent = `${m}:${String(sc).padStart(2,'0')}`;
   }, 500);
+}
+
+function sessionName() {
+  return `W${S.week}D${S.day} · ${S.type === 'a' ? 'ABC' : 'Press'}`;
 }
 
 // ════════════════════════════════════════════════
 // DAY A — INIT
 // ════════════════════════════════════════════════
 function initDayA() {
-  S.abcRounds=0; S.abcPhase='idle'; S.abcLog=[];
-  S.carryDone=0; S.phaseA=0;
+  S.abcRounds=0; S.abcPhase='idle'; S.abcLog=[]; S.carryDone=0; S.phaseA=0;
   const p = ABC_PLAN[S.week];
   S.abcTarget = p.max;
   document.getElementById('a-eyebrow').textContent = `Week ${S.week} · Day ${S.day}`;
@@ -922,9 +613,11 @@ function initDayA() {
   document.getElementById('abc-chips').innerHTML = '';
   document.getElementById('carry-chips').innerHTML = '';
   document.getElementById('carry-done').textContent = '0';
+  document.getElementById('carry-tap').className = 'tap-btn tide-go';
+  document.getElementById('carry-tap-lbl').textContent = 'START — LEFT ARM';
   resetArc();
-  ['abc-s-rounds','abc-s-reps','abc-s-kg','abc-s-rounds-2','abc-s-kg-2','carry-s-done'].forEach(id => {
-    document.getElementById(id).textContent = '0';
+  ['abc-s-rounds','abc-s-reps','abc-s-kg','abc-s-rounds-2','abc-s-kg-2','carry-s-done'].forEach(id=>{
+    document.getElementById(id).textContent='0';
   });
   goPhaseA(0);
 }
@@ -937,39 +630,38 @@ let arcInterval = null;
 
 function startArc() {
   clearInterval(arcInterval);
-  const arc = document.getElementById('abc-arc');
-  const timeEl = document.getElementById('abc-arc-time');
-  const lblEl  = document.getElementById('abc-arc-label');
+  const arc   = document.getElementById('abc-arc');
+  const tEl   = document.getElementById('abc-arc-time');
+  const lEl   = document.getElementById('abc-arc-label');
   let elapsed = 0;
   arc.classList.remove('warn');
   arcInterval = setInterval(() => {
     elapsed++;
-    const pct = Math.min(elapsed / S.emomSec, 1);
-    arc.style.strokeDashoffset = ARC_C * (1 - pct);
-    timeEl.textContent = elapsed + 's';
-    const over = elapsed > S.emomSec;
-    arc.classList.toggle('warn', over);
+    arc.style.strokeDashoffset = ARC_C * (1 - Math.min(elapsed/S.emomSec,1));
+    tEl.textContent = elapsed + 's';
+    arc.classList.toggle('warn', elapsed > S.emomSec);
     const rem = S.emomSec - elapsed;
-    lblEl.innerHTML = rem > 0
+    lEl.innerHTML = rem > 0
       ? `<strong>${rem}s</strong> remaining`
       : `<span style="color:var(--warn)">+${Math.abs(rem)}s over</span>`;
   }, 1000);
 }
 
-function stopArc() { clearInterval(arcInterval); return Math.round((Date.now()-S.abcStart)/1000); }
+function stopArc() {
+  clearInterval(arcInterval);
+  return Math.round((Date.now() - S.abcStart) / 1000);
+}
 
 function resetArc() {
   clearInterval(arcInterval);
-  const arc = document.getElementById('abc-arc');
-  arc.style.strokeDashoffset = ARC_C;
-  arc.classList.remove('warn');
+  document.getElementById('abc-arc').style.strokeDashoffset = ARC_C;
+  document.getElementById('abc-arc').classList.remove('warn');
   document.getElementById('abc-arc-time').textContent = '—';
   document.getElementById('abc-arc-label').textContent = 'Tap to start next round';
 }
 
 function abcTap() {
   const totalKg = S.wL + S.wR;
-
   if (S.abcPhase === 'idle') {
     S.abcPhase = 'running';
     S.abcStart = Date.now();
@@ -980,8 +672,6 @@ function abcTap() {
     startArc();
     return;
   }
-
-  // log round
   const sec = stopArc();
   S.abcRounds++;
   S.abcLog.push({sec});
@@ -990,23 +680,20 @@ function abcTap() {
   document.getElementById('abc-last').innerHTML = over
     ? `<span class="late">R${S.abcRounds}: ${sec}s — ${diff}s over</span>`
     : `<span class="good">R${S.abcRounds}: ${sec}s ✓</span>`;
-  document.getElementById('abc-done').textContent = S.abcRounds;
   const totalReps = S.abcRounds * 6;
   const totalKgMoved = totalReps * totalKg;
+  document.getElementById('abc-done').textContent = S.abcRounds;
   document.getElementById('abc-s-rounds').textContent = S.abcRounds;
   document.getElementById('abc-s-rounds-2').textContent = S.abcRounds;
   document.getElementById('abc-s-reps').textContent = totalReps;
   document.getElementById('abc-s-kg').textContent = totalKgMoved;
   document.getElementById('abc-s-kg-2').textContent = totalKgMoved;
   addChip('abc-chips', `R${S.abcRounds} ${sec}s`, over ? 'late' : 'fresh-a');
-
+  logRoundToSheet('ABC', S.abcRounds, 6, sec, sec <= S.emomSec);
   if (S.abcRounds >= S.abcTarget) {
     document.getElementById('abc-ctx').textContent = '🎯 TARGET REACHED!';
   }
-
-  logRoundToSheet('ABC', S.abcRounds, 6, sec, sec <= S.emomSec);
-
-  // auto-start next round
+  // auto-start next
   S.abcStart = Date.now();
   document.getElementById('abc-tap').className = 'tap-btn tide-live';
   document.getElementById('abc-tap-lbl').textContent = 'DONE ROUND';
@@ -1022,7 +709,7 @@ function carryTap() {
   S.carryDone++;
   document.getElementById('carry-done').textContent = S.carryDone;
   document.getElementById('carry-s-done').textContent = S.carryDone;
-  addChip('carry-chips', CARRY_SIDES[(S.carryDone-1)%6] + ' ✓', 'done-g');
+  addChip('carry-chips', CARRY_SIDES[(S.carryDone-1)%6]+' ✓', 'done-g');
   const next = S.carryDone < 6 ? CARRY_SIDES[S.carryDone] : null;
   if (next) {
     document.getElementById('carry-tap-lbl').textContent = `NEXT — ${next} ARM`;
@@ -1048,20 +735,11 @@ function goPhaseA(idx) {
 function initDayB() {
   S.pressReps=0; S.pressSets=0; S.pressRungIdx=0; S.pressPhase='idle'; S.pressLog=[];
   S.snatchSets=0; S.snatchPhase='idle';
-  S.ppSets=0; S.ppPhase='idle'; S.ppTotalPush=0; S.ppTotalPull=0;
-  S.phaseB=0;
-
+  S.ppSets=0; S.ppPhase='idle'; S.ppTotalPush=0; S.ppTotalPull=0; S.phaseB=0;
   const pp = PRESS_PLAN[S.week];
-  S.pressTarget = pp.max;
-  S.pressLadder = pp.ladder;
-
-  const sn = SNATCH_SETS[S.week];
-  S.snatchTarget = sn;
-
-  const pt = ppTargets(S.week);
-  S.ppPushTarget = pt.push;
-  S.ppPullTarget = pt.pull;
-
+  S.pressTarget = pp.max; S.pressLadder = pp.ladder;
+  const sn = SNATCH_SETS[S.week]; S.snatchTarget = sn;
+  const pt = ppTargets(S.week); S.ppPushTarget=pt.push; S.ppPullTarget=pt.pull;
   document.getElementById('b-eyebrow').textContent = `Week ${S.week} · Day ${S.day}`;
   document.getElementById('press-done').textContent = '0';
   document.getElementById('press-target').textContent = S.pressTarget;
@@ -1070,18 +748,18 @@ function initDayB() {
   document.getElementById('press-chips').innerHTML = '';
   document.getElementById('press-last').textContent = '';
   document.getElementById('press-tap').className = 'tap-btn ember-go';
+  document.getElementById('press-tap-lbl').textContent = 'START SET 1';
   ['press-s-sets','press-s-reps','press-s-kg','press-s-reps-2'].forEach(id=>{
     document.getElementById(id).textContent='0';
   });
-
   document.getElementById('snatch-sets').textContent = '0';
   document.getElementById('snatch-target').textContent = sn;
   document.getElementById('snatch-wt').textContent = `${S.wSnatch} kg`;
   document.getElementById('snatch-chips').innerHTML = '';
   document.getElementById('snatch-tap').className = 'tap-btn ember-go';
   document.getElementById('snatch-tap-lbl').textContent = 'START SET 1';
+  document.getElementById('snatch-tap-sub').textContent = '8 L · rest · 8 R';
   ['snatch-s-sets','snatch-s-reps'].forEach(id=>document.getElementById(id).textContent='0');
-
   document.getElementById('pp-sets').textContent = '0';
   document.getElementById('pp-push-target').textContent = pt.push;
   document.getElementById('pp-pull-target').textContent = pt.pull;
@@ -1090,7 +768,6 @@ function initDayB() {
   document.getElementById('pp-tap-lbl').textContent = 'START SUPERSET 1';
   document.getElementById('pp-tap-sub').textContent = `pushups ×${pt.push} · pullups ×${pt.pull}`;
   ['pp-s-sets','pp-s-push','pp-s-pull'].forEach(id=>document.getElementById(id).textContent='0');
-
   renderLadder();
   goPhaseB(0);
 }
@@ -1104,7 +781,7 @@ function renderLadder() {
   const pos = S.pressRungIdx % S.pressLadder.length;
   S.pressLadder.forEach((r,i) => {
     const d = document.createElement('div');
-    d.className = 'rung' + (i<pos?' done':i===pos?' current':' pending');
+    d.className = 'rung' + (i<pos?' done':i===pos?' current':'');
     d.textContent = r;
     row.appendChild(d);
   });
@@ -1116,20 +793,15 @@ function pressTap() {
     S.pressSetStart = Date.now();
     document.getElementById('press-tap').className = 'tap-btn ember-live';
     const pos = S.pressRungIdx % S.pressLadder.length;
-    document.getElementById('press-tap-lbl').textContent = 'DONE SET';
+    document.getElementById('press-tap-lbl').textContent = `DONE SET ${S.pressSets+1}`;
     document.getElementById('press-tap-sub').textContent = `${S.pressLadder[pos]} reps · strict press`;
     return;
   }
-
   const sec = Math.round((Date.now()-S.pressSetStart)/1000);
-  S.pressPhase = 'idle';
   const pos = S.pressRungIdx % S.pressLadder.length;
   const reps = S.pressLadder[pos];
-  S.pressReps += reps;
-  S.pressSets++;
-  S.pressRungIdx++;
+  S.pressReps += reps; S.pressSets++; S.pressRungIdx++;
   S.pressLog.push({reps,sec});
-
   const totalKg = S.wL + S.wR;
   document.getElementById('press-done').textContent = S.pressReps;
   document.getElementById('press-s-sets').textContent = S.pressSets;
@@ -1137,19 +809,18 @@ function pressTap() {
   document.getElementById('press-s-reps-2').textContent = S.pressReps;
   document.getElementById('press-s-kg').textContent = S.pressReps * totalKg;
   const rem = Math.max(0, S.pressTarget - S.pressReps);
-  document.getElementById('press-last').innerHTML =
-    rem > 0 ? `<span class="note">${rem} reps to target</span>`
-            : `<span class="good">Target reached! Keep going or move on.</span>`;
+  document.getElementById('press-last').innerHTML = rem > 0
+    ? `<span class="note">${rem} reps to target</span>`
+    : `<span class="good">Target reached! Keep going or move on.</span>`;
   addChip('press-chips', `×${reps} ${sec}s`, 'fresh-b');
   logRoundToSheet('Press', S.pressSets, reps, sec, true);
   renderLadder();
-
   // auto-start next
   S.pressPhase = 'running';
   S.pressSetStart = Date.now();
   document.getElementById('press-tap').className = 'tap-btn ember-live';
   const nextPos = S.pressRungIdx % S.pressLadder.length;
-  document.getElementById('press-tap-lbl').textContent = 'DONE SET';
+  document.getElementById('press-tap-lbl').textContent = `DONE SET ${S.pressSets+1}`;
   document.getElementById('press-tap-sub').textContent = `${S.pressLadder[nextPos]} reps · strict press`;
 }
 
@@ -1161,54 +832,47 @@ function snatchTap() {
     S.snatchPhase = 'running';
     S.snatchStart = Date.now();
     document.getElementById('snatch-tap').className = 'tap-btn ember-live';
-    document.getElementById('snatch-tap-lbl').textContent = 'DONE SET';
+    document.getElementById('snatch-tap-lbl').textContent = `DONE SET ${S.snatchSets+1}`;
     document.getElementById('snatch-tap-sub').textContent = '8 L · 8 R · wrist neutral at catch';
     return;
   }
-
   const sec = Math.round((Date.now()-S.snatchStart)/1000);
   S.snatchSets++;
-  S.snatchPhase = 'idle';
-  const reps = 16; // 8 each side
+  const reps = 16;
   document.getElementById('snatch-sets').textContent = S.snatchSets;
   document.getElementById('snatch-s-sets').textContent = S.snatchSets;
   document.getElementById('snatch-s-reps').textContent = S.snatchSets * reps;
   addChip('snatch-chips', `Set ${S.snatchSets} ${sec}s`, 'fresh-b');
-  logRoundToSheet('Snatch', S.snatchSets, reps, sec, true);
-
+  logRoundToSheet('Snatch', S.snatchSets, reps, sec, true, S.wSnatch);
   if (S.snatchSets >= S.snatchTarget) {
+    S.snatchPhase = 'done';
     document.getElementById('snatch-tap').className = 'tap-btn neutral';
     document.getElementById('snatch-tap-lbl').textContent = 'ALL SETS DONE ✓';
     document.getElementById('snatch-tap-sub').textContent = 'Move to Push / Pull when ready';
-    S.snatchPhase = 'done';
     return;
   }
-
   // auto-start next
   S.snatchPhase = 'running';
   S.snatchStart = Date.now();
   document.getElementById('snatch-tap').className = 'tap-btn ember-live';
-  document.getElementById('snatch-tap-lbl').textContent = 'DONE SET';
+  document.getElementById('snatch-tap-lbl').textContent = `DONE SET ${S.snatchSets+1}`;
   document.getElementById('snatch-tap-sub').textContent = `Set ${S.snatchSets+1} of ${S.snatchTarget} · 8L 8R`;
-  startSetTimer('it-snatch-rt-val','it-snatch-rt-phase');
 }
 
 // ════════════════════════════════════════════════
-// DAY B — PUSH / PULL
+// DAY B — PUSH/PULL
 // ════════════════════════════════════════════════
 function ppTap() {
   if (S.ppPhase === 'idle') {
     S.ppPhase = 'running';
     S.ppStart = Date.now();
     document.getElementById('pp-tap').className = 'tap-btn neutral';
-    document.getElementById('pp-tap-lbl').textContent = 'DONE SUPERSET';
+    document.getElementById('pp-tap-lbl').textContent = `DONE SUPERSET ${S.ppSets+1}`;
     document.getElementById('pp-tap-sub').textContent = `pushups ×${S.ppPushTarget} · then pullups ×${S.ppPullTarget}`;
     return;
   }
-
   const sec = Math.round((Date.now()-S.ppStart)/1000);
   S.ppSets++;
-  S.ppPhase = 'idle';
   S.ppTotalPush += S.ppPushTarget;
   S.ppTotalPull += S.ppPullTarget;
   document.getElementById('pp-sets').textContent = S.ppSets;
@@ -1216,23 +880,19 @@ function ppTap() {
   document.getElementById('pp-s-push').textContent = S.ppTotalPush;
   document.getElementById('pp-s-pull').textContent = S.ppTotalPull;
   addChip('pp-chips', `S${S.ppSets} ${sec}s`, 'done-g');
-  startRestTimer('it-pp-rt-val','it-pp-rt-phase');
-
   if (S.ppSets >= 3) {
+    S.ppPhase = 'done';
     document.getElementById('pp-tap').className = 'tap-btn neutral';
     document.getElementById('pp-tap-lbl').textContent = 'ALL SETS DONE ✓';
     document.getElementById('pp-tap-sub').textContent = 'Great work — session complete';
-    S.ppPhase = 'done';
     return;
   }
-
   // auto-start next
   S.ppPhase = 'running';
   S.ppStart = Date.now();
   document.getElementById('pp-tap').className = 'tap-btn neutral';
-  document.getElementById('pp-tap-lbl').textContent = 'DONE SUPERSET';
+  document.getElementById('pp-tap-lbl').textContent = `DONE SUPERSET ${S.ppSets+1}`;
   document.getElementById('pp-tap-sub').textContent = `set ${S.ppSets+1} · pushups ×${S.ppPushTarget} → pullups ×${S.ppPullTarget}`;
-  startSetTimer('it-pp-rt-val','it-pp-rt-phase');
 }
 
 function goPhaseB(idx) {
@@ -1253,7 +913,7 @@ function addChip(cid, txt, cls) {
   c.className = `chip ${cls}`;
   c.textContent = txt;
   document.getElementById(cid).appendChild(c);
-  setTimeout(()=>{ c.classList.remove('fresh-a','fresh-b','done-g','late'); }, 1800);
+  setTimeout(()=>c.classList.remove('fresh-a','fresh-b','done-g','late'), 1800);
 }
 
 function showEnd(id) {
@@ -1268,6 +928,7 @@ function hideEnd(id) {
 function endSession() {
   clearInterval(S.sessionInterval);
   clearInterval(arcInterval);
+  relWakeLock();
   logSessionToSheet();
   buildSummary();
   showScreen('summary');
@@ -1275,13 +936,12 @@ function endSession() {
 
 function buildSummary() {
   const elapsed = S.totalElapsed;
-  const m = Math.floor(elapsed/60), s = elapsed%60;
-  const timeStr = `${m}:${String(s).padStart(2,'0')}`;
+  const m = Math.floor(elapsed/60), sc = elapsed%60;
+  const timeStr = `${m}:${String(sc).padStart(2,'0')}`;
   const totalKg = S.wL + S.wR;
   const titleEl = document.getElementById('sum-title');
   const grid    = document.getElementById('sum-grid');
   grid.innerHTML = '';
-
   const addCard = (val, lbl, full=false) => {
     const d = document.createElement('div');
     d.className = 'sc' + (full?' full':'');
@@ -1291,11 +951,10 @@ function buildSummary() {
   const addChipsCard = (lbl, chips) => {
     const d = document.createElement('div');
     d.className = 'sc full';
-    d.innerHTML = `<div class="scl" style="margin-bottom:0.4rem">${lbl}</div>
+    d.innerHTML = `<div class="scl" style="margin-bottom:.4rem">${lbl}</div>
       <div class="sum-chips">${chips.map(c=>`<div class="sum-chip">${c}</div>`).join('')}</div>`;
     grid.appendChild(d);
   };
-
   if (S.type === 'a') {
     titleEl.className = 'sum-title a';
     titleEl.textContent = 'Day A Complete';
@@ -1307,9 +966,8 @@ function buildSummary() {
     if (S.abcLog.length) {
       const avg = Math.round(S.abcLog.reduce((a,r)=>a+r.sec,0)/S.abcLog.length);
       addCard(avg+'s', 'Avg Round');
-    }
-    if (S.abcLog.length)
       addChipsCard('Round times', S.abcLog.map((r,i)=>`R${i+1} ${r.sec}s`));
+    }
   } else {
     titleEl.className = 'sum-title b';
     titleEl.textContent = 'Day B Complete';
@@ -1319,7 +977,7 @@ function buildSummary() {
     addCard(S.snatchSets*16, 'Snatch Reps');
     addCard(S.ppTotalPush, 'Pushups');
     addCard(S.ppTotalPull, 'Pullups');
-    addCard((pressKg + snatchKg).toLocaleString()+'kg', 'Total kg Moved');
+    addCard((pressKg+snatchKg).toLocaleString()+'kg', 'Total kg Moved');
     addCard(timeStr, 'Time');
     if (S.pressLog.length)
       addChipsCard('Press sets', S.pressLog.map((s,i)=>`${i+1}: ×${s.reps} ${s.sec}s`));
@@ -1346,14 +1004,13 @@ function logRoundToSheet(session, num, reps, sec, onTarget, overrideWeight) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
   const wt = overrideWeight !== undefined ? overrideWeight : null;
   fetch(APPS_SCRIPT_URL, {
-    method:'POST', mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
+    method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       type:'round', program:'IronTide',
       week:S.week, day:S.day, session,
       number:num, reps, seconds:sec,
-      weightL: wt !== null ? wt : S.wL,
-      weightR: wt !== null ? wt : S.wR,
+      weightL: wt!==null ? wt : S.wL,
+      weightR: wt!==null ? wt : S.wR,
       onTarget,
     }),
   }).catch(()=>{});
@@ -1363,90 +1020,21 @@ function logSessionToSheet() {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
   const totalKg = S.wL + S.wR;
   const elapsed = S.totalElapsed;
-  const m = Math.floor(elapsed/60), s = elapsed%60;
+  const m = Math.floor(elapsed/60), sc = elapsed%60;
+  const snatchKg = S.snatchSets * 16 * S.wSnatch;
   fetch(APPS_SCRIPT_URL, {
-    method:'POST', mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
+    method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       type:'session', program:'IronTide',
       week:S.week, day:S.day,
-      session: S.type==='a' ? 'DayA-ABC' : 'DayB-Press',
+      session: sessionName(),
       weightL:S.wL, weightR:S.wR,
       rounds: S.abcRounds||'',
-      reps: S.type==='a' ? S.abcRounds*6 : S.pressReps,
-      kgMoved: S.type==='a' ? S.abcRounds*6*totalKg : S.pressReps*totalKg,
-      duration:elapsed, durationStr:`${m}:${String(s).padStart(2,'0')}`,
+      reps: S.type==='a' ? S.abcRounds*6 : S.pressReps + S.snatchSets*16,
+      kgMoved: S.type==='a' ? S.abcRounds*6*totalKg : S.pressReps*totalKg + snatchKg,
+      duration:elapsed, durationStr:`${m}:${String(sc).padStart(2,'0')}`,
     }),
   }).catch(()=>{});
-}
-
-
-// ── WAKE LOCK ────────────────────────────────────────────────
-let _wakeLock = null;
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      _wakeLock = await navigator.wakeLock.request('screen');
-    }
-  } catch(e) {}
-}
-function releaseWakeLock() {
-  if (_wakeLock) { _wakeLock.release().catch(()=>{}); _wakeLock = null; }
-}
-document.addEventListener('visibilitychange', async () => {
-  if (_wakeLock && document.visibilityState === 'visible') {
-    await requestWakeLock();
-  }
-});
-
-// ── REST TIMER ENGINE ────────────────────────────────────────
-// call startSetTimer() when set begins, stopSetTimer() when set ends
-// call resetRestTimer() to clear
-let _rtInterval = null;
-let _rtStart    = null;
-let _rtPhase    = 'idle'; // 'working' | 'resting' | 'idle'
-
-function _rtTick(valId, phaseId) {
-  const elapsed = Math.round((Date.now() - _rtStart) / 1000);
-  const m = Math.floor(elapsed / 60);
-  const s = String(elapsed % 60).padStart(2, '0');
-  const el = document.getElementById(valId);
-  const ph = document.getElementById(phaseId);
-  if (!el) return;
-  el.textContent = m > 0 ? `${m}:${s}` : `${elapsed}s`;
-  el.className = 'rt-val ' + _rtPhase;
-  if (ph) ph.textContent = _rtPhase === 'working' ? 'SET' : _rtPhase === 'resting' ? 'REST' : '';
-}
-
-function startSetTimer(valId, phaseId) {
-  clearInterval(_rtInterval);
-  _rtStart = Date.now();
-  _rtPhase = 'working';
-  _rtTick(valId, phaseId);
-  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
-}
-
-function startRestTimer(valId, phaseId) {
-  clearInterval(_rtInterval);
-  _rtStart = Date.now();
-  _rtPhase = 'resting';
-  _rtTick(valId, phaseId);
-  _rtInterval = setInterval(() => _rtTick(valId, phaseId), 500);
-}
-
-function stopRestTimer() {
-  clearInterval(_rtInterval);
-  _rtInterval = null;
-}
-
-function resetRestTimer(valId, phaseId) {
-  clearInterval(_rtInterval);
-  _rtInterval = null;
-  _rtPhase = 'idle';
-  const el = document.getElementById(valId);
-  const ph = document.getElementById(phaseId);
-  if (el) { el.textContent = '—'; el.className = 'rt-val'; }
-  if (ph)   ph.textContent = '';
 }
 
 // ════════════════════════════════════════════════
