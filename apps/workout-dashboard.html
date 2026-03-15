@@ -249,6 +249,7 @@ let dayData       = [];   // aggregated by day
 let filteredDays  = [];   // after program + range filter
 let activeProgram = 'all';
 let activeRange   = '3M';
+let activeHeatmap = '8W';
 let selectedDay   = null;
 
 // ══════════════════════════════════════════════════
@@ -660,50 +661,68 @@ function closeDetail() {
 }
 
 // ══════════════════════════════════════════════════
-// HEATMAP (52 weeks × 7 days)
+// HEATMAP (variable range)
 // ══════════════════════════════════════════════════
 function renderHeatmap(container) {
   const wrap = document.createElement('div');
-  const hdr  = document.createElement('div');
+
+  // Header with range buttons (same pattern as tonnage timeline)
+  const hdr = document.createElement('div');
   hdr.className = 'sec-hdr';
-  hdr.innerHTML = '<span class="sec-title">Consistency — Past Year</span>';
+  hdr.innerHTML = '<span class="sec-title">Consistency</span>';
+  const rangeWrap = document.createElement('div');
+  rangeWrap.className = 'range-btns';
+  ['8W','3M','6M','1Y'].forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'range-btn' + (activeHeatmap === r ? ' active' : '');
+    b.textContent = r;
+    b.onclick = () => { activeHeatmap = r; renderAll(); };
+    rangeWrap.appendChild(b);
+  });
+  hdr.appendChild(rangeWrap);
   wrap.appendChild(hdr);
 
   const hmWrap = document.createElement('div');
   hmWrap.className = 'heatmap-wrap';
 
-  // Build date→kg map for past 52 weeks
-  const today    = new Date();
-  const start    = new Date(today); start.setDate(start.getDate() - 363);
-  // align to Sunday
-  start.setDate(start.getDate() - start.getDay());
+  // Determine week count from active range
+  const weekCounts = { '8W': 8, '3M': 13, '6M': 26, '1Y': 53 };
+  const numWeeks = weekCounts[activeHeatmap] || 8;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  // Start on the Sunday at least numWeeks ago
+  const start = new Date(today);
+  start.setDate(start.getDate() - (numWeeks * 7 - 1));
+  start.setDate(start.getDate() - start.getDay()); // align to Sunday
 
   const kgMap = {};
   dayData.forEach(d => kgMap[d.date] = d.totalKg);
   const maxKg = Math.max(...Object.values(kgMap), 1);
 
-  // Build columns (weeks)
   const grid = document.createElement('div');
   grid.className = 'heatmap-grid';
 
-  const months = [];
-  let colIdx = 0;
-
-  for (let w = 0; w < 53; w++) {
+  for (let w = 0; w < numWeeks + 1; w++) {
     const col = document.createElement('div');
     col.className = 'heatmap-col';
 
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
       date.setDate(start.getDate() + w*7 + d);
-      if (date > today) { col.appendChild(document.createElement('div')); continue; }
 
-      const ds   = toLocalYMD(date);
-      const kg   = kgMap[ds] || 0;
       const cell = document.createElement('div');
+      if (date > today) {
+        // future cell — invisible placeholder to keep grid aligned
+        cell.style.visibility = 'hidden';
+        cell.className = 'hm-cell';
+        col.appendChild(cell);
+        continue;
+      }
+
+      const ds = toLocalYMD(date);
+      const kg = kgMap[ds] || 0;
       cell.className = 'hm-cell';
 
-      // intensity
       if (kg > 0) {
         const pct = Math.min(kg / (maxKg * 0.7), 1);
         const alpha = 0.25 + pct * 0.75;
@@ -713,22 +732,18 @@ function renderHeatmap(container) {
           selectedDay = dayData.find(x => x.date === ds);
           if (selectedDay) { updateDetailCard(selectedDay); renderAll(); }
         };
-      }
-
-      // track month labels
-      if (d === 0 && (date.getDate() <= 7)) {
-        months.push({ col: colIdx, label: date.toLocaleDateString('en',{month:'short'}) });
+      } else {
+        cell.title = fmtDateLong(ds);
       }
 
       col.appendChild(cell);
     }
     grid.appendChild(col);
-    colIdx++;
   }
 
   hmWrap.appendChild(grid);
 
-  // legend
+  // Legend
   const legend = document.createElement('div');
   legend.className = 'hm-legend';
   legend.innerHTML = '<span class="hm-legend-label">Less</span>';
