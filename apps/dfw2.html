@@ -552,9 +552,7 @@ function currentReps() {
 }
 
 function updateStats() {
-  document.getElementById('stat-sets').textContent = S.sets.length;
-  document.getElementById('stat-reps').textContent = S.sets.reduce((a,s)=>a+s.reps,0);
-  document.getElementById('stat-tons').textContent = (S.sets.reduce((a,s)=>a+s.tonnage,0)/1000).toFixed(2);
+  // stat pills removed — totals live on summary screen
 }
 
 function addChip(reps, time, over) {

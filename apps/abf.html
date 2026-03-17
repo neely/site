@@ -577,9 +577,9 @@ function initAbcSession() {
   document.getElementById('abc-done').textContent    = '0';
   document.getElementById('abc-target').textContent  = S.abcTarget;
   document.getElementById('abc-wt').textContent      = `${S.wL} / ${S.wR} kg`;
-  document.getElementById('abc-s-rounds').textContent= '0';
-  document.getElementById('abc-s-reps').textContent  = '0';
-  document.getElementById('abc-s-tons').textContent  = '0';
+  const _ar = document.getElementById('abc-s-rounds'); if(_ar) _ar.textContent='0';
+  const _arp = document.getElementById('abc-s-reps'); if(_arp) _arp.textContent='0';
+  const _at = document.getElementById('abc-s-tons'); if(_at) _at.textContent='0';
   document.getElementById('abc-chips').innerHTML     = '';
   document.getElementById('abc-last').textContent    = '';
   document.getElementById('abc-ctx').textContent     = 'READY';
@@ -611,9 +611,9 @@ function abcTap() {
     ? `<span class="late">Round ${S.abcRounds}: ${elapsed}s — ${diff}s over</span>`
     : `<span class="good">Round ${S.abcRounds}: ${elapsed}s ✓</span>`;
   document.getElementById('abc-done').textContent        = S.abcRounds;
-  document.getElementById('abc-s-rounds').textContent    = S.abcRounds;
-  document.getElementById('abc-s-reps').textContent      = S.abcRounds * 6;
-  document.getElementById('abc-s-tons').textContent      = (S.abcRounds * 6 * (S.wL+S.wR)).toLocaleString();
+  const _ar2 = document.getElementById('abc-s-rounds'); if(_ar2) _ar2.textContent=S.abcRounds;
+  const _arp2 = document.getElementById('abc-s-reps'); if(_arp2) _arp2.textContent=S.abcRounds*6;
+  const _at2 = document.getElementById('abc-s-tons'); if(_at2) _at2.textContent=(S.abcRounds*6*(S.wL+S.wR)).toLocaleString();
   addChip('abc-chips', `R${S.abcRounds} ${elapsed}s`, over ? 'late' : 'fresh');
   logAbcRound(S.abcRounds, elapsed);
   if (S.abcRounds >= S.abcTarget) document.getElementById('abc-ctx').textContent = 'TARGET REACHED! 🎯';
@@ -658,9 +658,9 @@ function initPressSession() {
   document.getElementById('press-done').textContent   = '0';
   document.getElementById('press-target').textContent = S.pressTarget;
   document.getElementById('press-wt').textContent     = `${S.wL} / ${S.wR} kg`;
-  document.getElementById('press-s-sets').textContent = '0';
-  document.getElementById('press-s-reps').textContent = '0';
-  document.getElementById('press-s-tons').textContent = '0';
+  const _ps = document.getElementById('press-s-sets'); if(_ps) _ps.textContent='0';
+  const _pr = document.getElementById('press-s-reps'); if(_pr) _pr.textContent='0';
+  const _pt = document.getElementById('press-s-tons'); if(_pt) _pt.textContent='0';
   document.getElementById('press-chips').innerHTML    = '';
   document.getElementById('press-last').textContent   = '';
   document.getElementById('press-cadence-ctx').textContent = `LADDER ${t.ladder}`;
@@ -725,9 +725,9 @@ function pressTap() {
   S.pressLog.push({ reps, elapsed });
   const totalWt = S.wL + S.wR;
   document.getElementById('press-done').textContent   = S.pressReps;
-  document.getElementById('press-s-sets').textContent = S.pressSets;
-  document.getElementById('press-s-reps').textContent = S.pressReps;
-  document.getElementById('press-s-tons').textContent = (S.pressReps*totalWt).toLocaleString();
+  const _ps2 = document.getElementById('press-s-sets'); if(_ps2) _ps2.textContent=S.pressSets;
+  const _pr2 = document.getElementById('press-s-reps'); if(_pr2) _pr2.textContent=S.pressReps;
+  const _pt3 = document.getElementById('press-s-tons'); if(_pt3) _pt3.textContent=(S.pressReps*totalWt).toLocaleString();
   document.getElementById('press-cadence-ctx').textContent = `LADDER ${PRESS_TARGETS[S.week].ladder}`;
   const rem = Math.max(0, S.pressTarget-S.pressReps);
   document.getElementById('press-last').innerHTML = rem>0

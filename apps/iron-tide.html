@@ -365,16 +365,18 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
 
   <!-- CARRIES -->
   <div class="phase-panel" id="a-p1">
-    <div class="big-num-area">
-      <div class="bna-ctx" id="carry-ctx">FARMER CARRY FINISHER</div>
-      <div class="bna-display">
-        <div class="bna-main" id="carry-timer" style="color:var(--dim)">0</div>
+    <div class="cadence-area">
+      <div class="cadence-ctx" id="carry-ctx">FARMER CARRY FINISHER</div>
+      <div class="cadence-timer idle" id="carry-timer">0</div>
+      <div class="target-row">
+        <div class="target-pip" id="carry-timer-pip"></div>
+        <div class="target-lbl" id="carry-progress">0 / 6 carries done</div>
       </div>
-      <div class="bna-detail">Single-arm · 3 lengths each side · <strong id="carry-wt">16 kg</strong><br>
-        <span style="font-size:.75rem;color:var(--dim)">Suitcase or rack — your call. Switch arm each carry.</span>
+      <div class="set-meta-detail" style="margin-top:1rem">
+        Single-arm · 3 lengths each side · <strong id="carry-wt">16 kg</strong>
       </div>
-      <div class="bna-last" style="margin-top:.5rem">
-        <span class="note" id="carry-progress">0 / 6 carries done</span>
+      <div class="set-meta-detail" style="margin-top:.3rem;color:var(--dim)">
+        Suitcase or rack — your call. Switch arm each carry.
       </div>
     </div>
     <button class="tap-btn tide-go" id="carry-tap" onclick="carryTap()">
@@ -721,7 +723,7 @@ function startSession() {
   S.totalElapsed = 0;
   reqWakeLock();
   if (S.type === 'a') { initDayA(); updateAbcNextPill(); updateCarryNextPill(); showScreen('session-a'); }
-  else                { initDayB(); showScreen('session-b'); }
+  else                { initDayB(); updatePressNextPill(); updateSnatchNextPill(); updatePpNextPill(); showScreen('session-b'); }
   startClock();
 }
 
@@ -764,18 +766,18 @@ function initDayA() {
   document.getElementById('abc-last').textContent = '';
   document.getElementById('abc-chips').innerHTML = '';
   document.getElementById('carry-chips').innerHTML = '';
-  document.getElementById('carry-done').textContent = '0';
+  const _gcarry_done = document.getElementById('carry-done'); if(_gcarry_done) _gcarry_done.textContent = '0';
   document.getElementById('carry-tap').className = 'tap-btn tide-go';
   document.getElementById('carry-tap-lbl').textContent = 'START — LEFT ARM';
   document.getElementById('carry-tap-sub').textContent = 'walk 3 lengths, tap when done';
   document.getElementById('carry-timer').textContent = '0';
-  document.getElementById('carry-timer').style.color = 'var(--dim)';
+  const ct = document.getElementById('carry-timer'); if(ct){ct.textContent='0';ct.className='cadence-timer idle';}
   document.getElementById('carry-ctx').textContent = 'FARMER CARRY FINISHER';
   document.getElementById('carry-progress').textContent = '0 / 6 carries done';
   S.carryPhase = 'idle'; S.carryStart = null; clearInterval(S.carryInterval);
   resetArc();
-  ['abc-s-rounds','abc-s-reps','abc-s-kg','abc-s-rounds-2','abc-s-kg-2','carry-s-done'].forEach(id=>{
-    document.getElementById(id).textContent='0';
+  ['abc-s-rounds','abc-s-reps','abc-s-kg'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.textContent='0';
   });
   goPhaseA(0);
 }
@@ -841,11 +843,11 @@ function abcTap() {
   const totalReps = S.abcRounds * 6;
   const totalKgMoved = totalReps * totalKg;
   document.getElementById('abc-done').textContent = S.abcRounds;
-  document.getElementById('abc-s-rounds').textContent = S.abcRounds;
-  document.getElementById('abc-s-rounds-2').textContent = S.abcRounds;
-  document.getElementById('abc-s-reps').textContent = totalReps;
-  document.getElementById('abc-s-kg').textContent = totalKgMoved;
-  document.getElementById('abc-s-kg-2').textContent = totalKgMoved;
+  const _gabc_s_rounds = document.getElementById('abc-s-rounds'); if(_gabc_s_rounds) _gabc_s_rounds.textContent = S.abcRounds;
+  const r2 = document.getElementById('abc-s-rounds-2'); if(r2) r2.textContent = S.abcRounds;
+  const _gabc_s_reps = document.getElementById('abc-s-reps'); if(_gabc_s_reps) _gabc_s_reps.textContent = totalReps;
+  const _gabc_s_kg = document.getElementById('abc-s-kg'); if(_gabc_s_kg) _gabc_s_kg.textContent = totalKgMoved;
+  const kg2 = document.getElementById('abc-s-kg-2'); if(kg2) kg2.textContent = totalKgMoved;
   addChip('abc-chips', `R${S.abcRounds} ${sec}s`, over ? 'late' : 'fresh-a');
   logRoundToSheet('ABC', S.abcRounds, 6, sec, sec <= S.emomSec);
   if (S.abcRounds >= S.abcTarget) {
@@ -879,7 +881,7 @@ function startCarryClock() {
 function stopCarryClock() {
   clearInterval(S.carryInterval);
   const el = Math.floor((Date.now() - S.carryStart) / 1000);
-  document.getElementById('carry-timer').style.color = 'var(--dim)';
+  const ct = document.getElementById('carry-timer'); if(ct){ct.textContent='0';ct.className='cadence-timer idle';}
   return el;
 }
 
@@ -913,8 +915,8 @@ function carryTap() {
   const side = CARRY_SIDES[S.carryDone % 6];
   S.carryDone++;
   S.carryPhase = 'idle';
-  document.getElementById('carry-done').textContent = S.carryDone;
-  document.getElementById('carry-s-done').textContent = S.carryDone;
+  const _gcarry_done = document.getElementById('carry-done'); if(_gcarry_done) _gcarry_done.textContent = S.carryDone;
+  const csd = document.getElementById('carry-s-done'); if(csd) csd.textContent = S.carryDone;
   document.getElementById('carry-progress').textContent = `${S.carryDone} / 6 carries done`;
   addChip('carry-chips', `${side} ${sec}s`, 'done-g');
 
@@ -1040,10 +1042,10 @@ function pressTap() {
   S.pressLog.push({reps,sec});
   const totalKg = S.wL + S.wR;
   document.getElementById('press-done').textContent = S.pressReps;
-  document.getElementById('press-s-sets').textContent = S.pressSets;
-  document.getElementById('press-s-reps').textContent = S.pressReps;
-  document.getElementById('press-s-reps-2').textContent = S.pressReps;
-  document.getElementById('press-s-kg').textContent = S.pressReps * totalKg;
+  const _gpress_s_sets = document.getElementById('press-s-sets'); if(_gpress_s_sets) _gpress_s_sets.textContent = S.pressSets;
+  const _gpress_s_reps = document.getElementById('press-s-reps'); if(_gpress_s_reps) _gpress_s_reps.textContent = S.pressReps;
+  const _gpress_s_reps_2 = document.getElementById('press-s-reps-2'); if(_gpress_s_reps_2) _gpress_s_reps_2.textContent = S.pressReps;
+  const _gpress_s_kg = document.getElementById('press-s-kg'); if(_gpress_s_kg) _gpress_s_kg.textContent = S.pressReps * totalKg;
   const rem = Math.max(0, S.pressTarget - S.pressReps);
   document.getElementById('press-last').innerHTML = rem > 0
     ? `<span class="note">${rem} reps to target</span>`
@@ -1092,8 +1094,8 @@ function snatchTap() {
   S.snatchSets++;
   const reps = 16;
   document.getElementById('snatch-sets').textContent = S.snatchSets;
-  document.getElementById('snatch-s-sets').textContent = S.snatchSets;
-  document.getElementById('snatch-s-reps').textContent = S.snatchSets * reps;
+  const _gsnatch_s_sets = document.getElementById('snatch-s-sets'); if(_gsnatch_s_sets) _gsnatch_s_sets.textContent = S.snatchSets;
+  const _gsnatch_s_reps = document.getElementById('snatch-s-reps'); if(_gsnatch_s_reps) _gsnatch_s_reps.textContent = S.snatchSets * reps;
   addChip('snatch-chips', `Set ${S.snatchSets} ${sec}s`, 'fresh-b');
   logRoundToSheet('Snatch', S.snatchSets, reps, sec, true, S.wSnatch);
   updateSnatchNextPill();
@@ -1144,9 +1146,9 @@ function ppTap() {
   S.ppTotalPush += S.ppPushTarget;
   S.ppTotalPull += S.ppPullTarget;
   document.getElementById('pp-sets').textContent = S.ppSets;
-  document.getElementById('pp-s-sets').textContent = S.ppSets;
-  document.getElementById('pp-s-push').textContent = S.ppTotalPush;
-  document.getElementById('pp-s-pull').textContent = S.ppTotalPull;
+  const _gpp_s_sets = document.getElementById('pp-s-sets'); if(_gpp_s_sets) _gpp_s_sets.textContent = S.ppSets;
+  const _gpp_s_push = document.getElementById('pp-s-push'); if(_gpp_s_push) _gpp_s_push.textContent = S.ppTotalPush;
+  const _gpp_s_pull = document.getElementById('pp-s-pull'); if(_gpp_s_pull) _gpp_s_pull.textContent = S.ppTotalPull;
   addChip('pp-chips', `S${S.ppSets} ${sec}s`, 'done-g');
   updatePpNextPill();
   if (S.ppSets >= 3) {

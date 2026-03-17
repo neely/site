@@ -596,9 +596,9 @@ function updateStats() {
   const totalSets = S.sets.length;
   const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
   const totalTons = S.sets.reduce((a,s) => a+s.tonnage, 0) / 1000;
-  document.getElementById('stat-sets').textContent = totalSets;
-  document.getElementById('stat-reps').textContent = totalReps;
-  document.getElementById('stat-tons').textContent = totalTons.toFixed(2);
+  // stat-sets removed
+  // stat-reps removed
+  // stat-tons removed
 }
 
 function addChip(reps, time, over) {
