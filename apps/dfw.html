@@ -163,6 +163,34 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   font-weight: 500; font-size: .6rem; letter-spacing: .06em;
 }
 
+
+/* ── BOTTOM BAR (locked design) ── */
+.new-stat-bar{padding:.6rem 1.5rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:.45rem;align-items:stretch;flex-shrink:0}
+.next-pill{flex:2;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.55rem .7rem;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.next-pill .np-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem}
+.next-pill .np-val{font-size:.85rem;font-weight:500;color:var(--ink);line-height:1.3}
+.action-pill{flex:1;border-radius:7px;padding:.55rem .5rem;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;border:none;font-family:'IBM Plex Mono',monospace;transition:opacity .15s}
+.action-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase}
+.action-pill .ap-val{font-size:.82rem;font-weight:500}
+/* Pause — gold tint */
+.pause-pill{background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.25)}
+.pause-pill .ap-lbl{color:rgba(227,179,65,.6)}
+.pause-pill .ap-val{color:#e3b341}
+.pause-pill.paused{background:rgba(63,185,80,.07);border-color:rgba(63,185,80,.3)}
+.pause-pill.paused .ap-lbl{color:rgba(63,185,80,.6)}
+.pause-pill.paused .ap-val{color:var(--go)}
+/* End — red tint */
+.end-pill-wrap{flex:1;position:relative}
+.end-pill{width:100%;height:100%;min-height:56px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);border-radius:7px;padding:.55rem .5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:opacity .15s}
+.end-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(248,81,73,.5)}
+.end-pill .ap-val{font-size:.82rem;font-weight:500;color:var(--warn)}
+.end-confirm-overlay{display:none;position:absolute;inset:0;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.4);border-radius:7px;flex-direction:column;align-items:center;justify-content:center;gap:.3rem}
+.end-confirm-overlay.vis{display:flex}
+.end-confirm-overlay span{font-size:.5rem;color:var(--dim);letter-spacing:.06em}
+.end-confirm-btns{display:flex;gap:.3rem}
+.ec-yes{padding:.25rem .5rem;background:var(--warn);border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:#fff;cursor:pointer}
+.ec-no{padding:.25rem .5rem;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--dim);cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -267,17 +295,26 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div class="log-scroll" id="set-log"></div>
   </div>
 
-  <div class="sess-bottom">
-    <div class="stat-pill"><div class="val" id="stat-sets">0</div><div class="lbl">Sets</div></div>
-    <div class="stat-pill"><div class="val" id="stat-reps">0</div><div class="lbl">Reps</div></div>
-    <div class="stat-pill"><div class="val" id="stat-tons">0.0</div><div class="lbl">Tons</div></div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0">
-      <button class="btn-pause" id="btn-pause" onclick="pauseSession()">⏸ Pause</button>
-      <button class="btn-end" id="btn-end-1" onclick="showEndConfirm()">End Workout</button>
-      <div id="end-confirm" style="display:none;gap:.35rem;align-items:center" class="end-confirm-row">
-        <span style="font-size:.55rem;color:var(--dim)">sure?</span>
-        <button class="btn-end-yes" onclick="endSession()">Yes</button>
-        <button class="btn-end-no" onclick="hideEndConfirm()">No</button>
+<div class="new-stat-bar">
+    <div class="next-pill">
+      <div class="np-lbl" id="dfw-next-lbl">Next set</div>
+      <div class="np-val" id="dfw-next-val">—</div>
+    </div>
+    <button class="action-pill pause-pill" id="dfw-pause" onclick="pauseSession()">
+      <div class="ap-lbl">Action</div>
+      <div class="ap-val">⏸ Pause</div>
+    </button>
+    <div class="end-pill-wrap">
+      <button class="end-pill" id="dfw-end" onclick="showEndConfirm()">
+        <div class="ap-lbl">Action</div>
+        <div class="ap-val">⏏ End</div>
+      </button>
+      <div class="end-confirm-overlay" id="dfw-end-confirm">
+        <span>end session?</span>
+        <div class="end-confirm-btns">
+          <button class="ec-yes" onclick="endSession()">Yes</button>
+          <button class="ec-no" onclick="hideEndConfirm()">No</button>
+        </div>
       </div>
     </div>
   </div>
@@ -419,6 +456,7 @@ function startSession() {
   document.getElementById('last-row').innerHTML            = '';
   updateStats();
   resetTapBtn();
+  updateNextPill();
   showScreen('session');
   startWorkoutClock();
   reqWakeLock();
@@ -517,6 +555,7 @@ function handleTap() {
       : `<span class="good">Set ${S.sets.length}: ${cadenceTime}s ✓</span>`;
 
     updateStats();
+    updateNextPill();
     addChip(reps, cadenceTime, over);
     logSetToSheet(S.sets.length, reps, cadenceTime);
 
@@ -576,12 +615,10 @@ function addChip(reps, time, over) {
 // END / SUMMARY
 // ════════════════════════════════════════════════════
 function showEndConfirm() {
-  document.getElementById('end-confirm').style.display = 'flex';
-  document.getElementById('btn-end-1').style.display   = 'none';
+  document.getElementById('dfw-end-confirm').classList.add('vis');
 }
 function hideEndConfirm() {
-  document.getElementById('end-confirm').style.display = 'none';
-  document.getElementById('btn-end-1').style.display   = 'block';
+  document.getElementById('dfw-end-confirm').classList.remove('vis');
 }
 
 function endSession() {
