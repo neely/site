@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>DFW</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0f0f10;--surface:#1a1a1c;--surface2:#242426;
+  --border:#2e2e30;--ink:#ededea;--dim:#6b6b68;
+  --accent:#e8c547;--red:#e5837a;--go:#4caf7d;--go-dark:#0f1a13;
+}
+
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'IBM Plex Mono',monospace;
+  min-height:100vh;display:flex;flex-direction:column;
+  max-width:480px;margin:0 auto;overflow-x:hidden;
+}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;flex:1;padding:2rem 1.5rem;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SETUP ── */
+.prog-badge{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
+.prog-title{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:700;line-height:1;margin-bottom:.25rem}
+.prog-title em{font-style:italic;color:var(--accent)}
+.prog-sub{font-size:.72rem;color:var(--dim);margin-bottom:2.5rem;letter-spacing:.05em}
+
+.sel-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem}
+.sel-group label{display:block;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.4rem}
+
+.seg{display:flex;background:var(--surface);border-radius:6px;border:1px solid var(--border);overflow:hidden}
+.seg-btn{flex:1;padding:.5rem 0;font-family:'IBM Plex Mono',monospace;font-size:.8rem;background:transparent;border:none;color:var(--dim);cursor:pointer;transition:background .15s,color .15s}
+.seg-btn.active{background:var(--surface2);color:var(--ink)}
+
+.scheme-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.scheme-lbl{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.4rem}
+.scheme-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:.25rem}
+.scheme-desc{font-size:.7rem;color:var(--dim);line-height:1.5}
+
+.wt-section{margin-bottom:1.5rem}
+.wt-section label{display:block;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem}
+.bell-toggle{display:flex;gap:.5rem;margin-bottom:.75rem}
+.bell-opt{flex:1;padding:.5rem;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--dim);cursor:pointer;transition:all .15s}
+.bell-opt.active{border-color:var(--accent);color:var(--accent);background:var(--surface2)}
+.wt-inputs{display:grid;gap:.5rem}
+.wt-inputs.doubles{grid-template-columns:1fr 1fr}
+.wt-inputs.single{grid-template-columns:1fr}
+.wt-wrap{position:relative}
+.wt-wrap span{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);font-size:.65rem;color:var(--dim);pointer-events:none}
+input[type=number]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:1.1rem;padding:.6rem 2.5rem .6rem .85rem;outline:none;-moz-appearance:textfield;appearance:textfield}
+input[type=number]:focus{border-color:var(--accent)}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+.cadence-hint{font-size:.62rem;color:var(--dim);margin-top:.4rem;line-height:1.5}
+
+.btn-primary{width:100%;padding:1.1rem;background:var(--go);border:none;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:500;letter-spacing:.08em;color:var(--go-dark);cursor:pointer;transition:background .15s,transform .1s;margin-top:auto}
+.btn-primary:active{transform:scale(.98);background:#3d9e68}
+
+/* ── SESSION HEADER ── */
+#session{padding:0;justify-content:stretch}
+.sess-hdr{padding:1rem 1.5rem .75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.wk-clock{display:flex;flex-direction:column}
+.wk-clock .ck-lbl{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.wk-clock .ck-val{font-size:1.4rem;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+.sess-info{text-align:right}
+.sess-info .day-lbl{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.sess-info .scheme-big{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--accent)}
+
+/* ── CADENCE AREA ── */
+.cadence-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1.5rem;gap:.25rem;position:relative}
+.cadence-ctx{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
+.cadence-timer{font-family:'IBM Plex Mono',monospace;font-size:clamp(5rem,22vw,7rem);font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);transition:color .3s}
+.cadence-timer.over{color:var(--red)}
+.cadence-timer.idle{color:var(--dim)}
+.target-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem}
+.target-pip{width:6px;height:6px;border-radius:50%;background:var(--go);flex-shrink:0}
+.target-pip.over{background:var(--red)}
+.target-lbl{font-size:.65rem;color:var(--dim);letter-spacing:.08em}
+.rep-badge-row{display:flex;align-items:center;gap:1rem;margin-top:1rem}
+.rep-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem 1rem;font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--ink);line-height:1}
+.rep-meta{font-size:.65rem;color:var(--dim);line-height:1.5}
+.rep-meta .wt{color:var(--accent);font-size:.72rem}
+.last-row{font-size:.65rem;color:var(--dim);margin-top:.75rem;min-height:1.2em;letter-spacing:.05em}
+.last-row .good{color:var(--go)}
+.last-row .slow{color:var(--red)}
+
+/* ── TAP BUTTON ── */
+.tap-zone{
+  margin:0 1.5rem;
+  border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.15rem;
+  font-family:'IBM Plex Mono',monospace;
+  cursor:pointer;user-select:none;-webkit-user-select:none;
+  flex-shrink:0;
+  transition:background .15s,transform .08s;
+  padding:1.2rem;
+  min-height:100px;
+  position:relative;overflow:hidden;
+}
+.tap-zone:active{transform:scale(.97)}
+/* idle state */
+.tap-zone.idle{background:var(--go);color:var(--go-dark)}
+/* running state */
+.tap-zone.running{background:#1c3022;border:1.5px solid var(--go);color:var(--go)}
+
+.tap-main{font-size:.9rem;font-weight:500;letter-spacing:.1em}
+.tap-sub{font-size:.88rem;letter-spacing:.04em;opacity:.85;font-weight:500}
+
+/* ── LOG AREA ── */
+.log-area{padding:.75rem 1.5rem .5rem;flex-shrink:0}
+.log-lbl{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.4rem}
+.log-scroll{display:flex;gap:.35rem;flex-wrap:wrap}
+.set-chip{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;font-size:.62rem;color:var(--dim);transition:all .5s}
+.set-chip.fresh{border-color:#2d6b4a;color:var(--go)}
+.set-chip.slow{border-color:#6b2e2a;color:var(--red)}
+
+/* ── BOTTOM BAR ── */
+.sess-bottom{padding:.75rem 1.5rem 1.5rem;display:flex;gap:.6rem;border-top:1px solid var(--border)}
+.stat-pill{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.45rem .5rem;text-align:center}
+.stat-pill .val{font-size:1rem;font-weight:500;color:var(--ink)}
+.stat-pill .lbl{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.btn-end{padding:.4rem .7rem;background:transparent;border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.55rem;letter-spacing:.08em;color:var(--dim);cursor:pointer;transition:color .15s,border-color .15s;flex-shrink:0;opacity:.5}
+.btn-end:hover{color:var(--red);border-color:var(--red);opacity:1}
+.end-confirm-row{display:flex}
+.btn-end-yes,.btn-end-no{padding:.35rem .6rem;font-family:'IBM Plex Mono',monospace;font-size:.55rem;letter-spacing:.08em;border-radius:5px;cursor:pointer;border:1px solid var(--border);transition:all .15s}
+.btn-end-yes{background:var(--red);color:#1a0a08;border-color:var(--red)}
+.btn-end-no{background:transparent;color:var(--dim)}
+
+/* ── SUMMARY ── */
+#summary{justify-content:center;gap:1.5rem}
+.sum-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--ink);text-align:center}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.sum-card.full{grid-column:span 2}
+.big-val{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--accent)}
+.card-lbl{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-top:.2rem}
+.set-history{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center}
+.h-chip{background:var(--surface2);border-radius:4px;padding:.12rem .4rem;font-size:.62rem;color:var(--dim)}
+.btn-secondary{padding:.85rem;background:transparent;border:1px solid var(--border);border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:.85rem;letter-spacing:.08em;color:var(--dim);cursor:pointer;transition:all .15s;margin-top:auto}
+.btn-secondary:hover{color:var(--ink);border-color:var(--ink)}
+
+/* ── PAUSE ── */
+.btn-pause {
+  padding: .4rem .7rem; background: transparent;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace; font-size: .55rem;
+  letter-spacing: .08em; color: var(--dim); cursor: pointer;
+  transition: color .15s, border-color .15s; flex-shrink: 0; opacity: .5;
+}
+.btn-pause:hover { opacity: 1; color: var(--gold, var(--accent, #e3b341)); border-color: var(--gold, var(--accent, #e3b341)); }
+.btn-pause.paused {
+  opacity: 1; color: var(--go); border-color: var(--go);
+  font-weight: 500; font-size: .6rem; letter-spacing: .06em;
+}
+
+
+/* ── BOTTOM BAR (locked design) ── */
+.new-stat-bar{padding:.6rem 1.5rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:.45rem;align-items:stretch;flex-shrink:0}
+.next-pill{flex:2;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.55rem .7rem;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.next-pill .np-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem}
+.next-pill .np-val{font-size:.85rem;font-weight:500;color:var(--ink);line-height:1.3}
+.action-pill{flex:1;border-radius:7px;padding:.55rem .5rem;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;border:none;font-family:'IBM Plex Mono',monospace;transition:opacity .15s}
+.action-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase}
+.action-pill .ap-val{font-size:.82rem;font-weight:500}
+/* Pause — gold tint */
+.pause-pill{background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.25)}
+.pause-pill .ap-lbl{color:rgba(227,179,65,.6)}
+.pause-pill .ap-val{color:#e3b341}
+.pause-pill.paused{background:rgba(63,185,80,.07);border-color:rgba(63,185,80,.3)}
+.pause-pill.paused .ap-lbl{color:rgba(63,185,80,.6)}
+.pause-pill.paused .ap-val{color:var(--go)}
+/* End — red tint */
+.end-pill-wrap{flex:1;position:relative}
+.end-pill{width:100%;height:100%;min-height:56px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);border-radius:7px;padding:.55rem .5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:opacity .15s}
+.end-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(248,81,73,.5)}
+.end-pill .ap-val{font-size:.82rem;font-weight:500;color:var(--warn)}
+.end-confirm-overlay{display:none;position:absolute;inset:0;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.4);border-radius:7px;flex-direction:column;align-items:center;justify-content:center;gap:.3rem}
+.end-confirm-overlay.vis{display:flex}
+.end-confirm-overlay span{font-size:.5rem;color:var(--dim);letter-spacing:.06em}
+.end-confirm-btns{display:flex;gap:.3rem}
+.ec-yes{padding:.25rem .5rem;background:var(--warn);border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:#fff;cursor:pointer}
+.ec-no{padding:.25rem .5rem;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--dim);cursor:pointer}
+
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup" class="screen active">
+  <div class="prog-badge">Neupert · Pavel</div>
+  <div class="prog-title">Dry <em>Fighting</em> Weight</div>
+  <div class="prog-sub">30 min · C+P alternating FSQ · 5RM bells</div>
+
+  <div class="sel-row">
+    <div class="sel-group">
+      <label>Week</label>
+      <div class="seg" id="week-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+        <button class="seg-btn" data-val="4">4</button>
+      </div>
+    </div>
+    <div class="sel-group">
+      <label>Day</label>
+      <div class="seg" id="day-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scheme-card">
+    <div class="scheme-lbl">Today's Scheme</div>
+    <div class="scheme-val" id="scheme-name">Ladders 1–2–3</div>
+    <div class="scheme-desc" id="scheme-desc"></div>
+  </div>
+
+  <div class="wt-section">
+    <label>Bell Setup</label>
+    <div class="bell-toggle">
+      <button class="bell-opt active" id="opt-single" onclick="setBellMode('single')">Single</button>
+      <button class="bell-opt" id="opt-double" onclick="setBellMode('double')">Double</button>
+    </div>
+    <div class="wt-inputs single" id="weight-inputs">
+      <div class="wt-wrap">
+        <input type="number" id="w1" placeholder="24" min="4" max="100" step="4">
+        <span>kg</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wt-section" style="margin-bottom:1rem">
+    <label>Target cadence (seconds per set)</label>
+    <div class="wt-inputs single">
+      <div class="wt-wrap">
+        <input type="number" id="cadence-target" placeholder="60" min="20" max="300" step="5" value="60">
+        <span>sec</span>
+      </div>
+    </div>
+    <div class="cadence-hint">Full cycle: your work + rest combined. Tap start, tap when set is done.</div>
+  </div>
+
+  <button class="btn-primary" onclick="startSession()">Start Session →</button>
+</div>
+
+<!-- SESSION -->
+<div id="session" class="screen">
+  <div class="sess-hdr">
+    <div class="wk-clock">
+      <div class="ck-lbl">remaining</div>
+      <div class="ck-val" id="elapsed">30:00</div>
+    </div>
+    <div class="sess-info">
+      <div class="day-lbl" id="sess-day-lbl">Week 1 · Day 1</div>
+      <div class="scheme-big" id="sess-scheme-name">Ladders 1–2–3</div>
+    </div>
+  </div>
+
+  <div class="cadence-area">
+    <div class="cadence-ctx" id="cadence-ctx">READY</div>
+    <div class="cadence-timer idle" id="cadence-timer">0</div>
+    <div class="target-row">
+      <div class="target-pip" id="target-pip"></div>
+      <div class="target-lbl" id="target-lbl">target: — s</div>
+    </div>
+    <div class="rep-badge-row">
+      <div class="rep-badge" id="rep-badge">1</div>
+      <div class="rep-meta">
+        <div>reps each side</div>
+        <div class="wt" id="weight-reminder">24 kg</div>
+      </div>
+    </div>
+    <div class="last-row" id="last-row"></div>
+  </div>
+
+  <div class="tap-zone idle" id="tap-zone" onclick="handleTap()">
+    <span class="tap-main" id="tap-main">START FIRST SET</span>
+    <span class="tap-sub" id="tap-sub">C+P · then FSQ</span>
+  </div>
+
+  <div class="log-area">
+    <div class="log-lbl">Sets</div>
+    <div class="log-scroll" id="set-log"></div>
+  </div>
+
+<div class="new-stat-bar">
+    <div class="next-pill">
+      <div class="np-lbl" id="dfw-next-lbl">Next set</div>
+      <div class="np-val" id="dfw-next-val">—</div>
+    </div>
+    <button class="action-pill pause-pill" id="dfw-pause" onclick="pauseSession()">
+      <div class="ap-lbl">Action</div>
+      <div class="ap-val">⏸ Pause</div>
+    </button>
+    <div class="end-pill-wrap">
+      <button class="end-pill" id="dfw-end" onclick="showEndConfirm()">
+        <div class="ap-lbl">Action</div>
+        <div class="ap-val">⏏ End</div>
+      </button>
+      <div class="end-confirm-overlay" id="dfw-end-confirm">
+        <span>end session?</span>
+        <div class="end-confirm-btns">
+          <button class="ec-yes" onclick="endSession()">Yes</button>
+          <button class="ec-no" onclick="hideEndConfirm()">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="summary" class="screen">
+  <div class="sum-title">Session Complete</div>
+  <div class="sum-grid">
+    <div class="sum-card"><div class="big-val" id="sum-sets">—</div><div class="card-lbl">Total Sets</div></div>
+    <div class="sum-card"><div class="big-val" id="sum-reps">—</div><div class="card-lbl">Total Reps</div></div>
+    <div class="sum-card"><div class="big-val" id="sum-tons">—</div><div class="card-lbl">Tonnage (kg)</div></div>
+    <div class="sum-card"><div class="big-val" id="sum-time">—</div><div class="card-lbl">Time</div></div>
+    <div class="sum-card"><div class="big-val" id="sum-avg">—</div><div class="card-lbl">Avg Cadence</div></div>
+    <div class="sum-card full">
+      <div class="card-lbl" style="margin-bottom:.5rem">Set breakdown</div>
+      <div class="set-history" id="sum-history"></div>
+    </div>
+  </div>
+  <button class="btn-secondary" onclick="goSetup()">← New Session</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// PROGRAM DATA
+// ════════════════════════════════════════════════════
+const SCHEMES = {
+  '1-1':{ name:'Ladders 1–2–3',   rungs:[1,2,3],   type:'ladder' },
+  '1-2':{ name:'Sets of 1',        rungs:[1],        type:'fixed'  },
+  '1-3':{ name:'Sets of 2',        rungs:[2],        type:'fixed'  },
+  '2-1':{ name:'Ladders 1–2–3',   rungs:[1,2,3],   type:'ladder' },
+  '2-2':{ name:'Sets of 1',        rungs:[1],        type:'fixed'  },
+  '2-3':{ name:'Sets of 3',        rungs:[3],        type:'fixed'  },
+  '3-1':{ name:'Ladders 1–2–3–4', rungs:[1,2,3,4], type:'ladder' },
+  '3-2':{ name:'Sets of 2',        rungs:[2],        type:'fixed'  },
+  '3-3':{ name:'Sets of 3',        rungs:[3],        type:'fixed'  },
+  '4-1':{ name:'Ladders 1–2–3–4–5', rungs:[1,2,3,4,5], type:'ladder' },
+  '4-2':{ name:'Sets of 3',        rungs:[3],        type:'fixed'  },
+  '4-3':{ name:'Alt 3s & 4s',      rungs:[3,4],     type:'alt'    },
+};
+const DESCS = {
+  ladder:'Complete each rung (1→2→3 reps) C+P then FSQ each rung. Repeat ladders for 30 min.',
+  fixed: 'Perform sets of the same rep count, C+P then FSQ each set. 30 min.',
+  alt:   'Alternate between the two rep counts, C+P then FSQ each set. 30 min.',
+};
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+const S = {
+  week:1, day:1,
+  bellMode:'single',
+  weights:[24],
+  targetCadence:60,
+  scheme:null,
+  // session
+  sets:[],
+  rungIdx:0,
+  setPhase:'idle',    // 'idle' | 'running'
+  sessionStart:null,
+  totalElapsed:0,
+  workoutInterval:null,
+  cadenceInterval:null,
+  setStart:null,
+};
+
+// ════════════════════════════════════════════════════
+// WAKE LOCK
+// ════════════════════════════════════════════════════
+let _wl = null;
+async function reqWakeLock() {
+  try { if ('wakeLock' in navigator) _wl = await navigator.wakeLock.request('screen'); }
+  catch(e) {}
+}
+function relWakeLock() { if (_wl) { _wl.release().catch(()=>{}); _wl = null; } }
+document.addEventListener('visibilitychange', async () => {
+  if (_wl && document.visibilityState === 'visible') await reqWakeLock();
+});
+
+// ════════════════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════════════════
+function segInit(id, key) {
+  document.getElementById(id).querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById(id).querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      S[key] = parseInt(btn.dataset.val);
+      updateSchemeCard();
+    });
+  });
+}
+
+function updateSchemeCard() {
+  const s = SCHEMES[`${S.week}-${S.day}`];
+  if (!s) return;
+  S.scheme = s;
+  document.getElementById('scheme-name').textContent = s.name;
+  document.getElementById('scheme-desc').textContent = DESCS[s.type];
+}
+
+function setBellMode(mode) {
+  S.bellMode = mode;
+  document.getElementById('opt-single').classList.toggle('active', mode === 'single');
+  document.getElementById('opt-double').classList.toggle('active', mode === 'double');
+  const inp = document.getElementById('weight-inputs');
+  inp.className = 'wt-inputs ' + (mode === 'double' ? 'doubles' : 'single');
+  inp.innerHTML = mode === 'single'
+    ? `<div class="wt-wrap"><input type="number" id="w1" placeholder="24" min="4" max="100" step="4"><span>kg</span></div>`
+    : `<div class="wt-wrap"><input type="number" id="w1" placeholder="24" min="4" max="100" step="4"><span>kg L</span></div>
+       <div class="wt-wrap"><input type="number" id="w2" placeholder="24" min="4" max="100" step="4"><span>kg R</span></div>`;
+}
+
+// ════════════════════════════════════════════════════
+// SESSION START
+// ════════════════════════════════════════════════════
+function startSession() {
+  const w1 = parseFloat(document.getElementById('w1')?.value) || 24;
+  const w2 = parseFloat(document.getElementById('w2')?.value) || w1;
+  S.weights        = S.bellMode === 'single' ? [w1] : [w1, w2];
+  S.targetCadence  = parseInt(document.getElementById('cadence-target')?.value) || 60;
+  S.sets           = [];
+  S.rungIdx        = 0;
+  S.setPhase       = 'idle';
+  S.sessionStart   = Date.now();
+  S.totalElapsed   = 0;
+
+  updateSchemeCard();
+
+  const wLabel = S.weights.length === 1
+    ? `${S.weights[0]} kg`
+    : `${S.weights[0]} / ${S.weights[1]} kg`;
+
+  document.getElementById('sess-day-lbl').textContent     = `Week ${S.week} · Day ${S.day}`;
+  document.getElementById('sess-scheme-name').textContent  = S.scheme.name;
+  document.getElementById('weight-reminder').textContent   = wLabel;
+  document.getElementById('target-lbl').textContent        = `target: ${S.targetCadence}s`;
+  document.getElementById('set-log').innerHTML             = '';
+  document.getElementById('last-row').innerHTML            = '';
+  updateStats();
+  resetTapBtn();
+  updateNextPill();
+  showScreen('session');
+  startWorkoutClock();
+  reqWakeLock();
+}
+
+// ════════════════════════════════════════════════════
+// WORKOUT CLOCK (30 min countdown, top left)
+// ════════════════════════════════════════════════════
+function startWorkoutClock() {
+  clearInterval(S.workoutInterval);
+  const totalSec = 30 * 60;
+  S.workoutInterval = setInterval(() => {
+    S.totalElapsed = Math.floor((Date.now() - S.sessionStart) / 1000);
+    const remaining = Math.max(0, totalSec - S.totalElapsed);
+    const m = Math.floor(remaining / 60);
+    const sc = remaining % 60;
+    document.getElementById('elapsed').textContent =
+      `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+    if (remaining === 0) { clearInterval(S.workoutInterval); endSession(); }
+  }, 500);
+}
+
+// ════════════════════════════════════════════════════
+// CADENCE CLOCK (big center number — counts up, turns red past target)
+// ════════════════════════════════════════════════════
+function startCadenceClock() {
+  clearInterval(S.cadenceInterval);
+  S.setStart = Date.now();
+  const timerEl = document.getElementById('cadence-timer');
+  const pipEl   = document.getElementById('target-pip');
+  timerEl.classList.remove('idle','over');
+
+  S.cadenceInterval = setInterval(() => {
+    const el = Math.floor((Date.now() - S.setStart) / 1000);
+    const m  = Math.floor(el / 60);
+    timerEl.textContent = m > 0 ? `${m}:${String(el%60).padStart(2,'0')}` : `${el}`;
+    const over = el > S.targetCadence;
+    timerEl.classList.toggle('over', over);
+    pipEl.classList.toggle('over', over);
+  }, 200);
+}
+
+function stopCadenceClock() {
+  clearInterval(S.cadenceInterval);
+  return Math.floor((Date.now() - S.setStart) / 1000);
+}
+
+function resetCadenceDisplay() {
+  const timerEl = document.getElementById('cadence-timer');
+  timerEl.textContent = '0';
+  timerEl.className   = 'cadence-timer idle';
+  document.getElementById('target-pip').classList.remove('over');
+  document.getElementById('rep-badge').textContent = currentReps();
+  document.getElementById('cadence-ctx').textContent = 'READY';
+}
+
+// ════════════════════════════════════════════════════
+// SPLIT TIMER (inside tap button)
+// ════════════════════════════════════════════════════
+function resetTapBtn() {
+  const zone = document.getElementById('tap-zone');
+  zone.className = 'tap-zone idle';
+  document.getElementById('tap-main').textContent = 'START FIRST SET';
+  document.getElementById('tap-sub').textContent  = tapSubText();
+}
+
+// ════════════════════════════════════════════════════
+// TAP HANDLER
+// ════════════════════════════════════════════════════
+function handleTap() {
+  if (S.setPhase === 'idle') {
+    // ── Start set ──
+    S.setPhase = 'running';
+    startCadenceClock();
+    document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
+    const zone = document.getElementById('tap-zone');
+    zone.className = 'tap-zone running';
+    const setNum = S.sets.length + 1;
+    document.getElementById('tap-main').textContent = `DONE SET ${setNum}`;
+    document.getElementById('tap-sub').textContent  = tapSubText();
+    document.getElementById('last-row').innerHTML   = '';
+
+  } else {
+    // ── Log set ──
+    const cadenceTime = stopCadenceClock();
+    const reps        = currentReps();
+    const totalWeight = S.weights.reduce((a,b) => a+b, 0);
+    const tonnage     = reps * totalWeight;
+    S.sets.push({ reps, tonnage, cycleTime: cadenceTime });
+    S.rungIdx++;
+
+    const over = cadenceTime > S.targetCadence;
+    const diff = Math.abs(cadenceTime - S.targetCadence);
+    document.getElementById('last-row').innerHTML = over
+      ? `<span class="slow">Set ${S.sets.length}: ${cadenceTime}s — ${diff}s over</span>`
+      : `<span class="good">Set ${S.sets.length}: ${cadenceTime}s ✓</span>`;
+
+    updateStats();
+    updateNextPill();
+    addChip(reps, cadenceTime, over);
+    logSetToSheet(S.sets.length, reps, cadenceTime);
+
+    // ── Immediately start next set ──
+    S.setPhase = 'running';
+    startCadenceClock();
+    document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
+    const zone = document.getElementById('tap-zone');
+    zone.className = 'tap-zone running';
+    const nextSetNum = S.sets.length + 1;
+    document.getElementById('tap-main').textContent = `DONE SET ${nextSetNum}`;
+    document.getElementById('tap-sub').textContent  = tapSubText();
+    document.getElementById('rep-badge').textContent = currentReps();
+  }
+}
+
+function currentReps() {
+  return S.scheme.rungs[S.rungIdx % S.scheme.rungs.length];
+}
+
+function tapSubLabel() {
+  const reps = currentReps();
+  // Within each ladder rung: C+P first, then FSQ same count
+  // Track position within rung cycle for label clarity
+  return `${reps} rep${reps>1?'s':''} · C+P → FSQ`;
+}
+
+function tapSubText() {
+  const reps = currentReps();
+  const rungs = S.scheme.rungs;
+  const pos   = S.rungIdx % rungs.length;
+  if (rungs.length === 1) return `${reps} rep${reps>1?'s':''} · C+P then FSQ`;
+  // ladder: show position e.g. "Rung 2 of 3 · ×2 C+P then FSQ"
+  return `Rung ${pos+1} of ${rungs.length} · ×${reps} C+P then FSQ`;
+}
+
+function updateStats() {
+  const totalSets = S.sets.length;
+  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
+  const totalTons = S.sets.reduce((a,s) => a+s.tonnage, 0) / 1000;
+  document.getElementById('stat-sets').textContent = totalSets;
+  document.getElementById('stat-reps').textContent = totalReps;
+  document.getElementById('stat-tons').textContent = totalTons.toFixed(2);
+}
+
+function addChip(reps, time, over) {
+  const log  = document.getElementById('set-log');
+  const chip = document.createElement('div');
+  chip.className   = 'set-chip fresh' + (over ? ' slow' : '');
+  chip.textContent = `×${reps} ${time}s`;
+  log.appendChild(chip);
+  setTimeout(() => chip.classList.remove('fresh'), 1500);
+  log.scrollLeft = log.scrollWidth;
+}
+
+// ════════════════════════════════════════════════════
+// END / SUMMARY
+// ════════════════════════════════════════════════════
+function showEndConfirm() {
+  document.getElementById('dfw-end-confirm').classList.add('vis');
+}
+function hideEndConfirm() {
+  document.getElementById('dfw-end-confirm').classList.remove('vis');
+}
+
+function endSession() {
+  clearInterval(S.workoutInterval);
+  clearInterval(S.cadenceInterval);
+  hideEndConfirm();
+  relWakeLock();
+  logSessionToSheet();
+
+  const totalSets = S.sets.length;
+  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
+  const totalTons = S.sets.reduce((a,s) => a+s.tonnage, 0);
+  const elapsed   = S.totalElapsed;
+  const m  = Math.floor(elapsed / 60);
+  const sc = elapsed % 60;
+  const avgCadence = totalSets > 0
+    ? Math.round(S.sets.reduce((a,s) => a+s.cycleTime, 0) / totalSets)
+    : 0;
+
+  document.getElementById('sum-sets').textContent = totalSets;
+  document.getElementById('sum-reps').textContent = totalReps;
+  document.getElementById('sum-tons').textContent = totalTons.toLocaleString() + ' kg';
+  document.getElementById('sum-time').textContent = `${m}:${String(sc).padStart(2,'0')}`;
+  document.getElementById('sum-avg').textContent  = avgCadence + 's avg';
+
+  const hist = document.getElementById('sum-history');
+  hist.innerHTML = '';
+  S.sets.forEach((set, i) => {
+    const chip = document.createElement('div');
+    const over = set.cycleTime > S.targetCadence;
+    chip.className   = 'h-chip';
+    chip.textContent = `${i+1}: ×${set.reps} ${set.cycleTime}s`;
+    if (over) chip.style.color = 'var(--red)';
+    hist.appendChild(chip);
+  });
+
+  showScreen('summary');
+}
+
+function goSetup() {
+  clearInterval(S.workoutInterval);
+  clearInterval(S.cadenceInterval);
+  showScreen('setup');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════
+// GOOGLE SHEETS LOGGING
+// ════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
+
+function logSessionToSheet() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  const elapsed   = S.totalElapsed;
+  const m  = Math.floor(elapsed / 60);
+  const sc = elapsed % 60;
+  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
+  const totalKg   = S.sets.reduce((a,s) => a+s.tonnage, 0);
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      type:'session', program:'DFW',
+      week:S.week, day:S.day, session:`W${S.week}D${S.day} · ${S.scheme.name}`,
+      weightL:S.weights[0], weightR:S.weights[1]||S.weights[0],
+      reps:totalReps, kgMoved:totalKg,
+      duration:elapsed, durationStr:`${m}:${String(sc).padStart(2,'0')}`,
+    }),
+  }).catch(()=>{});
+}
+
+function logSetToSheet(setNum, reps, cycleTime) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      type:'set', program:'DFW',
+      week:S.week, day:S.day, session:`W${S.week}D${S.day} · ${S.scheme.name}`,
+      number:setNum, reps, seconds:cycleTime,
+      weightL:S.weights[0], weightR:S.weights[1]||S.weights[0],
+      onTarget: cycleTime <= S.targetCadence,
+    }),
+  }).catch(()=>{});
+}
+
+
+// ════════════════════════════════════════════════════
+// PAUSE / RESUME
+// ════════════════════════════════════════════════════
+let _paused       = false;
+let _pauseStart   = null;
+let _cadenceAtPause = 0;   // elapsed cadence seconds when paused
+let _workoutAtPause = 0;   // totalElapsed when paused
+
+function pauseSession() {
+  if (_paused) { resumeSession(); return; }
+  _paused = true;
+  _pauseStart = Date.now();
+
+  // snapshot cadence elapsed
+  if (S.setStart) {
+    _cadenceAtPause = Math.floor((Date.now() - S.setStart) / 1000);
+  }
+  _workoutAtPause = S.totalElapsed;
+
+  // freeze all clocks
+  clearInterval(S.workoutInterval);
+  clearInterval(S.cadenceInterval);
+
+  // release wake lock — screen can sleep
+  relWakeLock();
+
+  // update button
+  const btn = document.getElementById('btn-pause');
+  if (btn) { btn.textContent = '▶ RESUME'; btn.classList.add('paused'); }
+
+  // dim tap zone
+  const zone = document.getElementById('tap-zone');
+  if (zone) zone.style.opacity = '0.4';
+}
+
+function resumeSession() {
+  if (!_paused) return;
+  const pausedMs = Date.now() - _pauseStart;
+  _paused = false;
+
+  // shift session start forward by pause duration
+  S.sessionStart = new Date(S.sessionStart.valueOf ? S.sessionStart : S.sessionStart).getTime
+    ? S.sessionStart + pausedMs
+    : Date.now() - _workoutAtPause * 1000;
+  // simpler: just rebase sessionStart
+  S.sessionStart = Date.now() - _workoutAtPause * 1000;
+
+  // shift setStart forward if mid-set
+  if (S.setPhase === 'running' && S.setStart) {
+    S.setStart = Date.now() - _cadenceAtPause * 1000;
+    startCadenceClock();
+  }
+
+  startWorkoutClock();
+  reqWakeLock();
+
+  const btn = document.getElementById('btn-pause');
+  if (btn) { btn.textContent = '⏸ Pause'; btn.classList.remove('paused'); }
+
+  const zone = document.getElementById('tap-zone');
+  if (zone) zone.style.opacity = '';
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+segInit('week-seg', 'week');
+segInit('day-seg', 'day');
+updateSchemeCard();
+</script>
+</body>
+</html>
