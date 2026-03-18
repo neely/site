@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>The Wolf</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;
+  --border:#30363d;--ink:#e6edf3;--dim:#656d76;
+  --accent:#34d399;--accent-dark:#052e16;
+  --warn:#f85149;--go:#3fb950;--go-dark:#0a1f0d;--radius:12px;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Mono',monospace;min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow-x:hidden}
+.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── SETUP ── */
+#setup{padding:2rem 1.5rem;overflow-y:auto}
+.prog-badge{font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+.prog-title{font-family:'Playfair Display',serif;font-size:3.5rem;font-weight:700;line-height:.95;margin-bottom:.2rem}
+.prog-title em{font-style:italic;color:var(--accent)}
+.prog-sub{font-size:.65rem;color:var(--dim);letter-spacing:.05em;margin-bottom:2rem}
+.fl{display:block;font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.45rem}
+.seg-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.25rem}
+.seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.seg-btn{flex:1;padding:.5rem 0;font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:transparent;border:none;color:var(--dim);cursor:pointer;transition:background .12s,color .12s}
+.seg-btn.active{background:var(--surface2);color:var(--ink)}
+.today-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:1rem 1.15rem;margin-bottom:1.25rem}
+.tc-eyebrow{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.tc-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--accent);margin-bottom:.3rem}
+.tc-body{font-size:.67rem;color:var(--dim);line-height:1.7}
+.tc-body strong{color:var(--ink)}
+.iw{position:relative;max-width:160px;margin-bottom:1.25rem}
+.iw span{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);font-size:.58rem;color:var(--dim);pointer-events:none}
+input[type=number]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:1rem;padding:.6rem 2.3rem .6rem .8rem;outline:none;-moz-appearance:textfield;appearance:textfield}
+input[type=number]:focus{border-color:var(--accent)}
+input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none}
+.btn-start{width:100%;padding:1.05rem;border:none;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.92rem;font-weight:500;letter-spacing:.08em;background:var(--accent);color:var(--accent-dark);cursor:pointer;transition:opacity .12s,transform .08s;margin-top:auto}
+.btn-start:active{transform:scale(.98)}
+
+/* ── SESSION ── */
+#session{padding:0}
+.sess-hdr{padding:.85rem 1.5rem .75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sh-left .sh-eyebrow{font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.sh-left .sh-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--accent)}
+.sh-right{text-align:right}
+.sh-right .sh-lbl{font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sh-right .sh-clock{font-size:1.3rem;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+
+/* ── CADENCE AREA ── */
+.cadence-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.75rem 1.5rem;gap:.25rem}
+.cadence-ctx{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
+.cadence-timer{font-family:'IBM Plex Mono',monospace;font-size:clamp(5rem,22vw,7rem);font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);transition:color .3s}
+.cadence-timer.idle{color:var(--dim)}
+.cadence-timer.rest-mode{color:var(--accent)}
+.cadence-timer.over{color:var(--warn)}
+.target-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem}
+.target-pip{width:6px;height:6px;border-radius:50%;background:var(--go);flex-shrink:0}
+.target-pip.rest{background:var(--accent)}
+.target-pip.over{background:var(--warn)}
+.target-lbl{font-size:.65rem;color:var(--dim);letter-spacing:.08em}
+.set-meta-row{display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;justify-content:center}
+.set-meta-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .85rem;text-align:center}
+.smv{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--ink);line-height:1}
+.sml{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:.1rem}
+.complex-steps{font-size:.72rem;color:var(--dim);margin-top:.6rem;line-height:1.8;text-align:center}
+.complex-steps strong{color:var(--ink)}
+.last-row{font-size:.65rem;color:var(--dim);margin-top:.5rem;min-height:1.1em;text-align:center}
+.last-row .good{color:var(--go)}
+
+/* ── TAP BUTTON ── */
+.tap-btn{margin:0 1.5rem;flex-shrink:0;height:96px;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:500;letter-spacing:.1em;cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .08s,background .12s;border:none}
+.tap-btn:active{transform:scale(.97)}
+.tap-btn .tap-sub{font-size:.88rem;letter-spacing:.04em;opacity:.9;font-weight:500}
+.tap-btn.go{background:var(--go);color:var(--go-dark)}
+.tap-btn.working{background:#0f2a1a;color:var(--accent);border:1.5px solid var(--accent)}
+.tap-btn.resting{background:#0d2010;color:var(--go);border:1.5px solid var(--go)}
+.tap-btn.done{background:var(--surface2);color:var(--dim);border:1px solid var(--border)}
+
+/* ── LOG / STAT ── */
+.log-strip{padding:.5rem 1.5rem 0;flex-shrink:0}
+.log-label{font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.log-chips{display:flex;flex-wrap:wrap;gap:.28rem;max-height:48px;overflow:hidden}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.12rem .38rem;font-size:.58rem;color:var(--dim);transition:all .5s}
+.chip.fresh{border-color:rgba(52,211,153,.4);color:var(--accent)}
+.new-stat-bar{padding:.6rem 1.5rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:.45rem;align-items:stretch;flex-shrink:0}
+.next-pill{flex:2;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.55rem .7rem;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.next-pill .np-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem}
+.next-pill .np-val{font-size:.85rem;font-weight:500;color:var(--ink);line-height:1.3}
+.action-pill{flex:1;border-radius:7px;padding:.55rem .5rem;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;border:none;font-family:'IBM Plex Mono',monospace}
+.action-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase}
+.action-pill .ap-val{font-size:.82rem;font-weight:500}
+.pause-pill{background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.25)}
+.pause-pill .ap-lbl{color:rgba(227,179,65,.6)}
+.pause-pill .ap-val{color:#e3b341}
+.pause-pill.paused{background:rgba(63,185,80,.07);border-color:rgba(63,185,80,.3)}
+.pause-pill.paused .ap-lbl{color:rgba(63,185,80,.6)}
+.pause-pill.paused .ap-val{color:var(--go)}
+.end-pill-wrap{flex:1;position:relative}
+.end-pill{width:100%;height:100%;min-height:56px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);border-radius:7px;padding:.55rem .5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;cursor:pointer;font-family:'IBM Plex Mono',monospace}
+.end-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(248,81,73,.5)}
+.end-pill .ap-val{font-size:.82rem;font-weight:500;color:var(--warn)}
+.end-confirm-overlay{display:none;position:absolute;inset:0;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.4);border-radius:7px;flex-direction:column;align-items:center;justify-content:center;gap:.3rem}
+.end-confirm-overlay.vis{display:flex}
+.end-confirm-overlay span{font-size:.5rem;color:var(--dim);letter-spacing:.06em}
+.end-confirm-btns{display:flex;gap:.3rem}
+.ec-yes{padding:.25rem .5rem;background:var(--warn);border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:#fff;cursor:pointer}
+.ec-no{padding:.25rem .5rem;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--dim);cursor:pointer}
+
+/* ── SUMMARY ── */
+#summary{padding:1.75rem 1.5rem 2.5rem;justify-content:center;gap:1.1rem;overflow-y:auto}
+.sum-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--accent)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem .9rem}
+.sc.full{grid-column:span 2}
+.sc .scv{font-size:1.6rem;font-weight:400;color:var(--ink)}
+.sc .scl{font-size:.5rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-top:.12rem}
+.sum-chips{display:flex;flex-wrap:wrap;gap:.28rem;margin-top:.45rem}
+.sum-chip{background:var(--surface2);border-radius:4px;padding:.12rem .38rem;font-size:.58rem;color:var(--dim)}
+.btn-back{width:100%;padding:.9rem;background:transparent;border:1px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.1em;color:var(--dim);cursor:pointer}
+.btn-back:hover{color:var(--ink);border-color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup" class="screen active">
+  <div class="prog-badge">Geoff Neupert · More Kettlebell Muscle</div>
+  <div class="prog-title">The <em>Wolf</em></div>
+  <div class="prog-sub">6 weeks · Double KB · 3 daily complexes · 10RM bells</div>
+
+  <div class="seg-row">
+    <div>
+      <label class="fl">Week</label>
+      <div class="seg" id="week-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+        <button class="seg-btn" data-val="4">4</button>
+        <button class="seg-btn" data-val="5">5</button>
+        <button class="seg-btn" data-val="6">6</button>
+      </div>
+    </div>
+    <div>
+      <label class="fl">Day</label>
+      <div class="seg" id="day-seg">
+        <button class="seg-btn active" data-val="1">1</button>
+        <button class="seg-btn" data-val="2">2</button>
+        <button class="seg-btn" data-val="3">3</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="today-card" id="today-card">
+    <div class="tc-eyebrow">Today's Complex</div>
+    <div class="tc-title" id="tc-title">Day 1 Complex</div>
+    <div class="tc-body" id="tc-body">—</div>
+  </div>
+
+  <div>
+    <label class="fl">Double Kettlebells</label>
+    <div class="iw">
+      <input type="number" id="wL" placeholder="20" min="4" max="100" step="2">
+      <span>kg L</span>
+    </div>
+    <div class="iw">
+      <input type="number" id="wR" placeholder="20" min="4" max="100" step="2">
+      <span>kg R</span>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="startSession()">Start Session →</button>
+</div>
+
+<!-- SESSION -->
+<div id="session" class="screen">
+  <div class="sess-hdr">
+    <div class="sh-left">
+      <div class="sh-eyebrow" id="sess-eyebrow">Week 1 · Day 1</div>
+      <div class="sh-title" id="sess-title">The Wolf</div>
+    </div>
+    <div class="sh-right">
+      <div class="sh-lbl">session</div>
+      <div class="sh-clock" id="sess-clock">0:00</div>
+    </div>
+  </div>
+
+  <div class="cadence-area">
+    <div class="cadence-ctx" id="cadence-ctx">READY</div>
+    <div class="cadence-timer idle" id="cadence-timer">0</div>
+    <div class="target-row">
+      <div class="target-pip" id="target-pip"></div>
+      <div class="target-lbl" id="target-lbl">—</div>
+    </div>
+    <div class="set-meta-row">
+      <div class="set-meta-badge">
+        <div class="smv" id="sets-done">0</div>
+        <div class="sml" id="sets-label">Sets done</div>
+      </div>
+      <div class="set-meta-badge">
+        <div class="smv" id="sets-target">3</div>
+        <div class="sml">Target sets</div>
+      </div>
+    </div>
+    <div class="complex-steps" id="complex-steps">—</div>
+    <div class="last-row" id="last-row"></div>
+  </div>
+
+  <div class="tap-btn go" id="tap-btn" onclick="handleTap()">
+    <span id="tap-main">START SET 1</span>
+    <span class="tap-sub" id="tap-sub">5 reps each exercise</span>
+  </div>
+
+  <div class="log-strip">
+    <div class="log-label">Sets</div>
+    <div class="log-chips" id="set-log"></div>
+  </div>
+
+  <div class="new-stat-bar">
+    <div class="next-pill">
+      <div class="np-lbl" id="wolf-next-lbl">Next</div>
+      <div class="np-val" id="wolf-next-val">—</div>
+    </div>
+    <button class="action-pill pause-pill" id="wolf-pause" onclick="pauseSession()">
+      <div class="ap-lbl">Action</div>
+      <div class="ap-val">⏸ Pause</div>
+    </button>
+    <div class="end-pill-wrap">
+      <button class="end-pill" id="wolf-end" onclick="showEndConfirm()">
+        <div class="ap-lbl">Action</div>
+        <div class="ap-val">⏏ End</div>
+      </button>
+      <div class="end-confirm-overlay" id="wolf-end-confirm">
+        <span>end session?</span>
+        <div class="end-confirm-btns">
+          <button class="ec-yes" onclick="endSession()">Yes</button>
+          <button class="ec-no" onclick="hideEndConfirm()">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="summary" class="screen">
+  <div class="sum-title">Session Complete</div>
+  <div class="sum-grid">
+    <div class="sc"><div class="scv" id="sum-sets">—</div><div class="scl">Sets Done</div></div>
+    <div class="sc"><div class="scv" id="sum-reps">—</div><div class="scl">Total Reps</div></div>
+    <div class="sc"><div class="scv" id="sum-tons">—</div><div class="scl">kg Moved</div></div>
+    <div class="sc"><div class="scv" id="sum-time">—</div><div class="scl">Time</div></div>
+    <div class="sc full">
+      <div class="scl" style="margin-bottom:.4rem">Set times</div>
+      <div class="sum-chips" id="sum-chips"></div>
+    </div>
+  </div>
+  <button class="btn-back" onclick="goSetup()">← New Session</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// PROGRAM DATA
+// ════════════════════════════════════════════════════
+// All sets: 5 reps per exercise, double bells
+
+const COMPLEXES = {
+  1: {
+    name: 'Day 1 Complex',
+    steps: ['Clean', 'Front Squat', 'Press', 'Front Squat'],
+    desc: 'Clean → FSQ → Press → FSQ · 5 reps each',
+  },
+  2: {
+    name: 'Day 2 Complex',
+    steps: ['Clean', 'Press', 'Front Squat'],
+    desc: 'Clean → Press → FSQ · 5 reps each',
+  },
+  3: {
+    name: 'Day 3 Complex',
+    steps: ['Front Squat', 'Clean', 'Press', 'Front Squat', 'Jerk'],
+    desc: 'FSQ → Clean → Press → FSQ → Jerk · 5 reps each',
+  },
+};
+
+// Week 1-3: 1:2 work:rest · Week 4-6: 1:1.5 work:rest
+// Sets per week: wk1=3, wk2=4, wk3=5, wk4=3, wk5=4, wk6=5
+const PLAN = {
+  1:{sets:3,ratio:2.0}, 2:{sets:4,ratio:2.0}, 3:{sets:5,ratio:2.0},
+  4:{sets:3,ratio:1.5}, 5:{sets:4,ratio:1.5}, 6:{sets:5,ratio:1.5},
+};
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+const S = {
+  week:1, day:1, wL:20, wR:20,
+  complex:null, plan:null,
+  phase:'idle',   // 'idle' | 'working' | 'resting' | 'done'
+  setsDone:0,
+  workStart:null, restStart:null,
+  lastWorkSec:0,
+  sets:[],        // {workSec, restSec}
+  sessionStart:null, sessionInterval:null, totalElapsed:0,
+  cadenceInterval:null,
+};
+
+// ════════════════════════════════════════════════════
+// WAKE LOCK
+// ════════════════════════════════════════════════════
+let _wl = null;
+async function reqWakeLock() {
+  try { if ('wakeLock' in navigator) _wl = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+function relWakeLock() { if (_wl) { _wl.release().catch(()=>{}); _wl = null; } }
+document.addEventListener('visibilitychange', async () => {
+  if (_wl && document.visibilityState === 'visible') await reqWakeLock();
+});
+
+// ════════════════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════════════════
+function segInit(id, key) {
+  document.getElementById(id).querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById(id).querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      S[key] = parseInt(btn.dataset.val);
+      updateTodayCard();
+    });
+  });
+}
+
+function updateTodayCard() {
+  const c = COMPLEXES[S.day];
+  const p = PLAN[S.week];
+  document.getElementById('tc-title').textContent = c.name;
+  document.getElementById('tc-body').innerHTML =
+    `<strong>${c.desc}</strong><br>` +
+    `${p.sets} sets · 1:${p.ratio} work:rest ratio<br>` +
+    `Rest = ${p.ratio}× your work time — auto-calculated`;
+}
+
+// ════════════════════════════════════════════════════
+// SESSION START
+// ════════════════════════════════════════════════════
+function startSession() {
+  S.wL = parseFloat(document.getElementById('wL').value) || 20;
+  S.wR = parseFloat(document.getElementById('wR').value) || S.wL;
+  S.complex = COMPLEXES[S.day];
+  S.plan    = PLAN[S.week];
+  S.phase   = 'idle';
+  S.setsDone = 0;
+  S.sets    = [];
+  S.sessionStart  = Date.now();
+  S.totalElapsed  = 0;
+
+  document.getElementById('sess-eyebrow').textContent = `Week ${S.week} · Day ${S.day}`;
+  document.getElementById('sess-title').textContent   = S.complex.name;
+  document.getElementById('sets-done').textContent    = '0';
+  document.getElementById('sets-target').textContent  = S.plan.sets;
+  document.getElementById('complex-steps').innerHTML  =
+    S.complex.steps.map(s=>`<strong>${s}</strong>`).join(' → ') + ' · ×5 each';
+  document.getElementById('set-log').innerHTML        = '';
+  document.getElementById('last-row').innerHTML       = '';
+  document.getElementById('cadence-timer').textContent = '0';
+  document.getElementById('cadence-timer').className  = 'cadence-timer idle';
+
+  updateNextPill();
+  showScreen('session');
+  startSessionClock();
+  reqWakeLock();
+}
+
+function startSessionClock() {
+  clearInterval(S.sessionInterval);
+  S.sessionInterval = setInterval(() => {
+    S.totalElapsed = Math.floor((Date.now() - S.sessionStart) / 1000);
+    const m = Math.floor(S.totalElapsed/60), sc = S.totalElapsed%60;
+    document.getElementById('sess-clock').textContent = `${m}:${String(sc).padStart(2,'0')}`;
+  }, 500);
+}
+
+// ════════════════════════════════════════════════════
+// CADENCE CLOCK
+// ════════════════════════════════════════════════════
+function startCadenceClock(mode) {
+  // mode: 'work' | 'rest'
+  clearInterval(S.cadenceInterval);
+  const startTime = Date.now();
+  const timerEl = document.getElementById('cadence-timer');
+  const pipEl   = document.getElementById('target-pip');
+  timerEl.classList.remove('idle','rest-mode','over');
+  if (mode === 'rest') timerEl.classList.add('rest-mode');
+
+  S.cadenceInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - startTime) / 1000);
+    const m   = Math.floor(sec / 60);
+    timerEl.textContent = m > 0 ? `${m}:${String(sec%60).padStart(2,'0')}` : `${sec}`;
+
+    if (mode === 'rest') {
+      // countdown to end of rest
+      const restTarget = Math.round(S.lastWorkSec * S.plan.ratio);
+      const remaining  = Math.max(0, restTarget - sec);
+      const lbl = document.getElementById('target-lbl');
+      if (remaining > 0) {
+        lbl.textContent = `rest: ${remaining}s remaining`;
+        pipEl.className = 'target-pip rest';
+      } else {
+        lbl.textContent = 'rest complete — tap to start';
+        timerEl.classList.add('over');
+        pipEl.className = 'target-pip over';
+      }
+    }
+  }, 200);
+}
+
+function stopCadenceClock() {
+  clearInterval(S.cadenceInterval);
+}
+
+// ════════════════════════════════════════════════════
+// TAP HANDLER — three states: idle → working → resting → working...
+// ════════════════════════════════════════════════════
+function handleTap() {
+  if (S.phase === 'done') return;
+
+  if (S.phase === 'idle' || S.phase === 'resting') {
+    // Start a work set
+    S.phase = 'working';
+    S.workStart = Date.now();
+    startCadenceClock('work');
+
+    document.getElementById('cadence-ctx').textContent = 'SET IN PROGRESS';
+    document.getElementById('target-lbl').textContent  = `work · ${S.complex.steps.length * 5} reps total`;
+    document.getElementById('target-pip').className    = 'target-pip';
+    document.getElementById('tap-btn').className       = 'tap-btn working';
+    document.getElementById('tap-main').textContent    = `DONE SET ${S.setsDone + 1}`;
+    document.getElementById('tap-sub').textContent     = `${S.complex.desc}`;
+    document.getElementById('last-row').innerHTML      = '';
+
+  } else if (S.phase === 'working') {
+    // Log set, start rest
+    const workSec = Math.floor((Date.now() - S.workStart) / 1000);
+    S.lastWorkSec = workSec;
+    S.setsDone++;
+    S.sets.push({ workSec });
+
+    const totalWt = S.wL + S.wR;
+    const repsPerSet = S.complex.steps.length * 5;
+    const tons = repsPerSet * totalWt;
+
+    document.getElementById('sets-done').textContent = S.setsDone;
+    addChip(workSec);
+    logSetToSheet(S.setsDone, repsPerSet, workSec);
+
+    if (S.setsDone >= S.plan.sets) {
+      // All sets done
+      S.phase = 'done';
+      stopCadenceClock();
+      document.getElementById('cadence-ctx').textContent = 'ALL SETS COMPLETE 🎯';
+      document.getElementById('tap-btn').className       = 'tap-btn done';
+      document.getElementById('tap-main').textContent    = 'SESSION DONE';
+      document.getElementById('tap-sub').textContent     = 'Tap End to finish';
+      document.getElementById('target-lbl').textContent  = `${S.setsDone} of ${S.plan.sets} sets`;
+      document.getElementById('last-row').innerHTML      = `<span class="good">Set ${S.setsDone}: ${workSec}s ✓</span>`;
+      updateNextPill();
+      return;
+    }
+
+    // Start rest
+    S.phase = 'resting';
+    const restTarget = Math.round(workSec * S.plan.ratio);
+    startCadenceClock('rest');
+
+    document.getElementById('cadence-ctx').textContent = 'REST';
+    document.getElementById('tap-btn').className       = 'tap-btn resting';
+    document.getElementById('tap-main').textContent    = `START SET ${S.setsDone + 1}`;
+    document.getElementById('tap-sub').textContent     = `rest ~${restTarget}s — tap when ready`;
+    document.getElementById('last-row').innerHTML      = `<span class="good">Set ${S.setsDone}: ${workSec}s ✓</span>`;
+    updateNextPill();
+  }
+}
+
+function updateNextPill() {
+  const el  = document.getElementById('wolf-next-val');
+  const lbl = document.getElementById('wolf-next-lbl');
+  if (S.phase === 'done') {
+    if (el)  el.textContent  = 'All sets done ✓';
+    if (lbl) lbl.textContent = 'Session complete';
+  } else if (S.phase === 'resting') {
+    if (el)  el.textContent  = `Set ${S.setsDone + 1} of ${S.plan.sets}`;
+    if (lbl) lbl.textContent = 'Up next';
+  } else {
+    if (el)  el.textContent  = S.plan.sets > S.setsDone
+      ? `Set ${S.setsDone + 1} of ${S.plan.sets} · rest 1:${S.plan.ratio}`
+      : 'Last set';
+    if (lbl) lbl.textContent = 'Next';
+  }
+}
+
+function addChip(sec) {
+  const chip = document.createElement('div');
+  chip.className   = 'chip fresh';
+  chip.textContent = `S${S.setsDone} ${sec}s`;
+  document.getElementById('set-log').appendChild(chip);
+  setTimeout(() => chip.classList.remove('fresh'), 1800);
+}
+
+// ════════════════════════════════════════════════════
+// END / SUMMARY
+// ════════════════════════════════════════════════════
+function showEndConfirm() { document.getElementById('wolf-end-confirm').classList.add('vis'); }
+function hideEndConfirm() { document.getElementById('wolf-end-confirm').classList.remove('vis'); }
+
+function endSession() {
+  clearInterval(S.sessionInterval);
+  stopCadenceClock();
+  hideEndConfirm();
+  relWakeLock();
+  logSessionToSheet();
+
+  const elapsed    = S.totalElapsed;
+  const m  = Math.floor(elapsed/60), sc = elapsed%60;
+  const repsPerSet = S.complex.steps.length * 5;
+  const totalReps  = S.setsDone * repsPerSet;
+  const totalTons  = totalReps * (S.wL + S.wR);
+
+  document.getElementById('sum-sets').textContent = S.setsDone;
+  document.getElementById('sum-reps').textContent = totalReps;
+  document.getElementById('sum-tons').textContent = totalTons.toLocaleString() + ' kg';
+  document.getElementById('sum-time').textContent = `${m}:${String(sc).padStart(2,'0')}`;
+
+  const chips = document.getElementById('sum-chips');
+  chips.innerHTML = '';
+  S.sets.forEach((s,i) => {
+    const c = document.createElement('div');
+    c.className   = 'sum-chip';
+    c.textContent = `S${i+1}: ${s.workSec}s`;
+    chips.appendChild(c);
+  });
+  showScreen('summary');
+}
+
+function goSetup() {
+  clearInterval(S.sessionInterval);
+  stopCadenceClock();
+  showScreen('setup');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════
+// GOOGLE SHEETS LOGGING
+// ════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVm3HlvTywuBB5UXHFYLenMd2gGcBxoRkBhkfL4NI3CZgjUMXzCe9TY6Z2JOV1U2HR/exec';
+
+function logSetToSheet(setNum, reps, seconds) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      type:'set', program:'Wolf',
+      week:S.week, day:S.day,
+      session:`W${S.week}D${S.day} · ${S.complex.name}`,
+      number:setNum, reps, seconds,
+      weightL:S.wL, weightR:S.wR, onTarget:true,
+    }),
+  }).catch(()=>{});
+}
+
+function logSessionToSheet() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_')) return;
+  const elapsed = S.totalElapsed;
+  const m = Math.floor(elapsed/60), sc = elapsed%60;
+  const repsPerSet = S.complex.steps.length * 5;
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      type:'session', program:'Wolf',
+      week:S.week, day:S.day,
+      session:`W${S.week}D${S.day} · ${S.complex.name}`,
+      weightL:S.wL, weightR:S.wR,
+      reps: S.setsDone * repsPerSet,
+      kgMoved: S.setsDone * repsPerSet * (S.wL + S.wR),
+      duration:elapsed, durationStr:`${m}:${String(sc).padStart(2,'0')}`,
+    }),
+  }).catch(()=>{});
+}
+
+// ════════════════════════════════════════════════════
+// PAUSE / RESUME
+// ════════════════════════════════════════════════════
+let _paused = false, _clockAtPause = 0, _workoutAtPause = 0;
+
+function pauseSession() {
+  if (_paused) { resumeSession(); return; }
+  _paused = true;
+  _workoutAtPause = S.totalElapsed;
+  _clockAtPause   = S.workStart
+    ? Math.floor((Date.now() - S.workStart) / 1000) : 0;
+  clearInterval(S.sessionInterval);
+  stopCadenceClock();
+  relWakeLock();
+  document.querySelectorAll('.pause-pill').forEach(b => {
+    b.querySelector('.ap-val').textContent = '▶ Resume'; b.classList.add('paused');
+  });
+  document.getElementById('tap-btn').style.opacity = '0.4';
+}
+
+function resumeSession() {
+  if (!_paused) return;
+  _paused = false;
+  S.sessionStart = Date.now() - _workoutAtPause * 1000;
+  if (S.phase === 'working' && S.workStart) {
+    S.workStart = Date.now() - _clockAtPause * 1000;
+    startCadenceClock('work');
+  } else if (S.phase === 'resting') {
+    startCadenceClock('rest');
+  }
+  startSessionClock();
+  reqWakeLock();
+  document.querySelectorAll('.pause-pill').forEach(b => {
+    b.querySelector('.ap-val').textContent = '⏸ Pause'; b.classList.remove('paused');
+  });
+  document.getElementById('tap-btn').style.opacity = '';
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+segInit('week-seg', 'week');
+segInit('day-seg',  'day');
+updateTodayCard();
+</script>
+</body>
+</html>

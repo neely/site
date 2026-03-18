@@ -495,7 +495,7 @@ function tapSubLabel() {
 }
 
 function updateNextPill() {
-  const nextReps = S.scheme.rungs[(S.rungIdx) % S.scheme.rungs.length];
+  const nextReps = S.scheme.rungs[(S.rungIdx + 1) % S.scheme.rungs.length];
   const el = document.getElementById('dfw2-next-val');
   if (el) el.textContent = `×${nextReps} · C+P → FSQ`;
   const lbl = document.getElementById('dfw2-next-lbl');

@@ -976,7 +976,7 @@ function initDayB() {
     if (el) { el.textContent='0'; el.className='cadence-timer idle'; }
   });
   ['press-s-sets','press-s-reps','press-s-kg','press-s-reps-2'].forEach(id=>{
-    document.getElementById(id).textContent='0';
+    const el=document.getElementById(id); if(el) el.textContent='0';
   });
   document.getElementById('snatch-sets').textContent = '0';
   document.getElementById('snatch-target').textContent = sn;
@@ -985,7 +985,7 @@ function initDayB() {
   document.getElementById('snatch-tap').className = 'tap-btn ember-go';
   document.getElementById('snatch-tap-lbl').textContent = 'START SET 1';
   document.getElementById('snatch-tap-sub').textContent = '8 L · rest · 8 R';
-  ['snatch-s-sets','snatch-s-reps'].forEach(id=>document.getElementById(id).textContent='0');
+  ['snatch-s-sets','snatch-s-reps'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; });
   document.getElementById('pp-sets').textContent = '0';
   document.getElementById('pp-push-target').textContent = pt.push;
   document.getElementById('pp-pull-target').textContent = pt.pull;
@@ -993,7 +993,7 @@ function initDayB() {
   document.getElementById('pp-tap').className = 'tap-btn go-green';
   document.getElementById('pp-tap-lbl').textContent = 'START SUPERSET 1';
   document.getElementById('pp-tap-sub').textContent = `pushups ×${pt.push} · pullups ×${pt.pull}`;
-  ['pp-s-sets','pp-s-push','pp-s-pull'].forEach(id=>document.getElementById(id).textContent='0');
+  ['pp-s-sets','pp-s-push','pp-s-pull'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; });
   renderLadder();
   goPhaseB(0);
 }
@@ -1014,7 +1014,7 @@ function renderLadder() {
 }
 
 function updatePressNextPill() {
-  const nextPos = S.pressRungIdx % S.pressLadder.length;
+  const nextPos  = (S.pressRungIdx + 1) % S.pressLadder.length;
   const nextReps = S.pressLadder[nextPos];
   const el = document.getElementById('it-press-next-val');
   if (el) el.textContent = `×${nextReps} · strict press`;

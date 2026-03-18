@@ -592,13 +592,16 @@ function tapSubText() {
   return `Rung ${pos+1} of ${rungs.length} · ×${reps} C+P then FSQ`;
 }
 
+function updateNextPill() {
+  const nextReps = S.scheme.rungs[(S.rungIdx + 1) % S.scheme.rungs.length];
+  const el  = document.getElementById('dfw-next-val');
+  const lbl = document.getElementById('dfw-next-lbl');
+  if (el)  el.textContent  = `×${nextReps} · C+P → FSQ`;
+  if (lbl) lbl.textContent = `Set ${S.sets.length + 1} next`;
+}
+
 function updateStats() {
-  const totalSets = S.sets.length;
-  const totalReps = S.sets.reduce((a,s) => a+s.reps, 0);
-  const totalTons = S.sets.reduce((a,s) => a+s.tonnage, 0) / 1000;
-  // stat-sets removed
-  // stat-reps removed
-  // stat-tons removed
+  // totals live on summary screen only
 }
 
 function addChip(reps, time, over) {
