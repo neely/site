@@ -90,7 +90,7 @@ const sec = stopCadenceClock('my-cadence-timer', 'my-cadence-timer-pip');
 
 Use when: athlete does a complex, taps done, waits for the next interval.
 
-**Center element:** Big round counter (Playfair Display), EMOM arc below showing interval progress.
+**Center element:** Big round counter (Playfair Display), 120px EMOM arc centered below. No side label. No last-round feedback.
 
 Copy from `abf-coach.html` ABC session.
 
@@ -103,20 +103,81 @@ Required elements:
     <div class="round-sep">/</div>
     <div class="round-target" id="my-target">20</div>
   </div>
-  <!-- EMOM arc SVG -->
-  <div class="emom-timer-row"> ... </div>
+  <div class="abc-scheme">2 Cleans · 1 Press · 3 Front Squats</div>
+  <div class="abc-wt" id="my-wt">16 / 16 kg</div>
+
+  <!-- 120px arc — centered, no wrapper row, no side label -->
+  <div class="emom-arc-wrap">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle class="emom-arc-bg" cx="60" cy="60" r="53"/>
+      <circle class="emom-arc-fg" id="my-arc" cx="60" cy="60" r="53"
+        stroke-dasharray="333" stroke-dashoffset="333"/>
+    </svg>
+    <div class="emom-time-center" id="my-arc-time">
+      <span class="t-sec">—</span>
+      <span class="t-lbl" id="my-arc-lbl">interval</span>
+    </div>
+  </div>
 </div>
 ```
 
-Wire up:
+Wire up — **use wall clock, not integer counting**:
 ```javascript
-// On START tap:
-startEmomArc();   // starts counting up, fills arc over emomSec
+const ARC_C = 333; // circumference for r=53
+let arcInterval = null;
 
-// On DONE tap:
+function startEmomArc() {
+  clearInterval(arcInterval);
+  const arc   = document.getElementById('my-arc');
+  const tEl   = document.getElementById('my-arc-time');
+  const arcStart = Date.now(); // wall clock anchor
+  arc.classList.remove('warn');
+
+  arcInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - arcStart) / 1000); // always accurate
+    arc.style.strokeDashoffset = ARC_C * (1 - Math.min(elapsed / S.emomSec, 1));
+    const over  = elapsed > S.emomSec;
+    arc.classList.toggle('warn', over);
+    const secEl = tEl.querySelector('.t-sec');
+    const lblEl = tEl.querySelector('.t-lbl');
+    if (over) {
+      const excess = elapsed - S.emomSec;
+      if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+      if (lblEl) { lblEl.textContent = 'over';         lblEl.classList.add('warn'); }
+    } else {
+      const rem = S.emomSec - elapsed;
+      if (secEl) { secEl.textContent = rem + 's';      secEl.classList.remove('warn'); }
+      if (lblEl) { lblEl.textContent = 'remaining';    lblEl.classList.remove('warn'); }
+    }
+  }, 200); // 200ms tick — responsive, no drift
+}
+
+function stopEmomArc() {
+  clearInterval(arcInterval);
+}
+
+function resetEmomArc() {
+  clearInterval(arcInterval);
+  const arc   = document.getElementById('my-arc');
+  const tEl   = document.getElementById('my-arc-time');
+  arc.style.strokeDashoffset = ARC_C;
+  arc.classList.remove('warn');
+  const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+  const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+  if (secEl) { secEl.textContent = '—';       secEl.classList.remove('warn'); }
+  if (lblEl) { lblEl.textContent = 'interval'; lblEl.classList.remove('warn'); }
+}
+
+// On START tap:
+S.roundStart = Date.now();
+startEmomArc();
+
+// On DONE tap — elapsed is accurate because it uses Date.now() too:
 stopEmomArc();
 const elapsed = Math.round((Date.now() - S.roundStart) / 1000);
 ```
+
+**Never use `elapsed++` in a `setInterval`. It drifts.** See DESIGN.md timing rule.
 
 ### Pattern C — Phase navigator (Iron Tide)
 
@@ -454,38 +515,91 @@ When the bottom bar was redesigned from three stat pills to the new Next/Pause/E
 
 ### Validation script — run before shipping any app
 
-```python
-import re
+Catches missing element refs, arc spec drift, bottom bar regressions, and the rungIdx+1 rule in one pass. Save as `validate.py` and run with `python3 validate.py yourapp.html`.
 
-with open('yourapp.html') as f:
+```python
+import re, sys
+
+path = sys.argv[1] if len(sys.argv) > 1 else 'yourapp.html'
+with open(path) as f:
     html = f.read()
 
 js = re.search(r'<script>([\s\S]*?)</script>', html).group(1)
 html_ids = set(re.findall(r'id="([^"]+)"', html))
+ok = True
 
+# ── 1. Unguarded missing element references ──────────────────────
 unguarded = []
 for m in re.finditer(r"getElementById\('([^']+)'\)", js):
     el_id = m.group(1)
     if el_id in html_ids:
         continue
     pre = js[max(0, m.start()-60):m.start()]
-    # Check if guarded
     if not re.search(r'const |let |if\s*\(', pre):
         line_start = js.rfind('\n', 0, m.start())
         line_end   = js.find('\n', m.start())
         line = js[line_start:line_end].strip()
         if 'if(' not in line and 'if (' not in line:
             unguarded.append((el_id, line[:80]))
-
 if unguarded:
-    print(f"UNGUARDED MISSING ELEMENTS ({len(unguarded)}):")
+    ok = False
+    print(f"✗ UNGUARDED MISSING ELEMENTS ({len(unguarded)}):")
     for el, line in unguarded:
-        print(f"  {el}: {line}")
+        print(f"    {el}: {line}")
 else:
-    print("ALL CLEAR — no unguarded missing element references")
-```
+    print("✓ missing elements: none")
 
-Run this after every structural HTML change. It catches both bare assignments and forEach patterns.
+# ── 2. Arc spec (only checked if app has an arc) ─────────────────
+arc_c = re.search(r'const ARC_C = ([0-9.]+)', js)
+if arc_c:
+    checks = [
+        ("ARC_C = 333",        arc_c.group(1) == "333"),
+        ("arc r = 53",         bool(re.search(r'id="(?:emom-arc|abc-arc)"[^>]*r="53"', html))),
+        ("stroke-dasharray=333", bool(re.search(r'stroke-dasharray="333"', html))),
+        (".t-sec/.t-lbl present", "t-sec" in html and "t-lbl" in html),
+        ("no abc-last in HTML", 'id="abc-last"' not in html),
+        ("no elapsed++",       "elapsed++" not in js),
+        ("arcStart wall clock","arcStart = Date.now()" in js),
+    ]
+    arc_tick = re.search(r'arcInterval\s*=\s*setInterval[\s\S]{0,600}?},\s*(200|1000)\)', js)
+    if arc_tick:
+        checks.append(("arc tick 200ms", arc_tick.group(1) == "200"))
+    for label, result in checks:
+        if not result:
+            ok = False
+            print(f"✗ arc: {label}")
+        else:
+            print(f"✓ arc: {label}")
+
+# ── 3. Bottom bar ────────────────────────────────────────────────
+bar_checks = [
+    ("pause-pill present",       "pause-pill" in html),
+    ("new-stat-bar present",     "new-stat-bar" in html),
+    ("end-pill present",         "end-pill" in html),
+    ("no old btn-pause class",   'class="btn-pause"' not in html),
+    ("no old stat-pill class",   'class="stat-pill"' not in html),
+]
+for label, result in bar_checks:
+    if not result:
+        ok = False
+        print(f"✗ bar: {label}")
+    else:
+        print(f"✓ bar: {label}")
+
+# ── 4. updateNextPill rungIdx+1 ──────────────────────────────────
+npp_start = js.find("function updateNextPill()")
+if npp_start != -1:
+    npp_end = js.find("\n}", npp_start) + 2
+    npp_fn  = js[npp_start:npp_end]
+    has_plus1 = "rungIdx + 1" in npp_fn or "rungIdx+1" in npp_fn
+    if not has_plus1:
+        ok = False
+        print("✗ nextPill: missing rungIdx+1")
+    else:
+        print("✓ nextPill: rungIdx+1 correct")
+
+print("\n" + ("ALL CHECKS PASSED ✓" if ok else "FAILURES FOUND — see above"))
+```
 
 ### Updated pre-ship checklist additions
 

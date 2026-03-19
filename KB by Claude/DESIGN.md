@@ -130,17 +130,68 @@ Used for: ABF ABC session, Iron Tide Day A ABC phase.
   - Round separator "/" and target in dim color
   - Exercise description ("2 Cleans · 1 Press · 3 Front Squats")
   - Weight label
-  - **EMOM arc** — 44px SVG circle, fills over the interval, turns red when over
-  - Last round feedback
+  - **EMOM arc** — 120px centered ring, fills clockwise over the interval. No side label. No last-round feedback text. The ring tells the whole story.
 - Tap button
 - Log chips
 - Bottom bar: Next set pill + Pause + End
 
-**EMOM arc behavior:**
-- Resets at the start of each round
-- Fills clockwise over the target interval
-- Turns red (`--warn`) when elapsed exceeds target
-- Label counts down remaining seconds, then shows "+Ns over"
+**EMOM arc — locked design (D-clean):**
+
+120px SVG circle, r=53, circumference=333. Centered below the round counter. Two-element interior: large number on top, small uppercase label underneath. Three states:
+
+| State | Arc fill | Number | Label |
+|-------|----------|--------|-------|
+| Mid-round | Gold, filling | elapsed seconds | "remaining" |
+| Resting / ready | Empty dim | interval target (e.g. 90s) | "interval" |
+| Over target | Full red | "+Ns" | "over" in red |
+
+No last-round feedback text anywhere on screen — athlete knows if they hit it.
+
+```html
+<!-- Arc HTML — centered, no wrapper row needed -->
+<div class="emom-arc-wrap">
+  <svg width="120" height="120" viewBox="0 0 120 120">
+    <circle class="emom-arc-bg" cx="60" cy="60" r="53"/>
+    <circle class="emom-arc-fg" id="emom-arc" cx="60" cy="60" r="53"
+      stroke-dasharray="333" stroke-dashoffset="333"/>
+  </svg>
+  <div class="emom-time-center" id="emom-time">
+    <span class="t-sec">—</span>
+    <span class="t-lbl" id="emom-lbl">interval</span>
+  </div>
+</div>
+```
+
+```css
+.emom-arc-wrap { position:relative; width:120px; height:120px; margin:.5rem 0 .15rem }
+.emom-arc-wrap svg { transform:rotate(-90deg) }
+.emom-arc-bg  { fill:none; stroke:var(--surface2); stroke-width:6 }
+.emom-arc-fg  { fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round }
+.emom-arc-fg.warn { stroke:var(--warn) }
+.emom-time-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.1rem }
+.emom-time-center .t-sec { font-size:1.5rem; font-weight:500; font-variant-numeric:tabular-nums; color:var(--ink); line-height:1 }
+.emom-time-center .t-lbl { font-size:.48rem; letter-spacing:.1em; text-transform:uppercase; color:var(--dim) }
+.emom-time-center .t-sec.warn, .emom-time-center .t-lbl.warn { color:var(--warn) }
+```
+
+**Timing rule — wall clock, not integer counting:**
+
+Both the EMOM arc and the cadence clock must be driven by `Date.now()`, not an incrementing integer. Integer counting drifts by up to 1-2 seconds relative to the tap time because the interval fires slightly late. Wall clock anchoring eliminates this.
+
+```javascript
+// WRONG — drifts up to ~2s from actual elapsed
+let elapsed = 0;
+setInterval(() => { elapsed++; ... }, 1000);
+
+// CORRECT — always in sync with tap time
+const arcStart = Date.now();
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - arcStart) / 1000);
+  ...
+}, 200); // 200ms tick = responsive display, negligible CPU
+```
+
+This applies to: EMOM arc, cadence clock, session clock, countdown. All clocks in every app use this pattern.
 
 ---
 

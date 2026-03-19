@@ -139,56 +139,122 @@ const KB = {
   },
 
   // ── EMOM ARC ───────────────────────────────────────────────
+  //
+  // Locked design: 120px centered ring, r=53, circumference=333.
+  // Two-element interior: .t-sec (number) + .t-lbl (label).
+  // Three states:
+  //   mid-round  → arc fills gold, shows remaining seconds
+  //   over target → arc full red, shows "+Ns over"
+  //   resting    → arc empty dim, shows interval target (via resetEmomArc)
+  //
+  // TIMING RULE: always use Date.now() wall clock, never elapsed++.
+  // Integer counting drifts up to ~2s relative to tap time.
+  // 200ms tick = responsive display with no perceptible CPU cost.
+  //
+  // cfg: { arcId, timeId, targetSec }
+  //   arcId   — id of the <circle> element (the arc stroke)
+  //   timeId  — id of the .emom-time-center wrapper div
+  //   targetSec — EMOM interval in seconds (S.emomSec)
+  //
+  // HTML required:
+  //   <div class="emom-arc-wrap">
+  //     <svg width="120" height="120" viewBox="0 0 120 120">
+  //       <circle class="emom-arc-bg" cx="60" cy="60" r="53"/>
+  //       <circle class="emom-arc-fg" id="MY_ARC_ID" cx="60" cy="60" r="53"
+  //         stroke-dasharray="333" stroke-dashoffset="333"/>
+  //     </svg>
+  //     <div class="emom-time-center" id="MY_TIME_ID">
+  //       <span class="t-sec">—</span>
+  //       <span class="t-lbl">interval</span>
+  //     </div>
+  //   </div>
+
   _arcInterval: null,
-  _arcElapsed: 0,
+  _arcStart: null,
+  ARC_C: 333, // circumference for r=53
 
   startEmomArc(cfg) {
-    // cfg: { arcId, timeId, labelId, targetSec }
     clearInterval(this._arcInterval);
-    const C = 119.4; // circumference for r=19 circle
-    const arc    = document.getElementById(cfg.arcId);
-    const timeEl = document.getElementById(cfg.timeId);
-    const lblEl  = document.getElementById(cfg.labelId);
-    let elapsed  = this._arcElapsed;
+    this._arcStart = Date.now();
+    const arc   = document.getElementById(cfg.arcId);
+    const tEl   = document.getElementById(cfg.timeId);
     if (arc) arc.classList.remove('warn');
 
     this._arcInterval = setInterval(() => {
-      elapsed++;
-      this._arcElapsed = elapsed;
+      const elapsed = Math.floor((Date.now() - this._arcStart) / 1000);
       if (arc) {
-        arc.style.strokeDashoffset = C * (1 - Math.min(elapsed / cfg.targetSec, 1));
+        arc.style.strokeDashoffset = this.ARC_C * (1 - Math.min(elapsed / cfg.targetSec, 1));
         arc.classList.toggle('warn', elapsed > cfg.targetSec);
       }
-      if (timeEl) timeEl.textContent = elapsed + 's';
-      const rem = cfg.targetSec - elapsed;
-      if (lblEl) lblEl.innerHTML = rem > 0
-        ? `<strong>${rem}s</strong> until next round`
-        : `<strong class="late">+${Math.abs(rem)}s over</strong>`;
-    }, 1000);
+      const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+      const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+      const over  = elapsed > cfg.targetSec;
+      if (over) {
+        const excess = elapsed - cfg.targetSec;
+        if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+        if (lblEl) { lblEl.textContent = 'over';         lblEl.classList.add('warn'); }
+      } else {
+        const rem = cfg.targetSec - elapsed;
+        if (secEl) { secEl.textContent = rem + 's';   secEl.classList.remove('warn'); }
+        if (lblEl) { lblEl.textContent = 'remaining'; lblEl.classList.remove('warn'); }
+      }
+    }, 200);
   },
 
   stopEmomArc() {
     clearInterval(this._arcInterval);
-    return this._arcElapsed;
+    // Return accurate elapsed using wall clock, not a counter
+    return this._arcStart ? Math.floor((Date.now() - this._arcStart) / 1000) : 0;
   },
 
   resetEmomArc(cfg) {
+    // Call after a round is logged to show resting state:
+    // arc empties, interior shows the interval target
     clearInterval(this._arcInterval);
-    this._arcElapsed = 0;
-    const C = 119.4;
+    this._arcStart = null;
     const arc = document.getElementById(cfg.arcId);
-    if (arc) { arc.style.strokeDashoffset = C; arc.classList.remove('warn'); }
-    const timeEl = document.getElementById(cfg.timeId);
-    if (timeEl) timeEl.textContent = '—';
-    const lblEl = document.getElementById(cfg.labelId);
-    if (lblEl) lblEl.textContent = 'Tap to start first round';
+    if (arc) { arc.style.strokeDashoffset = this.ARC_C; arc.classList.remove('warn'); }
+    const tEl   = document.getElementById(cfg.timeId);
+    const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+    const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+    if (secEl) { secEl.textContent = cfg.targetSec + 's'; secEl.classList.remove('warn'); }
+    if (lblEl) { lblEl.textContent = 'interval';           lblEl.classList.remove('warn'); }
   },
 
-  pauseEmomArc() { clearInterval(this._arcInterval); },
+  pauseEmomArc() {
+    // Snapshot _arcStart offset so resume restores correctly
+    clearInterval(this._arcInterval);
+    if (this._arcStart) {
+      const elapsed = Math.floor((Date.now() - this._arcStart) / 1000);
+      this._arcStart = Date.now() - elapsed * 1000; // preserve offset for resume
+    }
+  },
 
   resumeEmomArc(cfg) {
-    // resume from where we left off — _arcElapsed preserved
-    this.startEmomArc(cfg);
+    // _arcStart already holds the correct offset from pauseEmomArc
+    if (!this._arcStart) this._arcStart = Date.now();
+    const arc = document.getElementById(cfg.arcId);
+    if (arc) arc.classList.remove('warn');
+    this._arcInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - this._arcStart) / 1000);
+      if (arc) {
+        arc.style.strokeDashoffset = this.ARC_C * (1 - Math.min(elapsed / cfg.targetSec, 1));
+        arc.classList.toggle('warn', elapsed > cfg.targetSec);
+      }
+      const tEl   = document.getElementById(cfg.timeId);
+      const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+      const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+      const over  = elapsed > cfg.targetSec;
+      if (over) {
+        const excess = elapsed - cfg.targetSec;
+        if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+        if (lblEl) { lblEl.textContent = 'over';         lblEl.classList.add('warn'); }
+      } else {
+        const rem = cfg.targetSec - elapsed;
+        if (secEl) { secEl.textContent = rem + 's';   secEl.classList.remove('warn'); }
+        if (lblEl) { lblEl.textContent = 'remaining'; lblEl.classList.remove('warn'); }
+      }
+    }, 200);
   },
 
   // ── WAKE LOCK ──────────────────────────────────────────────
@@ -230,10 +296,10 @@ const KB = {
     this.stopCountdown();
     this.relWakeLock();
     if (this._onPause) this._onPause();
-    document.querySelectorAll('.btn-pause').forEach(btn => {
-      btn.textContent = '▶ RESUME'; btn.classList.add('paused');
+    document.querySelectorAll('.pause-pill').forEach(btn => {
+      btn.querySelector('.ap-val').textContent = '▶ Resume'; btn.classList.add('paused');
     });
-    document.querySelectorAll('.tap-btn').forEach(b => b.style.opacity = '0.4');
+    document.querySelectorAll('.tap-btn, .tap-zone').forEach(b => b.style.opacity = '0.4');
   },
 
   resumeSession(clockElId, isCountdown, countdownTotal, onCountdownExpire) {
@@ -246,10 +312,10 @@ const KB = {
       this.startSessionClock(clockElId);
     }
     this.reqWakeLock();
-    document.querySelectorAll('.btn-pause').forEach(btn => {
-      btn.textContent = '⏸ Pause'; btn.classList.remove('paused');
+    document.querySelectorAll('.pause-pill').forEach(btn => {
+      btn.querySelector('.ap-val').textContent = '⏸ Pause'; btn.classList.remove('paused');
     });
-    document.querySelectorAll('.tap-btn').forEach(b => b.style.opacity = '');
+    document.querySelectorAll('.tap-btn, .tap-zone').forEach(b => b.style.opacity = '');
   },
 
   // ── CHIPS ──────────────────────────────────────────────────
