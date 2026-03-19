@@ -93,12 +93,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .abc-scheme{font-size:.7rem;color:var(--abc);letter-spacing:.06em;margin-top:.15rem}
 .abc-wt{font-size:.85rem;color:var(--dim);margin-top:.25rem;line-height:1.45}
 .emom-timer-row{display:flex;align-items:center;gap:.6rem;margin-top:.6rem}
-.emom-arc-wrap{position:relative;width:44px;height:44px;flex-shrink:0}
+.emom-arc-wrap{position:relative;width:120px;height:120px;flex-shrink:0;margin:.5rem 0 .15rem}
 .emom-arc-wrap svg{transform:rotate(-90deg)}
-.emom-arc-bg{fill:none;stroke:var(--surface2);stroke-width:3}
+.emom-arc-bg{fill:none;stroke:var(--surface2);stroke-width:6}
 .emom-arc-fg{fill:none;stroke:var(--abc);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
 .emom-arc-fg.warn{stroke:var(--warn)}
-.emom-time-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.emom-time-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem}
+.emom-time-center .t-sec{font-size:1.5rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.emom-time-center .t-lbl{font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.emom-time-center .t-sec.warn{color:var(--warn)}
+.emom-time-center .t-lbl.warn{color:var(--warn)}
 .emom-lbl{font-size:.6rem;color:var(--dim);line-height:1.4}
 .emom-lbl strong{color:var(--ink)}
 .abc-last{font-size:.62rem;color:var(--dim);margin-top:.5rem;min-height:1em}
@@ -261,17 +265,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     </div>
     <div class="abc-scheme">2 Cleans · 1 Press · 3 Front Squats</div>
     <div class="abc-wt" id="abc-wt">24 / 24 kg</div>
-    <div class="emom-timer-row">
-      <div class="emom-arc-wrap">
-        <svg width="44" height="44" viewBox="0 0 44 44">
-          <circle class="emom-arc-bg" cx="22" cy="22" r="19"/>
-          <circle class="emom-arc-fg" id="emom-arc" cx="22" cy="22" r="19" stroke-dasharray="119.4" stroke-dashoffset="119.4"/>
-        </svg>
-        <div class="emom-time-center" id="emom-time">—</div>
+    <div class="emom-arc-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="emom-arc-bg" cx="60" cy="60" r="53"/>
+        <circle class="emom-arc-fg" id="emom-arc" cx="60" cy="60" r="53" stroke-dasharray="333" stroke-dashoffset="333"/>
+      </svg>
+      <div class="emom-time-center" id="emom-time">
+        <span class="t-sec">—</span>
+        <span class="t-lbl" id="emom-lbl">interval</span>
       </div>
-      <div class="emom-lbl" id="emom-lbl">Tap to start first round</div>
     </div>
-    <div class="abc-last" id="abc-last"></div>
   </div>
   <button class="tap-btn go" id="abc-tap" onclick="abcTap()">
     <span id="abc-tap-lbl">START ROUND 1</span>
@@ -581,7 +584,7 @@ function initAbcSession() {
   const _arp = document.getElementById('abc-s-reps'); if(_arp) _arp.textContent='0';
   const _at = document.getElementById('abc-s-tons'); if(_at) _at.textContent='0';
   document.getElementById('abc-chips').innerHTML     = '';
-  document.getElementById('abc-last').textContent    = '';
+  const _abl = document.getElementById('abc-last'); if(_abl) _abl.textContent = '';
   document.getElementById('abc-ctx').textContent     = 'READY';
   document.getElementById('abc-tap-lbl').textContent = 'START ROUND 1';
   document.getElementById('abc-tap').className       = 'tap-btn go';
@@ -597,7 +600,7 @@ function abcTap() {
     document.getElementById('abc-ctx').textContent     = 'ROUND IN PROGRESS';
     document.getElementById('abc-tap').className       = 'tap-btn active-set';
     document.getElementById('abc-tap-lbl').textContent = 'DONE ROUND';
-    document.getElementById('abc-last').textContent    = '';
+    const _abl = document.getElementById('abc-last'); if(_abl) _abl.textContent = '';
     startEmomArc();
     return;
   }
@@ -607,7 +610,7 @@ function abcTap() {
   S.abcLog.push({ sec: elapsed });
   const over = elapsed > S.emomSec;
   const diff = Math.abs(elapsed - S.emomSec);
-  document.getElementById('abc-last').innerHTML = over
+  const _abl = document.getElementById('abc-last'); if(_abl) _abl.innerHTML = over
     ? `<span class="late">Round ${S.abcRounds}: ${elapsed}s — ${diff}s over</span>`
     : `<span class="good">Round ${S.abcRounds}: ${elapsed}s ✓</span>`;
   document.getElementById('abc-done').textContent        = S.abcRounds;
@@ -626,7 +629,7 @@ function abcTap() {
 }
 
 let arcInterval = null;
-const ARC_C = 119.4;
+const ARC_C = 333;
 function startEmomArc() {
   clearInterval(arcInterval);
   const arc=document.getElementById('emom-arc'), tEl=document.getElementById('emom-time'), lEl=document.getElementById('emom-lbl');
@@ -635,17 +638,32 @@ function startEmomArc() {
   arcInterval = setInterval(() => {
     const el = Math.floor((Date.now() - arcStart) / 1000);
     arc.style.strokeDashoffset = ARC_C*(1-Math.min(el/S.emomSec,1));
-    tEl.textContent = el+'s';
-    arc.classList.toggle('warn', el>S.emomSec);
-    const rem = S.emomSec-el;
-    lEl.innerHTML = rem>0 ? `<strong>${rem}s</strong> until next round` : `<strong class="late">+${Math.abs(rem)}s over</strong>`;
+    const over = el > S.emomSec;
+    arc.classList.toggle('warn', over);
+    const secEl = tEl.querySelector('.t-sec');
+    const lblEl = tEl.querySelector('.t-lbl');
+    if (over) {
+      const excess = el - S.emomSec;
+      if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+      if (lblEl) { lblEl.textContent = 'over'; lblEl.classList.add('warn'); }
+    } else {
+      const rem = S.emomSec - el;
+      if (secEl) { secEl.textContent = rem+'s'; secEl.classList.remove('warn'); }
+      if (lblEl) { lblEl.textContent = 'remaining'; lblEl.classList.remove('warn'); }
+    }
   }, 200);
 }
 function stopEmomArc() { clearInterval(arcInterval); }
 function resetEmomArc() {
   clearInterval(arcInterval);
-  document.getElementById('emom-arc').style.strokeDashoffset = ARC_C;
-  document.getElementById('emom-arc').classList.remove('warn');
+  const arc = document.getElementById('emom-arc');
+  arc.style.strokeDashoffset = ARC_C;
+  arc.classList.remove('warn');
+  const tEl = document.getElementById('emom-time');
+  const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+  const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+  if (secEl) { secEl.textContent = '—'; secEl.classList.remove('warn'); }
+  if (lblEl) { lblEl.textContent = 'interval'; lblEl.classList.remove('warn'); }
 }
 
 // ════════════════════════════════════════════════════

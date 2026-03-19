@@ -93,13 +93,17 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
 .bna-last .late{color:var(--warn)}
 .bna-last .note{color:var(--dim)}
 .emom-row{display:flex;align-items:center;gap:.65rem;margin-top:.5rem}
-.arc-wrap{position:relative;width:48px;height:48px;flex-shrink:0}
+.arc-wrap{position:relative;width:120px;height:120px;flex-shrink:0;margin:.5rem 0 .15rem}
 .arc-wrap svg{transform:rotate(-90deg)}
-.arc-bg{fill:none;stroke:var(--surface2);stroke-width:3.5}
-.arc-fg{fill:none;stroke-width:3.5;stroke-linecap:round;transition:stroke-dashoffset .22s linear}
+.arc-bg{fill:none;stroke:var(--surface2);stroke-width:6}
+.arc-fg{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .22s linear}
 .arc-fg.tide{stroke:var(--tide)}
 .arc-fg.warn{stroke:var(--warn)}
-.arc-time{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:500;font-variant-numeric:tabular-nums}
+.arc-time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem}
+.arc-time .t-sec{font-size:1.5rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.arc-time .t-lbl{font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.arc-time .t-sec.warn{color:var(--warn)}
+.arc-time .t-lbl.warn{color:var(--warn)}
 .arc-label{font-size:.58rem;color:var(--dim);line-height:1.45}
 .arc-label strong{color:var(--ink)}
 .ladder-row{display:flex;gap:.4rem;margin:.4rem 0;flex-wrap:wrap;justify-content:center}
@@ -322,15 +326,17 @@ input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appear
       <div class="bna-detail">2 cleans · 1 press · 3 front squats · <strong id="abc-wt">16/16 kg</strong></div>
       <div class="emom-row">
         <div class="arc-wrap">
-          <svg width="48" height="48" viewBox="0 0 48 48">
-            <circle class="arc-bg" cx="24" cy="24" r="20"/>
-            <circle class="arc-fg tide" id="abc-arc" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="125.7"/>
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle class="arc-bg" cx="60" cy="60" r="53"/>
+            <circle class="arc-fg tide" id="abc-arc" cx="60" cy="60" r="53" stroke-dasharray="333" stroke-dashoffset="333"/>
           </svg>
-          <div class="arc-time" id="abc-arc-time">—</div>
+          <div class="arc-time" id="abc-arc-time">
+            <span class="t-sec">—</span>
+            <span class="t-lbl" id="abc-arc-label">interval</span>
+          </div>
         </div>
-        <div class="arc-label" id="abc-arc-label">Tap to start first round</div>
       </div>
-      <div class="bna-last" id="abc-last"></div>
+
     </div>
     <button class="tap-btn tide-go" id="abc-tap" onclick="abcTap()">
       <span id="abc-tap-lbl">START ROUND 1</span>
@@ -763,7 +769,7 @@ function initDayA() {
   document.getElementById('abc-ctx').textContent = 'READY';
   document.getElementById('abc-tap').className = 'tap-btn tide-go';
   document.getElementById('abc-tap-lbl').textContent = 'START ROUND 1';
-  document.getElementById('abc-last').textContent = '';
+  // abc-last removed
   document.getElementById('abc-chips').innerHTML = '';
   document.getElementById('carry-chips').innerHTML = '';
   const _gcarry_done = document.getElementById('carry-done'); if(_gcarry_done) _gcarry_done.textContent = '0';
@@ -785,7 +791,7 @@ function initDayA() {
 // ════════════════════════════════════════════════
 // DAY A — ABC
 // ════════════════════════════════════════════════
-const ARC_C = 125.7;
+const ARC_C = 333;
 let arcInterval = null;
 
 function startArc() {
@@ -798,12 +804,19 @@ function startArc() {
   arcInterval = setInterval(() => {
     const elapsed = Math.floor((Date.now() - arcStart) / 1000);
     arc.style.strokeDashoffset = ARC_C * (1 - Math.min(elapsed/S.emomSec,1));
-    tEl.textContent = elapsed + 's';
-    arc.classList.toggle('warn', elapsed > S.emomSec);
-    const rem = S.emomSec - elapsed;
-    lEl.innerHTML = rem > 0
-      ? `<strong>${rem}s</strong> remaining`
-      : `<span style="color:var(--warn)">+${Math.abs(rem)}s over</span>`;
+    const over = elapsed > S.emomSec;
+    arc.classList.toggle('warn', over);
+    const secEl = tEl.querySelector('.t-sec');
+    const lblEl = tEl.querySelector('.t-lbl');
+    if (over) {
+      const excess = elapsed - S.emomSec;
+      if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+      if (lblEl) { lblEl.textContent = 'over'; lblEl.classList.add('warn'); }
+    } else {
+      const rem = S.emomSec - elapsed;
+      if (secEl) { secEl.textContent = rem+'s'; secEl.classList.remove('warn'); }
+      if (lblEl) { lblEl.textContent = 'remaining'; lblEl.classList.remove('warn'); }
+    }
   }, 200);
 }
 
@@ -814,10 +827,14 @@ function stopArc() {
 
 function resetArc() {
   clearInterval(arcInterval);
-  document.getElementById('abc-arc').style.strokeDashoffset = ARC_C;
-  document.getElementById('abc-arc').classList.remove('warn');
-  document.getElementById('abc-arc-time').textContent = '—';
-  document.getElementById('abc-arc-label').textContent = 'Tap to start next round';
+  const arc = document.getElementById('abc-arc');
+  arc.style.strokeDashoffset = ARC_C;
+  arc.classList.remove('warn');
+  const tEl = document.getElementById('abc-arc-time');
+  const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+  const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+  if (secEl) { secEl.textContent = '—'; secEl.classList.remove('warn'); }
+  if (lblEl) { lblEl.textContent = 'interval'; lblEl.classList.remove('warn'); }
 }
 
 function abcTap() {
@@ -828,7 +845,7 @@ function abcTap() {
     document.getElementById('abc-tap').className = 'tap-btn tide-live';
     document.getElementById('abc-tap-lbl').textContent = 'DONE ROUND';
     document.getElementById('abc-ctx').textContent = `ROUND ${S.abcRounds+1} IN PROGRESS`;
-    document.getElementById('abc-last').textContent = '';
+    // abc-last removed
     startArc();
     return;
   }
@@ -837,7 +854,7 @@ function abcTap() {
   S.abcLog.push({sec});
   const over = sec > S.emomSec;
   const diff = Math.abs(sec - S.emomSec);
-  document.getElementById('abc-last').innerHTML = over
+  const _abl = document.getElementById('abc-last'); if(_abl) _abl.innerHTML = over
     ? `<span class="late">R${S.abcRounds}: ${sec}s — ${diff}s over</span>`
     : `<span class="good">R${S.abcRounds}: ${sec}s ✓</span>`;
   const totalReps = S.abcRounds * 6;
