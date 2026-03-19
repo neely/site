@@ -630,15 +630,16 @@ const ARC_C = 119.4;
 function startEmomArc() {
   clearInterval(arcInterval);
   const arc=document.getElementById('emom-arc'), tEl=document.getElementById('emom-time'), lEl=document.getElementById('emom-lbl');
-  let el=0; arc.classList.remove('warn');
+  const arcStart = Date.now();
+  arc.classList.remove('warn');
   arcInterval = setInterval(() => {
-    el++;
+    const el = Math.floor((Date.now() - arcStart) / 1000);
     arc.style.strokeDashoffset = ARC_C*(1-Math.min(el/S.emomSec,1));
     tEl.textContent = el+'s';
     arc.classList.toggle('warn', el>S.emomSec);
     const rem = S.emomSec-el;
     lEl.innerHTML = rem>0 ? `<strong>${rem}s</strong> until next round` : `<strong class="late">+${Math.abs(rem)}s over</strong>`;
-  }, 1000);
+  }, 200);
 }
 function stopEmomArc() { clearInterval(arcInterval); }
 function resetEmomArc() {

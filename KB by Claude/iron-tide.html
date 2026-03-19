@@ -793,10 +793,10 @@ function startArc() {
   const arc   = document.getElementById('abc-arc');
   const tEl   = document.getElementById('abc-arc-time');
   const lEl   = document.getElementById('abc-arc-label');
-  let elapsed = 0;
+  const arcStart = Date.now();
   arc.classList.remove('warn');
   arcInterval = setInterval(() => {
-    elapsed++;
+    const elapsed = Math.floor((Date.now() - arcStart) / 1000);
     arc.style.strokeDashoffset = ARC_C * (1 - Math.min(elapsed/S.emomSec,1));
     tEl.textContent = elapsed + 's';
     arc.classList.toggle('warn', elapsed > S.emomSec);
@@ -804,7 +804,7 @@ function startArc() {
     lEl.innerHTML = rem > 0
       ? `<strong>${rem}s</strong> remaining`
       : `<span style="color:var(--warn)">+${Math.abs(rem)}s over</span>`;
-  }, 1000);
+  }, 200);
 }
 
 function stopArc() {
