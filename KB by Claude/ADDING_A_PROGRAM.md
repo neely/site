@@ -513,6 +513,38 @@ When the bottom bar was redesigned from three stat pills to the new Next/Pause/E
 2. Guard or remove every reference found
 3. Run the validation script below
 
+### Rule 5 — When you restructure an element from flat to nested, audit all .textContent writes
+
+Changing an element from a simple text node to a parent-with-children is a common design evolution (e.g. the EMOM arc going from a single `<div>` to a wrapper containing `.t-sec` and `.t-lbl` spans). Any JS that still calls `.textContent = x` on the **parent** will silently destroy its children on every invocation.
+
+**Example of the failure:**
+```html
+<!-- Old: flat -->
+<div id="emom-time">—</div>
+
+<!-- New: nested -->
+<div id="emom-time">
+  <span class="t-sec">—</span>
+  <span class="t-lbl">interval</span>
+</div>
+```
+
+```javascript
+// This looks harmless but wipes the two child spans on every call:
+document.getElementById('emom-time').textContent = '—'; // ← DESTROYS children
+```
+
+**Process when restructuring any element:**
+1. Note the old `id`
+2. `grep -n "getElementById.*OLD_ID.*textContent" yourapp.html`
+3. For every hit: does it write to the parent or a specific child?
+4. Parent writes → replace with child-targeted writes or remove if a reset function already handles it
+5. Re-run the validation script
+
+This is distinct from Rule 4 (removing elements) — the element still exists, so the validation script won't flag it. It only manifests at runtime when the parent's children silently vanish.
+
+---
+
 ### Validation script — run before shipping any app
 
 Catches missing element refs, arc spec drift, bottom bar regressions, and the rungIdx+1 rule in one pass. Save as `validate.py` and run with `python3 validate.py yourapp.html`.

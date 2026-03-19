@@ -174,6 +174,10 @@ No last-round feedback text anywhere on screen — athlete knows if they hit it.
 .emom-time-center .t-sec.warn, .emom-time-center .t-lbl.warn { color:var(--warn) }
 ```
 
+**When restructuring arc interior — audit all .textContent writes:**
+
+The arc time element is a parent div with two child spans (`.t-sec`, `.t-lbl`). Any JS calling `.textContent` on the parent `emom-time` div will silently destroy both children. Always write to the child spans directly, or use `resetEmomArc()` which handles this correctly. If you see `getElementById('emom-time').textContent = x` anywhere in the JS, it's a bug.
+
 **Timing rule — wall clock, not integer counting:**
 
 Both the EMOM arc and the cadence clock must be driven by `Date.now()`, not an incrementing integer. Integer counting drifts by up to 1-2 seconds relative to the tap time because the interval fires slightly late. Wall clock anchoring eliminates this.
