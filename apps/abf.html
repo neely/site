@@ -589,8 +589,7 @@ function initAbcSession() {
   document.getElementById('abc-tap-lbl').textContent = 'START ROUND 1';
   document.getElementById('abc-tap').className       = 'tap-btn go';
   resetEmomArc();
-  document.getElementById('emom-time').textContent   = '—';
-  document.getElementById('emom-lbl').textContent    = 'Tap to start first round';
+  // emom-time and emom-lbl are inner spans — resetEmomArc handles them
 }
 
 function abcTap() {
