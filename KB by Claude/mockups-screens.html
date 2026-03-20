@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>KBs by Claude — Screen Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --ink:#e6edf3;--dim:#656d76;
+  --go:#3fb950;--go-dark:#0a1f0d;--warn:#f85149;
+  --tide:#58a6ff;--ember:#f0883e;--press:#7aabe5;--abc:#e8c547;
+  --radius:12px;
+}
+html{background:#000}
+body{font-family:'IBM Plex Mono',monospace;color:var(--ink);max-width:390px;margin:0 auto;background:var(--bg)}
+.screen-label{background:#000;color:#444;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;padding:.5rem 1rem;border-bottom:1px solid #1a1a1a;position:sticky;top:0;z-index:10}
+.screen{min-height:100svh;display:flex;flex-direction:column;border-bottom:3px solid #111}
+.setup-hero{padding:2rem 1.5rem 1.5rem;border-bottom:1px solid var(--border);background:linear-gradient(160deg,#0d1117 60%,#0a1a2e);position:relative;overflow:hidden}
+.setup-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(88,166,255,.08) 0%,transparent 70%);pointer-events:none}
+.hero-badge{font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--tide);margin-bottom:.4rem}
+.hero-title{font-family:'Playfair Display',serif;font-size:3.2rem;font-weight:700;line-height:.95;margin-bottom:.2rem}
+.hero-title em{font-style:italic;color:var(--tide)}
+.hero-sub{font-size:.65rem;color:var(--dim);letter-spacing:.05em;margin-bottom:1rem}
+.hero-pills{display:flex;gap:.4rem;flex-wrap:wrap}
+.hero-pill{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .6rem;border-radius:20px;border:1px solid var(--border);color:var(--dim)}
+.hero-pill.a{border-color:rgba(88,166,255,.4);color:var(--tide)}
+.hero-pill.b{border-color:rgba(240,136,62,.4);color:var(--ember)}
+.setup-body{padding:1.25rem 1.5rem 2rem;display:flex;flex-direction:column;gap:1rem;flex:1}
+.fl{font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.45rem;display:block}
+.seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.seg-btn{flex:1;padding:.5rem 0;font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:transparent;border:none;color:var(--dim);text-align:center}
+.seg-btn.active{background:var(--surface2);color:var(--ink)}
+.week-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.today-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.15rem;position:relative;overflow:hidden}
+.today-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.today-card.a::before{background:var(--tide)}
+.today-card.b::before{background:var(--ember)}
+.tc-eyebrow{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.tc-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;margin-bottom:.3rem}
+.tc-title.a{color:var(--tide)}
+.tc-body{font-size:.67rem;color:var(--dim);line-height:1.6}
+.tc-body strong{color:var(--ink)}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.iw{position:relative}
+.iw span{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);font-size:.58rem;color:var(--dim);pointer-events:none}
+input[type=number]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:1rem;padding:.6rem 2.3rem .6rem .8rem;outline:none}
+.elbow-card{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:var(--radius);padding:.75rem 1rem;font-size:.62rem;color:var(--dim);line-height:1.55}
+.elbow-card strong{color:var(--warn)}
+.btn-start{width:100%;padding:1.05rem;border:none;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.92rem;font-weight:500;letter-spacing:.08em;cursor:pointer;margin-top:auto}
+.btn-start.a{background:var(--tide);color:#071220}
+.sess-hdr{padding:.85rem 1.5rem .75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sh-eyebrow{font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.sh-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;line-height:1.1}
+.sh-title.a{color:var(--tide)}
+.sh-title.b{color:var(--ember)}
+.sh-right{text-align:right}
+.sh-clock-lbl{font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sh-clock{font-size:1.3rem;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+.phase-nav{display:flex;justify-content:center;gap:.5rem;padding:.6rem 0 .2rem;flex-shrink:0}
+.phase-dot{width:7px;height:7px;border-radius:50%;background:var(--surface2);border:1px solid var(--border)}
+.phase-dot.active-a{background:var(--tide);border-color:var(--tide)}
+.phase-dot.active-b{background:var(--ember);border-color:var(--ember)}
+.phase-dot.done{background:var(--surface2);border-color:var(--go)}
+.abc-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.75rem 1.5rem;gap:.2rem}
+.abc-ctx{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.25rem}
+.round-display{display:flex;align-items:baseline;gap:.5rem}
+.round-done{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,15vw,5rem);font-weight:700;line-height:1;color:var(--ink)}
+.round-sep{font-size:1.5rem;color:var(--dim);font-weight:300}
+.round-target{font-size:1.5rem;color:var(--dim);font-weight:300;font-variant-numeric:tabular-nums}
+.abc-scheme{font-size:.7rem;color:var(--abc);letter-spacing:.06em;margin-top:.15rem}
+.abc-wt{font-size:.85rem;color:var(--dim);margin-top:.2rem}
+.arc-wrap{position:relative;width:120px;height:120px;flex-shrink:0;margin:.5rem 0 .15rem}
+.arc-wrap svg{transform:rotate(-90deg)}
+.arc-bg{fill:none;stroke:var(--surface2);stroke-width:6}
+.arc-fg{fill:none;stroke-width:6;stroke-linecap:round}
+.arc-fg.tide{stroke:var(--tide)}
+.arc-time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem}
+.arc-time .t-sec{font-size:1.5rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.arc-time .t-lbl{font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.cadence-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.75rem 1.5rem;gap:.25rem}
+.cadence-ctx{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
+.cadence-timer{font-family:'IBM Plex Mono',monospace;font-size:clamp(5rem,22vw,7rem);font-weight:300;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink)}
+.cadence-timer.idle{color:var(--dim)}
+.target-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem}
+.target-pip{width:6px;height:6px;border-radius:50%;background:var(--go);flex-shrink:0}
+.target-lbl{font-size:.65rem;color:var(--dim);letter-spacing:.08em}
+.set-meta-row{display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;justify-content:center}
+.set-meta-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .85rem;text-align:center}
+.smv{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--ink);line-height:1}
+.sml{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:.1rem}
+.set-meta-detail{font-size:.72rem;color:var(--dim);line-height:1.6;text-align:center;margin-top:.4rem}
+.set-meta-detail strong{color:var(--ink)}
+.ladder-row{display:flex;gap:.4rem;margin:.5rem 0;flex-wrap:wrap;justify-content:center}
+.rung{width:38px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:500;border:1.5px solid var(--border);color:var(--dim)}
+.rung.done{background:var(--surface2);border-color:var(--press);color:var(--press)}
+.rung.current{background:var(--press);border-color:var(--press);color:#1a2d40}
+.tap-btn{margin:0 1.5rem;flex-shrink:0;height:96px;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:500;letter-spacing:.1em;border:none}
+.tap-btn .tap-sub{font-size:.88rem;letter-spacing:.04em;opacity:.9;font-weight:500}
+.tap-btn.go{background:var(--go);color:var(--go-dark)}
+.tap-btn.tide-live{background:#1a3a5a;color:var(--tide);border:1.5px solid var(--tide)}
+.tap-btn.ember-live{background:#2a1800;color:var(--ember);border:1.5px solid var(--ember)}
+.tap-btn.press-live{background:#1a2d40;color:var(--press);border:1.5px solid var(--press)}
+.tap-btn.neutral{background:var(--surface2);color:var(--dim);border:1px solid var(--border)}
+.log-strip{padding:.5rem 1.5rem 0;flex-shrink:0}
+.log-label{font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.log-chips{display:flex;flex-wrap:wrap;gap:.28rem}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.12rem .38rem;font-size:.58rem;color:var(--dim)}
+.chip.fresh-a{border-color:rgba(88,166,255,.4);color:var(--tide)}
+.chip.fresh-b{border-color:rgba(240,136,62,.4);color:var(--ember)}
+.chip.fresh-p{border-color:rgba(122,171,229,.4);color:var(--press)}
+.chip.done-g{border-color:rgba(63,185,80,.35);color:var(--go)}
+.new-stat-bar{padding:.6rem 1.5rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:.45rem;align-items:stretch;flex-shrink:0}
+.next-pill{flex:2;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.55rem .7rem;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.np-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem}
+.np-val{font-size:.85rem;font-weight:500;color:var(--ink);line-height:1.3}
+.pause-pill{flex:1;background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.25);border-radius:7px;padding:.55rem .5rem;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem}
+.pause-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(227,179,65,.6)}
+.pause-pill .ap-val{font-size:.82rem;font-weight:500;color:#e3b341}
+.pause-pill.paused{background:rgba(63,185,80,.07);border-color:rgba(63,185,80,.3)}
+.pause-pill.paused .ap-lbl{color:rgba(63,185,80,.6)}
+.pause-pill.paused .ap-val{color:var(--go)}
+.end-pill-wrap{flex:1}
+.end-pill{width:100%;min-height:56px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);border-radius:7px;padding:.55rem .5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem}
+.end-pill .ap-lbl{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(248,81,73,.5)}
+.end-pill .ap-val{font-size:.82rem;font-weight:500;color:var(--warn)}
+.next-phase-btn{margin:.5rem 1.5rem .75rem;flex-shrink:0;padding:.75rem;border:none;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:500;letter-spacing:.08em;display:flex;align-items:center;justify-content:center}
+.next-phase-btn.to-b{background:var(--ember);color:#1a0c04}
+.next-phase-btn.to-a{background:var(--tide);color:#071220}
+.next-phase-btn.to-end{background:var(--go);color:var(--go-dark)}
+.sum-screen{padding:1.75rem 1.5rem 2.5rem;display:flex;flex-direction:column;gap:1.1rem;flex:1}
+.sum-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--tide)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem .9rem}
+.sc.full{grid-column:span 2}
+.sc .scv{font-size:1.6rem;font-weight:400;color:var(--ink)}
+.sc .scl{font-size:.5rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-top:.12rem}
+.sum-chips{display:flex;flex-wrap:wrap;gap:.28rem;margin-top:.45rem}
+.sum-chip{background:var(--surface2);border-radius:4px;padding:.12rem .38rem;font-size:.58rem;color:var(--dim)}
+.elbow-banner{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:9px;padding:.7rem .9rem;font-size:.6rem;color:var(--dim);line-height:1.55}
+.elbow-banner strong{color:var(--warn)}
+.btn-back{width:100%;padding:.9rem;background:transparent;border:1px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.1em;color:var(--dim);cursor:pointer;margin-top:auto}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     1. SETUP
+════════════════════════════════════ -->
+<div class="screen-label">Screen 1 — Setup</div>
+<div class="screen">
+  <div class="setup-hero">
+    <div class="hero-badge">8-Week Kettlebell Program</div>
+    <div class="hero-title">Iron<br><em>Tide</em></div>
+    <div class="hero-sub">Practical strength · Posterior chain · Surf ready</div>
+    <div class="hero-pills">
+      <div class="hero-pill a">Day A · ABC + Carries</div>
+      <div class="hero-pill b">Day B · Press + Snatch + Push/Pull</div>
+    </div>
+  </div>
+  <div class="setup-body">
+    <div>
+      <label class="fl">Week</label>
+      <div class="week-grid">
+        <div class="seg"><div class="seg-btn active">1</div><div class="seg-btn">2</div><div class="seg-btn">3</div><div class="seg-btn">4</div></div>
+        <div class="seg"><div class="seg-btn">5</div><div class="seg-btn">6</div><div class="seg-btn">7</div><div class="seg-btn">8</div></div>
+      </div>
+    </div>
+    <div>
+      <label class="fl">Day</label>
+      <div class="seg" style="max-width:200px"><div class="seg-btn active">1</div><div class="seg-btn">2</div><div class="seg-btn">3</div></div>
+    </div>
+    <div class="today-card a">
+      <div class="tc-eyebrow">Today's Session</div>
+      <div class="tc-title a">Day A — Tide</div>
+      <div class="tc-body"><strong>8–10 rounds</strong> ABC at 90s EMOM<br>2 cleans · 1 press · 3 front squats<br>Finisher: farmer carries × 3 each side</div>
+    </div>
+    <div>
+      <label class="fl">Double Kettlebells</label>
+      <div class="input-grid">
+        <div class="iw"><input type="number" placeholder="16"><span>kg L</span></div>
+        <div class="iw"><input type="number" placeholder="16"><span>kg R</span></div>
+      </div>
+    </div>
+    <div>
+      <label class="fl">EMOM interval</label>
+      <div class="iw" style="max-width:140px"><input type="number" placeholder="90" value="90"><span>sec</span></div>
+    </div>
+    <div class="elbow-card"><strong>Elbow check</strong> — wrist neutral in rack &amp; snatch catch. Pain 3/10 or lower.</div>
+    <button class="btn-start a">Start Day A →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     2. ABC / EMOM (120px arc, mid-round)
+════════════════════════════════════ -->
+<div class="screen-label">Screen 2 — ABC / EMOM (arc mid-round)</div>
+<div class="screen">
+  <div class="sess-hdr">
+    <div><div class="sh-eyebrow">Week 1 · Day 1</div><div class="sh-title a">Iron Tide — Day A</div></div>
+    <div class="sh-right"><div class="sh-clock-lbl">session</div><div class="sh-clock">8:32</div></div>
+  </div>
+  <div class="phase-nav">
+    <div class="phase-dot active-a"></div>
+    <div class="phase-dot"></div>
+  </div>
+  <div class="abc-center">
+    <div class="abc-ctx">ROUND IN PROGRESS</div>
+    <div class="round-display">
+      <div class="round-done">5</div>
+      <div class="round-sep">/</div>
+      <div class="round-target">10</div>
+    </div>
+    <div class="abc-scheme">2 Cleans · 1 Press · 3 Front Squats</div>
+    <div class="abc-wt">16 / 16 kg</div>
+    <div class="arc-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="arc-bg" cx="60" cy="60" r="53"/>
+        <circle class="arc-fg tide" cx="60" cy="60" r="53" stroke-dasharray="333" stroke-dashoffset="166"/>
+      </svg>
+      <div class="arc-time"><div class="t-sec">45s</div><div class="t-lbl">remaining</div></div>
+    </div>
+  </div>
+  <div class="tap-btn tide-live" style="margin:0 1.5rem">
+    <span>DONE ROUND</span><span class="tap-sub">2 cleans · 1 press · 3 FSQ</span>
+  </div>
+  <div class="log-strip">
+    <div class="log-label">Rounds</div>
+    <div class="log-chips">
+      <div class="chip fresh-a">R1 42s</div><div class="chip fresh-a">R2 39s</div><div class="chip fresh-a">R3 41s</div><div class="chip fresh-a">R4 38s</div>
+    </div>
+  </div>
+  <div class="new-stat-bar">
+    <div class="next-pill"><div class="np-lbl">Next round</div><div class="np-val">2 cleans · 1 press · 3 FSQ</div></div>
+    <div class="pause-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏸ Pause</div></div>
+    <div class="end-pill-wrap"><div class="end-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏏ End</div></div></div>
+  </div>
+  <button class="next-phase-btn to-b">ABC done → Carries ›</button>
+</div>
+
+<!-- ═══════════════════════════════════
+     3. CARRY SESSION
+════════════════════════════════════ -->
+<div class="screen-label">Screen 3 — Carry session (cadence clock)</div>
+<div class="screen">
+  <div class="sess-hdr">
+    <div><div class="sh-eyebrow">Week 1 · Day 1</div><div class="sh-title a">Iron Tide — Day A</div></div>
+    <div class="sh-right"><div class="sh-clock-lbl">session</div><div class="sh-clock">14:08</div></div>
+  </div>
+  <div class="phase-nav">
+    <div class="phase-dot done"></div>
+    <div class="phase-dot active-a"></div>
+  </div>
+  <div class="cadence-area">
+    <div class="cadence-ctx">CARRY 3 IN PROGRESS</div>
+    <div class="cadence-timer" style="color:var(--tide)">18</div>
+    <div class="target-row">
+      <div class="target-pip"></div>
+      <div class="target-lbl">3 / 6 carries done</div>
+    </div>
+    <div class="set-meta-detail" style="margin-top:1rem">Single-arm · 3 lengths each side · <strong>20 kg</strong></div>
+    <div class="set-meta-detail">Suitcase or rack — your call. Switch arm each carry.</div>
+  </div>
+  <div class="tap-btn tide-live" style="margin:0 1.5rem">
+    <span>DONE — RIGHT ARM</span><span class="tap-sub">walking… tap when done</span>
+  </div>
+  <div class="log-strip">
+    <div class="log-label">Carries</div>
+    <div class="log-chips">
+      <div class="chip done-g">LEFT 34s</div><div class="chip done-g">RIGHT 31s</div>
+    </div>
+  </div>
+  <div class="new-stat-bar">
+    <div class="next-pill"><div class="np-lbl">Next carry</div><div class="np-val">LEFT ARM</div></div>
+    <div class="pause-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏸ Pause</div></div>
+    <div class="end-pill-wrap"><div class="end-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏏ End</div></div></div>
+  </div>
+  <button class="next-phase-btn to-end">Session Complete ✓</button>
+</div>
+
+<!-- ═══════════════════════════════════
+     4. PRESS + LADDER RUNGS (Day B)
+════════════════════════════════════ -->
+<div class="screen-label">Screen 4 — Press with ladder rungs (Day B)</div>
+<div class="screen">
+  <div class="sess-hdr">
+    <div><div class="sh-eyebrow">Week 1 · Day 2</div><div class="sh-title b">Iron Tide — Day B</div></div>
+    <div class="sh-right"><div class="sh-clock-lbl">session</div><div class="sh-clock">12:05</div></div>
+  </div>
+  <div class="phase-nav">
+    <div class="phase-dot active-b"></div>
+    <div class="phase-dot"></div>
+    <div class="phase-dot"></div>
+  </div>
+  <div class="cadence-area">
+    <div class="cadence-ctx">SET IN PROGRESS</div>
+    <div class="cadence-timer" style="color:var(--press)">31</div>
+    <div class="target-row">
+      <div class="target-pip"></div>
+      <div class="target-lbl">target: 20–30 reps</div>
+    </div>
+    <div class="set-meta-row">
+      <div class="set-meta-badge"><div class="smv">7</div><div class="sml">Reps done</div></div>
+      <div class="set-meta-badge"><div class="smv">30</div><div class="sml">Target</div></div>
+    </div>
+    <div class="ladder-row">
+      <div class="rung done">2</div><div class="rung done">3</div><div class="rung current">5</div>
+    </div>
+    <div class="set-meta-detail">Double strict press · 16/16 kg</div>
+    <div class="set-meta-detail" style="margin-top:.2rem"><strong>23</strong> reps to target · next rung: <strong>2</strong></div>
+  </div>
+  <div class="tap-btn press-live" style="margin:0 1.5rem">
+    <span>DONE SET 3</span><span class="tap-sub">5 reps · strict press</span>
+  </div>
+  <div class="log-strip">
+    <div class="log-label">Sets</div>
+    <div class="log-chips">
+      <div class="chip fresh-p">×2 28s</div><div class="chip fresh-p">×3 35s</div>
+    </div>
+  </div>
+  <div class="new-stat-bar">
+    <div class="next-pill"><div class="np-lbl">Next set</div><div class="np-val">×2 · strict press</div></div>
+    <div class="pause-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏸ Pause</div></div>
+    <div class="end-pill-wrap"><div class="end-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏏ End</div></div></div>
+  </div>
+  <button class="next-phase-btn to-a">Press done → Half Snatches ›</button>
+</div>
+
+<!-- ═══════════════════════════════════
+     5. SNATCH SESSION (Day B)
+════════════════════════════════════ -->
+<div class="screen-label">Screen 5 — Snatch session (Day B)</div>
+<div class="screen">
+  <div class="sess-hdr">
+    <div><div class="sh-eyebrow">Week 1 · Day 2</div><div class="sh-title b">Iron Tide — Day B</div></div>
+    <div class="sh-right"><div class="sh-clock-lbl">session</div><div class="sh-clock">18:44</div></div>
+  </div>
+  <div class="phase-nav">
+    <div class="phase-dot done"></div>
+    <div class="phase-dot active-b"></div>
+    <div class="phase-dot"></div>
+  </div>
+  <div class="cadence-area">
+    <div class="cadence-ctx">SET IN PROGRESS</div>
+    <div class="cadence-timer" style="color:var(--ember)">44</div>
+    <div class="target-row">
+      <div class="target-pip"></div>
+      <div class="target-lbl">—</div>
+    </div>
+    <div class="set-meta-row">
+      <div class="set-meta-badge"><div class="smv">2</div><div class="sml">Sets done</div></div>
+      <div class="set-meta-badge"><div class="smv">3</div><div class="sml">Target</div></div>
+    </div>
+    <div class="set-meta-detail">8 reps/side · single bell · <strong>16 kg</strong></div>
+    <div class="set-meta-detail" style="margin-top:.3rem;font-size:.62rem">Wrist neutral at catch. Hip snap = surf pop-up.</div>
+  </div>
+  <div class="tap-btn ember-live" style="margin:0 1.5rem">
+    <span>DONE SET 3</span><span class="tap-sub">Set 3 of 3 · 8L 8R</span>
+  </div>
+  <div class="log-strip">
+    <div class="log-label">Sets</div>
+    <div class="log-chips">
+      <div class="chip fresh-b">Set 1 48s</div><div class="chip fresh-b">Set 2 51s</div>
+    </div>
+  </div>
+  <div class="new-stat-bar">
+    <div class="next-pill"><div class="np-lbl">Next snatch set</div><div class="np-val">Set 3 of 3 · 8L 8R</div></div>
+    <div class="pause-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏸ Pause</div></div>
+    <div class="end-pill-wrap"><div class="end-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏏ End</div></div></div>
+  </div>
+  <button class="next-phase-btn to-a">Snatches done → Push / Pull ›</button>
+</div>
+
+<!-- ═══════════════════════════════════
+     6. PUSH / PULL (Day B)
+════════════════════════════════════ -->
+<div class="screen-label">Screen 6 — Push / Pull superset (Day B)</div>
+<div class="screen">
+  <div class="sess-hdr">
+    <div><div class="sh-eyebrow">Week 1 · Day 2</div><div class="sh-title b">Iron Tide — Day B</div></div>
+    <div class="sh-right"><div class="sh-clock-lbl">session</div><div class="sh-clock">26:12</div></div>
+  </div>
+  <div class="phase-nav">
+    <div class="phase-dot done"></div>
+    <div class="phase-dot done"></div>
+    <div class="phase-dot active-b"></div>
+  </div>
+  <div class="cadence-area">
+    <div class="cadence-ctx">SUPERSET IN PROGRESS</div>
+    <div class="cadence-timer" style="color:var(--go)">1:12</div>
+    <div class="target-row">
+      <div class="target-pip"></div>
+      <div class="target-lbl">3 supersets</div>
+    </div>
+    <div class="set-meta-row">
+      <div class="set-meta-badge"><div class="smv">1</div><div class="sml">Done</div></div>
+      <div class="set-meta-badge"><div class="smv">3</div><div class="sml">Target</div></div>
+    </div>
+    <div class="set-meta-detail">Pushups × <strong>9</strong> · Pullups × <strong>4</strong></div>
+    <div class="set-meta-detail" style="margin-top:.3rem;font-size:.62rem">No rest between. Rest 90s between supersets.</div>
+  </div>
+  <div class="tap-btn neutral" style="margin:0 1.5rem">
+    <span>DONE SUPERSET 2</span><span class="tap-sub">pushups ×9 · then pullups ×4</span>
+  </div>
+  <div class="log-strip">
+    <div class="log-label">Supersets</div>
+    <div class="log-chips"><div class="chip done-g">S1 1:08</div></div>
+  </div>
+  <div class="new-stat-bar">
+    <div class="next-pill"><div class="np-lbl">Next superset</div><div class="np-val">Pushups ×9 → Pullups ×4</div></div>
+    <div class="pause-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏸ Pause</div></div>
+    <div class="end-pill-wrap"><div class="end-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏏ End</div></div></div>
+  </div>
+  <button class="next-phase-btn to-end">Session Complete ✓</button>
+</div>
+
+<!-- ═══════════════════════════════════
+     7. PAUSED STATE
+════════════════════════════════════ -->
+<div class="screen-label">Screen 7 — Paused state (clock frozen)</div>
+<div class="screen">
+  <div class="sess-hdr">
+    <div><div class="sh-eyebrow">Week 1 · Day 2</div><div class="sh-title b">Iron Tide — Day B</div></div>
+    <div class="sh-right"><div class="sh-clock-lbl">session</div><div class="sh-clock">12:05</div></div>
+  </div>
+  <div class="phase-nav">
+    <div class="phase-dot active-b"></div>
+    <div class="phase-dot"></div>
+    <div class="phase-dot"></div>
+  </div>
+  <div class="cadence-area">
+    <div class="cadence-ctx">PAUSED</div>
+    <div class="cadence-timer idle">31</div>
+    <div class="target-row">
+      <div class="target-pip"></div>
+      <div class="target-lbl">clock frozen — resume to continue</div>
+    </div>
+    <div class="set-meta-row">
+      <div class="set-meta-badge"><div class="smv">7</div><div class="sml">Reps done</div></div>
+      <div class="set-meta-badge"><div class="smv">30</div><div class="sml">Target</div></div>
+    </div>
+    <div class="set-meta-detail">Double strict press · 16/16 kg</div>
+  </div>
+  <div class="tap-btn press-live" style="margin:0 1.5rem;opacity:.4">
+    <span>DONE SET 3</span><span class="tap-sub">5 reps · strict press</span>
+  </div>
+  <div class="log-strip">
+    <div class="log-label">Sets</div>
+    <div class="log-chips">
+      <div class="chip fresh-p">×2 28s</div><div class="chip fresh-p">×3 35s</div>
+    </div>
+  </div>
+  <div class="new-stat-bar">
+    <div class="next-pill"><div class="np-lbl">Next set</div><div class="np-val">×2 · strict press</div></div>
+    <div class="pause-pill paused"><div class="ap-lbl">Action</div><div class="ap-val">▶ Resume</div></div>
+    <div class="end-pill-wrap"><div class="end-pill"><div class="ap-lbl">Action</div><div class="ap-val">⏏ End</div></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     8. SUMMARY
+════════════════════════════════════ -->
+<div class="screen-label">Screen 8 — Summary (Day A)</div>
+<div class="screen">
+  <div class="sum-screen">
+    <div class="sum-title">Day A Complete</div>
+    <div class="sum-grid">
+      <div class="sc"><div class="scv">9</div><div class="scl">ABC Rounds</div></div>
+      <div class="sc"><div class="scv">54</div><div class="scl">Total Reps</div></div>
+      <div class="sc"><div class="scv">1,728 kg</div><div class="scl">kg Moved</div></div>
+      <div class="sc"><div class="scv">22:42</div><div class="scl">Time</div></div>
+      <div class="sc"><div class="scv">6</div><div class="scl">Carry Sets</div></div>
+      <div class="sc"><div class="scv">89s</div><div class="scl">Avg Round</div></div>
+      <div class="sc full">
+        <div class="scl" style="margin-bottom:.4rem">Round times</div>
+        <div class="sum-chips">
+          <div class="sum-chip">R1 92s</div><div class="sum-chip">R2 86s</div>
+          <div class="sum-chip">R3 98s</div><div class="sum-chip">R4 90s</div>
+          <div class="sum-chip">R5 88s</div><div class="sum-chip">R6 89s</div>
+          <div class="sum-chip">R7 86s</div><div class="sum-chip">R8 86s</div>
+          <div class="sum-chip">R9 87s</div>
+        </div>
+      </div>
+    </div>
+    <div class="elbow-banner"><strong>Elbow check</strong> — how does it feel right now and tomorrow morning? If tomorrow is worse, reduce volume 20%.</div>
+    <button class="btn-back">← New Session</button>
+  </div>
+</div>
+
+</body>
+</html>
