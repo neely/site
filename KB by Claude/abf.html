@@ -548,7 +548,7 @@ function startSession() {
   S.totalElapsed = 0;
   reqWakeLock();
   if (S.type === 'abc') { initAbcSession(); updateAbcNextPill(); showScreen('session-abc'); }
-  else                  { initPressSession(); showScreen('session-press'); }
+  else                  { initPressSession(); updatePressNextPill(); showScreen('session-press'); }
   startSessionClock();
 }
 
@@ -769,6 +769,7 @@ function pressTap() {
   const pos  = S.pressRungIdx % S.pressLadder.length;
   const reps = S.pressLadder[pos];
   S.pressReps += reps; S.pressSets++; S.pressRungIdx++;
+  updatePressNextPill();
   S.pressLog.push({ reps, elapsed });
   const totalWt = S.wL + S.wR;
   document.getElementById('press-done').textContent   = S.pressReps;
