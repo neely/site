@@ -793,13 +793,14 @@ function initDayA() {
 // ════════════════════════════════════════════════
 const ARC_C = 333;
 let arcInterval = null;
+let arcStart = null;  // module-level so pauseSession can preserve it
 
 function startArc() {
   clearInterval(arcInterval);
+  arcStart = Date.now();  // always fresh start (reset per round)
   const arc   = document.getElementById('abc-arc');
   const tEl   = document.getElementById('abc-arc-time');
   const lEl   = document.getElementById('abc-arc-label');
-  const arcStart = Date.now();
   arc.classList.remove('warn');
   arcInterval = setInterval(() => {
     const elapsed = Math.floor((Date.now() - arcStart) / 1000);
@@ -825,6 +826,34 @@ function stopArc() {
   return Math.round((Date.now() - S.abcStart) / 1000);
 }
 
+function resumeArc() {
+  // Resume from preserved arcStart — do NOT reset it
+  clearInterval(arcInterval);
+  if (!arcStart) arcStart = Date.now(); // safety fallback
+  const arc = document.getElementById('abc-arc');
+  const tEl = document.getElementById('abc-arc-time');
+  if (arc) arc.classList.remove('warn');
+  arcInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - arcStart) / 1000);
+    if (arc) {
+      arc.style.strokeDashoffset = ARC_C * (1 - Math.min(elapsed/S.emomSec,1));
+      arc.classList.toggle('warn', elapsed > S.emomSec);
+    }
+    const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+    const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+    const over  = elapsed > S.emomSec;
+    if (over) {
+      const excess = elapsed - S.emomSec;
+      if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+      if (lblEl) { lblEl.textContent = 'over';         lblEl.classList.add('warn'); }
+    } else {
+      const rem = S.emomSec - elapsed;
+      if (secEl) { secEl.textContent = rem+'s';      secEl.classList.remove('warn'); }
+      if (lblEl) { lblEl.textContent = 'remaining';  lblEl.classList.remove('warn'); }
+    }
+  }, 200);
+}
+
 function resetArc() {
   clearInterval(arcInterval);
   const arc = document.getElementById('abc-arc');
@@ -846,6 +875,7 @@ function abcTap() {
     document.getElementById('abc-tap-lbl').textContent = 'DONE ROUND';
     document.getElementById('abc-ctx').textContent = `ROUND ${S.abcRounds+1} IN PROGRESS`;
     // abc-last removed
+    _setActiveClock('arc', { arcId: 'abc-arc', timeId: 'abc-arc-time', targetSec: S.emomSec });
     startArc();
     return;
   }
@@ -875,6 +905,7 @@ function abcTap() {
   document.getElementById('abc-tap').className = 'tap-btn tide-live';
   document.getElementById('abc-tap-lbl').textContent = 'DONE ROUND';
   document.getElementById('abc-ctx').textContent = `ROUND ${S.abcRounds+1} IN PROGRESS`;
+  _setActiveClock('arc', { arcId: 'abc-arc', timeId: 'abc-arc-time', targetSec: S.emomSec });
   startArc();
 }
 
@@ -885,13 +916,23 @@ const CARRY_SIDES = ['LEFT','RIGHT','LEFT','RIGHT','LEFT','RIGHT'];
 
 function startCarryClock() {
   clearInterval(S.carryInterval);
-  S.carryStart = Date.now();
+  S.carryStart = Date.now();  // fresh start for a new carry
+  _runCarryInterval();
+}
+
+function resumeCarryClock() {
+  clearInterval(S.carryInterval);
+  if (!S.carryStart) S.carryStart = Date.now(); // safety fallback
+  _runCarryInterval();
+}
+
+function _runCarryInterval() {
   const timerEl = document.getElementById('carry-timer');
-  timerEl.style.color = 'var(--tide)';
+  if (timerEl) timerEl.style.color = 'var(--tide)';
   S.carryInterval = setInterval(() => {
     const el = Math.floor((Date.now() - S.carryStart) / 1000);
     const m  = Math.floor(el / 60);
-    timerEl.textContent = m > 0 ? `${m}:${String(el%60).padStart(2,'0')}` : `${el}`;
+    if (timerEl) timerEl.textContent = m > 0 ? `${m}:${String(el%60).padStart(2,'0')}` : `${el}`;
   }, 200);
 }
 
@@ -918,6 +959,7 @@ function carryTap() {
   if (S.carryPhase === 'idle') {
     // start carry
     S.carryPhase = 'running';
+    _setActiveClock('carry', { _carryElapsed: 0 });
     startCarryClock();
     const side = CARRY_SIDES[S.carryDone % 6];
     document.getElementById('carry-tap').className = 'tap-btn tide-live';
@@ -939,6 +981,7 @@ function carryTap() {
 
   if (S.carryDone >= 6) {
     // all done
+    _setActiveClock(null);
     document.getElementById('carry-tap').className = 'tap-btn neutral';
     document.getElementById('carry-tap-lbl').textContent = 'ALL CARRIES DONE ✓';
     document.getElementById('carry-tap-sub').textContent = 'Great work — session complete';
@@ -1049,6 +1092,7 @@ function pressTap() {
     const pos = S.pressRungIdx % S.pressLadder.length;
     document.getElementById('press-tap-lbl').textContent = `DONE SET ${S.pressSets+1}`;
     document.getElementById('press-tap-sub').textContent = `${S.pressLadder[pos]} reps · strict press`;
+    _setActiveClock('cadence', { id: 'press-cadence-timer', pipId: 'press-cadence-timer-pip' });
     startCadenceClock('press-cadence-timer', 'press-cadence-timer-pip');
     return;
   }
@@ -1079,6 +1123,7 @@ function pressTap() {
   const nextPos = S.pressRungIdx % S.pressLadder.length;
   document.getElementById('press-tap-lbl').textContent = `DONE SET ${S.pressSets+1}`;
   document.getElementById('press-tap-sub').textContent = `${S.pressLadder[nextPos]} reps · strict press`;
+  _setActiveClock('cadence', { id: 'press-cadence-timer', pipId: 'press-cadence-timer-pip' });
   startCadenceClock('press-cadence-timer', 'press-cadence-timer-pip');
 }
 
@@ -1104,6 +1149,7 @@ function snatchTap() {
     document.getElementById('snatch-ctx').textContent = 'SET IN PROGRESS';
     document.getElementById('snatch-tap-lbl').textContent = `DONE SET ${S.snatchSets+1}`;
     document.getElementById('snatch-tap-sub').textContent = '8 L · 8 R · wrist neutral at catch';
+    _setActiveClock('cadence', { id: 'snatch-cadence-timer', pipId: 'snatch-cadence-timer-pip' });
     startCadenceClock('snatch-cadence-timer', 'snatch-cadence-timer-pip');
     return;
   }
@@ -1118,6 +1164,7 @@ function snatchTap() {
   updateSnatchNextPill();
   if (S.snatchSets >= S.snatchTarget) {
     S.snatchPhase = 'done';
+    _setActiveClock(null);
     document.getElementById('snatch-tap').className = 'tap-btn neutral';
     document.getElementById('snatch-tap-lbl').textContent = 'ALL SETS DONE ✓';
     document.getElementById('snatch-tap-sub').textContent = 'Move to Push / Pull when ready';
@@ -1130,6 +1177,7 @@ function snatchTap() {
   document.getElementById('snatch-ctx').textContent = 'SET IN PROGRESS';
   document.getElementById('snatch-tap-lbl').textContent = `DONE SET ${S.snatchSets+1}`;
   document.getElementById('snatch-tap-sub').textContent = `Set ${S.snatchSets+1} of ${S.snatchTarget} · 8L 8R`;
+  _setActiveClock('cadence', { id: 'snatch-cadence-timer', pipId: 'snatch-cadence-timer-pip' });
   startCadenceClock('snatch-cadence-timer', 'snatch-cadence-timer-pip');
 }
 
@@ -1155,6 +1203,7 @@ function ppTap() {
     document.getElementById('pp-ctx').textContent = 'SUPERSET IN PROGRESS';
     document.getElementById('pp-tap-lbl').textContent = `DONE SUPERSET ${S.ppSets+1}`;
     document.getElementById('pp-tap-sub').textContent = `pushups ×${S.ppPushTarget} · then pullups ×${S.ppPullTarget}`;
+    _setActiveClock('cadence', { id: 'pp-cadence-timer', pipId: 'pp-cadence-timer-pip' });
     startCadenceClock('pp-cadence-timer', 'pp-cadence-timer-pip');
     return;
   }
@@ -1170,6 +1219,7 @@ function ppTap() {
   updatePpNextPill();
   if (S.ppSets >= 3) {
     S.ppPhase = 'done';
+    _setActiveClock(null);
     document.getElementById('pp-tap').className = 'tap-btn neutral';
     document.getElementById('pp-tap-lbl').textContent = 'ALL SETS DONE ✓';
     document.getElementById('pp-tap-sub').textContent = 'Great work — session complete';
@@ -1182,6 +1232,7 @@ function ppTap() {
   document.getElementById('pp-ctx').textContent = 'SUPERSET IN PROGRESS';
   document.getElementById('pp-tap-lbl').textContent = `DONE SUPERSET ${S.ppSets+1}`;
   document.getElementById('pp-tap-sub').textContent = `set ${S.ppSets+1} · pushups ×${S.ppPushTarget} → pullups ×${S.ppPullTarget}`;
+  _setActiveClock('cadence', { id: 'pp-cadence-timer', pipId: 'pp-cadence-timer-pip' });
   startCadenceClock('pp-cadence-timer', 'pp-cadence-timer-pip');
 }
 
@@ -1337,37 +1388,47 @@ function logSessionToSheet() {
 // ════════════════════════════════════════════════════
 // PAUSE / RESUME
 // ════════════════════════════════════════════════════
+// Active clock registry — set on every tap START/DONE
+// pauseSession() reads this to freeze the right clock
+// resumeSession() reads this to restore from snapshot
 let _paused = false;
-let _pauseStart = null;
 let _workoutAtPause = 0;
-let _abcElapsed = 0, _pressElapsed = 0, _snatchElapsed = 0;
-let _ppElapsed = 0, _carryElapsed = 0;
+let _activeClockType = null;  // 'cadence' | 'arc' | 'carry' | null
+let _activeClockCfg  = null;
+
+function _setActiveClock(type, cfg) {
+  _activeClockType = type || null;
+  _activeClockCfg  = cfg  || null;
+}
 
 function pauseSession() {
   if (_paused) { resumeSession(); return; }
   _paused = true;
-  _pauseStart = Date.now();
   _workoutAtPause = S.totalElapsed;
 
-  if (S.abcPhase === 'running' && S.abcStart)
-    _abcElapsed = Math.floor((Date.now() - S.abcStart) / 1000);
-  if (S.pressPhase === 'running') _pressElapsed = pauseCadenceClock();
-  if (S.snatchPhase === 'running') _snatchElapsed = pauseCadenceClock();
-  if (S.ppPhase === 'running') _ppElapsed = pauseCadenceClock();
-  if (S.carryPhase === 'running' && S.carryStart)
-    _carryElapsed = Math.floor((Date.now() - S.carryStart) / 1000);
+  // Freeze active clock — snapshot elapsed so resume is accurate
+  if (_activeClockType === 'arc') {
+    clearInterval(arcInterval);
+    // Snapshot elapsed so resume can rebase arcStart to exclude pause time
+    if (_activeClockCfg && arcStart)
+      _activeClockCfg._arcElapsed = Math.floor((Date.now() - arcStart) / 1000);
+  } else if (_activeClockType === 'cadence') {
+    const elapsed = pauseCadenceClock();  // snapshots via _cadenceStart
+    if (_activeClockCfg) _activeClockCfg._elapsed = elapsed;
+  } else if (_activeClockType === 'carry') {
+    // carry uses its own interval — snapshot elapsed
+    clearInterval(S.carryInterval);
+    if (S.carryStart) _activeClockCfg._carryElapsed = Math.floor((Date.now() - S.carryStart) / 1000);
+  }
 
   clearInterval(S.sessionInterval);
-  clearInterval(arcInterval);
-  clearInterval(S.carryInterval);
   relWakeLock();
 
-  document.querySelectorAll('.btn-pause').forEach(btn => {
-    btn.textContent = '\u25b6 RESUME'; btn.classList.add('paused');
+  document.querySelectorAll('.pause-pill').forEach(btn => {
+    btn.querySelector('.ap-val').textContent = '▶ Resume'; btn.classList.add('paused');
   });
   ['abc-tap','carry-tap','press-tap','snatch-tap','pp-tap'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.opacity = '0.4';
+    const el = document.getElementById(id); if (el) el.style.opacity = '0.4';
   });
 }
 
@@ -1376,27 +1437,29 @@ function resumeSession() {
   _paused = false;
   S.sessionStart = Date.now() - _workoutAtPause * 1000;
 
-  if (S.abcPhase === 'running' && S.abcStart) {
-    S.abcStart = Date.now() - _abcElapsed * 1000;
-    startArc();
-  }
-  if (S.pressPhase === 'running') resumeCadenceClock('press-cadence-timer','press-cadence-timer-pip',_pressElapsed);
-  if (S.snatchPhase === 'running') resumeCadenceClock('snatch-cadence-timer','snatch-cadence-timer-pip',_snatchElapsed);
-  if (S.ppPhase === 'running') resumeCadenceClock('pp-cadence-timer','pp-cadence-timer-pip',_ppElapsed);
-  if (S.carryPhase === 'running' && S.carryStart) {
-    S.carryStart = Date.now() - _carryElapsed * 1000;
-    startCarryClock();
+  // Restore active clock from snapshot — never restart fresh
+  if (_activeClockType === 'arc') {
+    // Rebase arcStart to exclude pause duration, then restart interval
+    if (_activeClockCfg && _activeClockCfg._arcElapsed !== undefined)
+      arcStart = Date.now() - _activeClockCfg._arcElapsed * 1000;
+    resumeArc();
+  } else if (_activeClockType === 'cadence' && _activeClockCfg) {
+    resumeCadenceClock(_activeClockCfg.id, _activeClockCfg.pipId, _activeClockCfg._elapsed || 0);
+  } else if (_activeClockType === 'carry') {
+    if (_activeClockCfg) {
+      S.carryStart = Date.now() - (_activeClockCfg._carryElapsed || 0) * 1000;
+    }
+    resumeCarryClock();
   }
 
   startClock();
   reqWakeLock();
 
-  document.querySelectorAll('.btn-pause').forEach(btn => {
-    btn.textContent = '\u23f8 Pause'; btn.classList.remove('paused');
+  document.querySelectorAll('.pause-pill').forEach(btn => {
+    btn.querySelector('.ap-val').textContent = '⏸ Pause'; btn.classList.remove('paused');
   });
   ['abc-tap','carry-tap','press-tap','snatch-tap','pp-tap'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.opacity = '';
+    const el = document.getElementById(id); if (el) el.style.opacity = '';
   });
 }
 
