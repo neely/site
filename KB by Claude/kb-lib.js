@@ -279,23 +279,52 @@ const KB = {
   },
 
   // ── PAUSE / RESUME ─────────────────────────────────────────
-  // Apps call KB.initPause(cfg) with their app-specific snapshot/restore fns
-  _paused: false,
-  _onPause: null,   // fn() — app-specific: snapshot active clocks
-  _onResume: null,  // fn() — app-specific: restore clocks
+  //
+  // CLOCK PAUSE CONTRACT
+  // Every running clock must be frozen on pause and restored on resume
+  // from its exact elapsed value. Never call startXClock() fresh from
+  // resume — always snapshot on pause and rebase on resume.
+  //
+  // The library handles this automatically via an "active clock" registry.
+  // Before calling pauseSession(), apps register what is currently running:
+  //
+  //   KB.setActiveClock('cadence', { id: 'my-timer', pipId: 'my-pip', targetSec: 60 })
+  //   KB.setActiveClock('arc',     { arcId: 'my-arc', timeId: 'my-time', targetSec: S.emomSec })
+  //   KB.setActiveClock(null)   // nothing running (between sets)
+  //
+  // pauseSession() freezes the registered clock.
+  // resumeSession() restores it from the snapshot.
+  //
+  // Apps must call setActiveClock() on every tap:
+  //   - Tap START → setActiveClock('cadence', cfg) or setActiveClock('arc', cfg)
+  //   - Tap DONE  → setActiveClock(null)
+  //
+  // This is the single source of truth for pause behaviour across all apps.
 
-  initPause(onPause, onResume) {
-    this._onPause  = onPause;
-    this._onResume = onResume;
+  _paused: false,
+  _activeClockType: null,   // 'cadence' | 'arc' | null
+  _activeClockCfg:  null,   // config object for the active clock
+
+  setActiveClock(type, cfg) {
+    this._activeClockType = type || null;
+    this._activeClockCfg  = cfg  || null;
   },
 
   pauseSession() {
     if (this._paused) { this.resumeSession(); return; }
     this._paused = true;
+
+    // Freeze the active clock — snapshot elapsed so resume is accurate
+    if (this._activeClockType === 'cadence' && this._activeClockCfg) {
+      this.pauseCadenceClock(this._activeClockCfg.id);
+    } else if (this._activeClockType === 'arc') {
+      this.pauseEmomArc();
+    }
+
     this.stopSessionClock();
     this.stopCountdown();
     this.relWakeLock();
-    if (this._onPause) this._onPause();
+
     document.querySelectorAll('.pause-pill').forEach(btn => {
       btn.querySelector('.ap-val').textContent = '▶ Resume'; btn.classList.add('paused');
     });
@@ -305,13 +334,22 @@ const KB = {
   resumeSession(clockElId, isCountdown, countdownTotal, onCountdownExpire) {
     if (!this._paused) return;
     this._paused = false;
-    if (this._onResume) this._onResume();
+
+    // Restore the active clock from its snapshot — never restart fresh
+    if (this._activeClockType === 'cadence' && this._activeClockCfg) {
+      const cfg = this._activeClockCfg;
+      this.resumeCadenceClock(cfg.id, cfg.targetSec);
+    } else if (this._activeClockType === 'arc' && this._activeClockCfg) {
+      this.resumeEmomArc(this._activeClockCfg);
+    }
+
     if (isCountdown) {
       this.startCountdown(clockElId, countdownTotal, onCountdownExpire);
     } else {
       this.startSessionClock(clockElId);
     }
     this.reqWakeLock();
+
     document.querySelectorAll('.pause-pill').forEach(btn => {
       btn.querySelector('.ap-val').textContent = '⏸ Pause'; btn.classList.remove('paused');
     });

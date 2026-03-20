@@ -178,6 +178,41 @@ No last-round feedback text anywhere on screen — athlete knows if they hit it.
 
 The arc time element is a parent div with two child spans (`.t-sec`, `.t-lbl`). Any JS calling `.textContent` on the parent `emom-time` div will silently destroy both children. Always write to the child spans directly, or use `resetEmomArc()` which handles this correctly. If you see `getElementById('emom-time').textContent = x` anywhere in the JS, it's a bug.
 
+**Clock pause contract — freeze and restore, never restart:**
+
+Every running clock must be frozen on pause and restored from its exact elapsed value on resume. The rule applies to both the cadence clock and the EMOM arc.
+
+```
+WRONG — restarts clock from zero:
+  pauseSession()  → clearInterval only
+  resumeSession() → startCadenceClock()   ← fresh start, loses elapsed
+
+CORRECT — freezes and rebases:
+  pauseSession()  → pauseCadenceClock(id)         ← snapshots elapsed
+  resumeSession() → resumeCadenceClock(id, target) ← rebases from snapshot
+```
+
+**Implementation via active clock registry (kb-lib.js):**
+
+Apps must register the currently running clock before any tap handler completes. The library's `pauseSession`/`resumeSession` then handle the freeze/restore automatically.
+
+```javascript
+// On START tap — register what's now running
+KB.setActiveClock('cadence', { id: 'my-timer', pipId: 'my-pip', targetSec: 60 });
+
+// On DONE tap — nothing running between sets
+KB.setActiveClock(null);
+
+// For EMOM arc sessions:
+KB.setActiveClock('arc', { arcId: 'my-arc', timeId: 'my-time', targetSec: S.emomSec });
+```
+
+`pauseSession()` reads the registry and freezes whichever clock is active. `resumeSession()` restores it. Apps that call `KB.setActiveClock()` correctly on every tap get correct pause behavior for free — no per-app pause logic needed.
+
+**The failure mode:** If an app calls `startCadenceClock()` directly in its `resumeSession()` instead of `resumeCadenceClock()`, the clock resets to zero on resume. This was the bug across DFW, DFW2, ABF press, and Iron Tide Day A. Iron Tide Day B (ember) worked correctly because it happened to call `resumeCadenceClock()` via the library. The active clock registry makes this consistent across all apps.
+
+---
+
 **Timing rule — wall clock, not integer counting:**
 
 Both the EMOM arc and the cadence clock must be driven by `Date.now()`, not an incrementing integer. Integer counting drifts by up to 1-2 seconds relative to the tap time because the interval fires slightly late. Wall clock anchoring eliminates this.

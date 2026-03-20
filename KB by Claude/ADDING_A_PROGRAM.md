@@ -323,6 +323,36 @@ document.querySelectorAll('.pause-pill').forEach(btn => {
 
 ## Step 5 — Pause / Resume
 
+**The rule: freeze and restore, never restart.** On pause, snapshot the active clock's elapsed time. On resume, rebase from that snapshot. Never call `startCadenceClock()` or `startEmomArc()` from resume — that resets the clock to zero.
+
+Use the active clock registry in kb-lib.js. Call `KB.setActiveClock()` on every tap:
+
+```javascript
+// Cadence clock app — in your tap handler:
+if (phase === 'idle') {
+  // starting a set
+  KB.setActiveClock('cadence', { id: 'my-timer', pipId: 'my-pip', targetSec: S.targetCadence });
+  startCadenceClock();
+} else {
+  // set done
+  KB.setActiveClock(null);
+  stopCadenceClock();
+}
+
+// EMOM arc app — in your tap handler:
+if (phase === 'idle') {
+  KB.setActiveClock('arc', { arcId: 'my-arc', timeId: 'my-time', targetSec: S.emomSec });
+  startEmomArc();
+} else {
+  KB.setActiveClock(null);
+  stopEmomArc();
+}
+```
+
+Then `pauseSession()` and `resumeSession()` handle the rest automatically via kb-lib.js.
+
+**For apps that inline their own pause/resume** (not using kb-lib.js), follow this pattern:
+
 Add these variables and functions (copy from any existing app):
 
 ```javascript
