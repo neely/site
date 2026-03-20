@@ -669,3 +669,5 @@ print("\n" + ("ALL CHECKS PASSED ✓" if ok else "FAILURES FOUND — see above")
 - [ ] Every function called from `startSession()` chain has a `function X()` definition
 - [ ] Every `forEach(id => ...)` loop that writes to DOM uses a null guard
 - [ ] After any HTML redesign, grep for all removed element IDs in the JS
+- [ ] `updateNextPill()` (and any variant like `updatePressNextPill()`) is called in **two places**: on session init AND after the rung/set index increments in the tap handler. Define the function, then grep for calls — if it only appears once, it's missing one of the two wiring points.
+- [ ] The validation script cannot detect missing function call wiring — check next pill, ladder render, and chip log calls manually after building a new program.
