@@ -211,6 +211,44 @@ KB.setActiveClock('arc', { arcId: 'my-arc', timeId: 'my-time', targetSec: S.emom
 
 **The failure mode:** If an app calls `startCadenceClock()` directly in its `resumeSession()` instead of `resumeCadenceClock()`, the clock resets to zero on resume. This was the bug across DFW, DFW2, ABF press, and Iron Tide Day A. Iron Tide Day B (ember) worked correctly because it happened to call `resumeCadenceClock()` via the library. The active clock registry makes this consistent across all apps.
 
+**The arc-specific failure mode — local vs module-level start variable:**
+
+If `arcStart` is declared as `const arcStart = Date.now()` inside `startArc()`, it is a new local variable on every call. There is no way to preserve it across pause. Calling `startArc()` from resume always resets the arc to zero.
+
+```javascript
+// WRONG — arcStart is local, lost on every call
+function startArc() {
+  const arcStart = Date.now(); // ← new variable every time, can't be preserved
+  arcInterval = setInterval(() => { ... }, 200);
+}
+
+// CORRECT — arcStart is module-level, survives pause
+let arcStart = null;
+function startArc() {
+  arcStart = Date.now(); // ← sets the shared variable
+  arcInterval = setInterval(() => { ... }, 200);
+}
+function resumeArc() {
+  // arcStart is already set — just restart the interval tick
+  // caller must rebase arcStart first: arcStart = Date.now() - elapsedAtPause * 1000
+  arcInterval = setInterval(() => { ... }, 200);
+}
+```
+
+**Additionally:** stopping the interval with `clearInterval` does not stop real time passing. If you resume by restarting the interval without rebasing `arcStart`, the arc will appear to jump forward by the pause duration. Always snapshot elapsed on pause and rebase on resume:
+
+```javascript
+// On pause:
+clearInterval(arcInterval);
+const elapsedAtPause = Math.floor((Date.now() - arcStart) / 1000);
+
+// On resume:
+arcStart = Date.now() - elapsedAtPause * 1000; // exclude pause time
+resumeArc(); // restart interval only — arcStart already correct
+```
+
+This applies to any wall-clock-anchored timer, not just the arc.
+
 ---
 
 **Timing rule — wall clock, not integer counting:**

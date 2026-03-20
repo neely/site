@@ -171,6 +171,7 @@ const KB = {
 
   _arcInterval: null,
   _arcStart: null,
+  _arcElapsedAtPause: 0,
   ARC_C: 333, // circumference for r=53
 
   startEmomArc(cfg) {
@@ -222,17 +223,17 @@ const KB = {
   },
 
   pauseEmomArc() {
-    // Snapshot _arcStart offset so resume restores correctly
+    // Stop the tick and snapshot elapsed — real time keeps passing during pause
+    // so we must rebase _arcStart on resume to exclude the pause duration
     clearInterval(this._arcInterval);
-    if (this._arcStart) {
-      const elapsed = Math.floor((Date.now() - this._arcStart) / 1000);
-      this._arcStart = Date.now() - elapsed * 1000; // preserve offset for resume
-    }
+    this._arcElapsedAtPause = this._arcStart
+      ? Math.floor((Date.now() - this._arcStart) / 1000)
+      : 0;
   },
 
   resumeEmomArc(cfg) {
-    // _arcStart already holds the correct offset from pauseEmomArc
-    if (!this._arcStart) this._arcStart = Date.now();
+    // Rebase _arcStart to exclude pause time, then restart interval
+    this._arcStart = Date.now() - (this._arcElapsedAtPause || 0) * 1000;
     const arc = document.getElementById(cfg.arcId);
     if (arc) arc.classList.remove('warn');
     this._arcInterval = setInterval(() => {
