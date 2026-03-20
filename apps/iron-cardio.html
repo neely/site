@@ -379,6 +379,18 @@ function startCadenceClock() {
   }, 200);
 }
 
+function resumeCadenceClock() {
+  // Resume from rebased S.setStart — do NOT reset it to Date.now()
+  clearInterval(S.cadenceInterval);
+  const timerEl = document.getElementById('cadence-timer');
+  if (timerEl) timerEl.classList.remove('idle', 'over');
+  S.cadenceInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - S.setStart) / 1000);
+    const m   = Math.floor(sec / 60);
+    if (timerEl) timerEl.textContent = m > 0 ? `${m}:${String(sec % 60).padStart(2, '0')}` : `${sec}`;
+  }, 200);
+}
+
 function stopCadenceClock() {
   clearInterval(S.cadenceInterval);
   return Math.floor((Date.now() - S.setStart) / 1000);
@@ -582,7 +594,7 @@ function resumeSession() {
   S.sessionStart = Date.now() - _workoutAtPause * 1000;
   if (S.setPhase === 'running' && S.setStart) {
     S.setStart = Date.now() - _cadenceAtPause * 1000;
-    startCadenceClock();
+    resumeCadenceClock();
   }
   startWorkoutClock();
   reqWakeLock();

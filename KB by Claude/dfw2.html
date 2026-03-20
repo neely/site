@@ -137,11 +137,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   letter-spacing: .08em; color: var(--dim); cursor: pointer;
   transition: color .15s, border-color .15s; flex-shrink: 0; opacity: .5;
 }
-.btn-pause:hover { opacity: 1; color: var(--gold, var(--accent, #e3b341)); border-color: var(--gold, var(--accent, #e3b341)); }
-.btn-pause.paused {
-  opacity: 1; color: var(--go); border-color: var(--go);
-  font-weight: 500; font-size: .6rem; letter-spacing: .06em;
-}
+/* .btn-pause removed — using .pause-pill */
 
 
 /* ── BOTTOM BAR (locked design) ── */
@@ -469,6 +465,18 @@ function startCadenceClock() {
   }, 200);
 }
 
+function resumeCadenceClock() {
+  // Resume from rebased S.setStart — do NOT reset it to Date.now()
+  clearInterval(S.cadenceInterval);
+  const timerEl = document.getElementById('cadence-timer');
+  if (timerEl) timerEl.classList.remove('idle', 'over');
+  S.cadenceInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - S.setStart) / 1000);
+    const m   = Math.floor(sec / 60);
+    if (timerEl) timerEl.textContent = m > 0 ? `${m}:${String(sec % 60).padStart(2, '0')}` : `${sec}`;
+  }, 200);
+}
+
 function stopCadenceClock() {
   clearInterval(S.cadenceInterval);
   return Math.floor((Date.now() - S.setStart) / 1000);
@@ -692,8 +700,9 @@ function pauseSession() {
   relWakeLock();
 
   // update button
-  const btn = document.getElementById('btn-pause');
-  if (btn) { btn.textContent = '▶ RESUME'; btn.classList.add('paused'); }
+  document.querySelectorAll('.pause-pill').forEach(b => {
+    b.querySelector('.ap-val').textContent = '▶ Resume'; b.classList.add('paused');
+  });
 
   // dim tap zone
   const zone = document.getElementById('tap-zone');
@@ -715,14 +724,15 @@ function resumeSession() {
   // shift setStart forward if mid-set
   if (S.setPhase === 'running' && S.setStart) {
     S.setStart = Date.now() - _cadenceAtPause * 1000;
-    startCadenceClock();
+    resumeCadenceClock();
   }
 
   startWorkoutClock();
   reqWakeLock();
 
-  const btn = document.getElementById('btn-pause');
-  if (btn) { btn.textContent = '⏸ Pause'; btn.classList.remove('paused'); }
+  document.querySelectorAll('.pause-pill').forEach(b => {
+    b.querySelector('.ap-val').textContent = '⏸ Pause'; b.classList.remove('paused');
+  });
 
   const zone = document.getElementById('tap-zone');
   if (zone) zone.style.opacity = '';

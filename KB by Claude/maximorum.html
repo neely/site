@@ -464,6 +464,19 @@ function startCadenceClock() {
   }, 200);
 }
 
+function resumeCadenceClock() {
+  // Resume from rebased S.roundStart — do NOT reset to Date.now()
+  clearInterval(S.cadenceInterval);
+  const timerEl = document.getElementById('cadence-timer');
+  if (timerEl) timerEl.classList.remove('idle');
+  const liveClass = S.type === 'snatch' ? 'snatch-live' : 'press-live';
+  S.cadenceInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - S.roundStart) / 1000);
+    const m   = Math.floor(sec / 60);
+    if (timerEl) timerEl.textContent = m > 0 ? `${m}:${String(sec % 60).padStart(2, '0')}` : `${sec}`;
+  }, 200);
+}
+
 function stopCadenceClock() {
   clearInterval(S.cadenceInterval);
   return S.roundStart ? Math.floor((Date.now() - S.roundStart) / 1000) : 0;
@@ -639,7 +652,7 @@ function resumeSession() {
   S.sessionStart = Date.now() - _workoutAtPause * 1000;
   if (S.phase === 'running' && S.roundStart) {
     S.roundStart = Date.now() - _cadenceAtPause * 1000;
-    startCadenceClock();
+    resumeCadenceClock();
   }
   startCountdown();
   startSessionClock();

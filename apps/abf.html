@@ -628,11 +628,12 @@ function abcTap() {
 }
 
 let arcInterval = null;
+let arcStart = null;  // module-level for pause/resume
 const ARC_C = 333;
 function startEmomArc() {
   clearInterval(arcInterval);
+  arcStart = Date.now();  // fresh per round
   const arc=document.getElementById('emom-arc'), tEl=document.getElementById('emom-time'), lEl=document.getElementById('emom-lbl');
-  const arcStart = Date.now();
   arc.classList.remove('warn');
   arcInterval = setInterval(() => {
     const el = Math.floor((Date.now() - arcStart) / 1000);
@@ -653,6 +654,34 @@ function startEmomArc() {
   }, 200);
 }
 function stopEmomArc() { clearInterval(arcInterval); }
+
+function resumeEmomArc() {
+  // Restart interval using preserved arcStart — do NOT reset
+  clearInterval(arcInterval);
+  if (!arcStart) arcStart = Date.now();
+  const arc  = document.getElementById('emom-arc');
+  const tEl  = document.getElementById('emom-time');
+  if (arc) arc.classList.remove('warn');
+  arcInterval = setInterval(() => {
+    const el = Math.floor((Date.now() - arcStart) / 1000);
+    if (arc) {
+      arc.style.strokeDashoffset = ARC_C*(1-Math.min(el/S.emomSec,1));
+      arc.classList.toggle('warn', el > S.emomSec);
+    }
+    const secEl = tEl ? tEl.querySelector('.t-sec') : null;
+    const lblEl = tEl ? tEl.querySelector('.t-lbl') : null;
+    const over  = el > S.emomSec;
+    if (over) {
+      const excess = el - S.emomSec;
+      if (secEl) { secEl.textContent = `+${excess}s`; secEl.classList.add('warn'); }
+      if (lblEl) { lblEl.textContent = 'over';         lblEl.classList.add('warn'); }
+    } else {
+      const rem = S.emomSec - el;
+      if (secEl) { secEl.textContent = rem+'s';      secEl.classList.remove('warn'); }
+      if (lblEl) { lblEl.textContent = 'remaining';  lblEl.classList.remove('warn'); }
+    }
+  }, 200);
+}
 function resetEmomArc() {
   clearInterval(arcInterval);
   const arc = document.getElementById('emom-arc');
@@ -855,7 +884,8 @@ function resumeSession() {
   S.sessionStart=Date.now()-_workoutAtPause*1000;
   if (S.abcPhase==='running' && S.abcRoundStart) {
     S.abcRoundStart=Date.now()-_abcElapsedAtPause*1000;
-    startEmomArc();
+    arcStart = Date.now() - _abcElapsedAtPause * 1000;
+    resumeEmomArc();
   }
   if (S.pressPhase==='running')
     resumeCadenceClock('press-cadence-timer','press-cadence-timer-pip',999,_pressElapsedAtPause);
