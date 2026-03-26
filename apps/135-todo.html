@@ -236,6 +236,12 @@
     font-weight: 500;
   }
 
+  .footer-btns {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
   .reset-btn {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.65rem;
@@ -253,6 +259,11 @@
   .reset-btn:hover {
     color: var(--big);
     border-color: var(--big);
+  }
+
+  .reset-btn.clear-done:hover {
+    color: var(--med);
+    border-color: var(--med);
   }
 
   @media (max-width: 480px) {
@@ -274,7 +285,10 @@
     <div class="total-progress">
       <span id="done-count">0</span> of <span id="total-count">9</span> complete
     </div>
-    <button class="reset-btn" onclick="resetAll()">↺ clear all checks</button>
+    <div class="footer-btns">
+      <button class="reset-btn clear-done" onclick="clearDone()">✕ clear done</button>
+      <button class="reset-btn" onclick="resetList()">↺ reset list</button>
+    </div>
   </footer>
 </div>
 
@@ -404,12 +418,44 @@ function updateProgress() {
   document.getElementById('total-count').textContent = total;
 }
 
-function resetAll() {
-  if (!confirm('Clear all checkmarks? (Task text stays.)')) return;
+function resetList() {
+  if (!confirm('Reset everything? All tasks and checks will be cleared.')) return;
   SECTIONS.forEach(sec => {
     for (let i = 0; i < sec.count; i++) {
       const k = getKey(sec.id, i);
-      if (state[k]) state[k].done = false;
+      state[k] = { text: '', done: false };
+    }
+  });
+  saveState(state);
+  renderApp();
+}
+
+function clearDone() {
+  // Count how many completed tasks have text
+  let count = 0;
+  SECTIONS.forEach(sec => {
+    for (let i = 0; i < sec.count; i++) {
+      const k = getKey(sec.id, i);
+      if (state[k]?.done && state[k]?.text) count++;
+    }
+  });
+  if (count === 0) {
+    // Nothing to clear — no confirm needed
+    SECTIONS.forEach(sec => {
+      for (let i = 0; i < sec.count; i++) {
+        const k = getKey(sec.id, i);
+        if (state[k]?.done) { state[k].done = false; state[k].text = ''; }
+      }
+    });
+    saveState(state);
+    renderApp();
+    return;
+  }
+  if (!confirm(`Clear ${count} completed task${count !== 1 ? 's' : ''}? This removes their text too.`)) return;
+  SECTIONS.forEach(sec => {
+    for (let i = 0; i < sec.count; i++) {
+      const k = getKey(sec.id, i);
+      if (state[k]?.done) { state[k].done = false; state[k].text = ''; }
     }
   });
   saveState(state);
