@@ -618,7 +618,16 @@ function abcTap() {
   const _at2 = document.getElementById('abc-s-tons'); if(_at2) _at2.textContent=(S.abcRounds*6*(S.wL+S.wR)).toLocaleString();
   addChip('abc-chips', `R${S.abcRounds} ${elapsed}s`, over ? 'late' : 'fresh');
   logAbcRound(S.abcRounds, elapsed);
-  if (S.abcRounds >= S.abcTarget) document.getElementById('abc-ctx').textContent = 'TARGET REACHED! 🎯';
+  if (S.abcRounds >= S.abcTarget) {
+    // Target reached — stop auto-start, let athlete decide to continue
+    S.abcPhase = 'idle';
+    _setActiveClock(null);
+    resetEmomArc();
+    document.getElementById('abc-ctx').textContent     = '🎯 TARGET REACHED!';
+    document.getElementById('abc-tap').className       = 'tap-btn go';
+    document.getElementById('abc-tap-lbl').textContent = `START ROUND ${S.abcRounds+1}`;
+    return;
+  }
   // auto-start next
   S.abcRoundStart = Date.now();
   document.getElementById('abc-tap').className       = 'tap-btn active-set';
@@ -784,6 +793,16 @@ function pressTap() {
   addChip('press-chips', `×${reps} ${elapsed}s`, 'fresh');
   logPressSet(S.pressSets, reps, elapsed);
   renderLadder();
+  if (rem === 0) {
+    // Target reached — stop auto-start, let athlete decide to continue
+    S.pressPhase = 'idle';
+    _setActiveClock(null);
+    document.getElementById('press-cadence-ctx').textContent = '🎯 TARGET REACHED!';
+    document.getElementById('press-tap').className       = 'tap-btn press-go';
+    document.getElementById('press-tap-lbl').textContent = `START SET ${S.pressSets+1}`;
+    document.getElementById('press-tap-sub').textContent = 'Keep going or end session';
+    return;
+  }
   // auto-start next
   S.pressPhase = 'running';
   S.pressSetStart = Date.now();

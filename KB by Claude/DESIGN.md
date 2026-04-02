@@ -135,6 +135,22 @@ Used for: ABF ABC session, Iron Tide Day A ABC phase.
 - Log chips
 - Bottom bar: Next set pill + Pause + End
 
+**Target-reached behavior (ABC and Press sessions only):**
+
+When the round/rep target is hit, auto-start stops. The session pauses at idle so the athlete can decide to continue or end.
+
+```
+ctx label  → "🎯 TARGET REACHED!"
+arc        → resetEmomArc() — shows interval target, ring empty
+tap button → go-green, label = "START ROUND N" or "START SET N"
+phase      → set back to 'idle'
+activeClock → null
+```
+
+The athlete taps the green button to continue past the target, or uses the phase advance / end button. The `return` before the auto-start block is essential — without it the target message is immediately overwritten.
+
+Applies to: ABF (ABC + press), Iron Tide (ABC + press). Not applicable to duration-based programs (DFW, DFW2, Wolf, Iron Cardio, Maximorum).
+
 **EMOM arc — locked design (D-clean):**
 
 120px SVG circle, r=53, circumference=333. Centered below the round counter. Two-element interior: large number on top, small uppercase label underneath. Three states:

@@ -179,6 +179,26 @@ const elapsed = Math.round((Date.now() - S.roundStart) / 1000);
 
 **Never use `elapsed++` in a `setInterval`. It drifts.** See DESIGN.md timing rule.
 
+**Target-reached — stop auto-start:**
+
+If the session has a round/rep target, check it before the auto-start block and `return` early:
+
+```javascript
+// After logging the round/set:
+if (S.rounds >= S.target) {
+  S.phase = 'idle';
+  _setActiveClock(null);
+  resetEmomArc();  // arc resets to show interval target
+  document.getElementById('ctx').textContent     = '🎯 TARGET REACHED!';
+  document.getElementById('tap').className       = 'tap-btn go';
+  document.getElementById('tap-lbl').textContent = `START ROUND ${S.rounds+1}`;
+  return;  // ← skip auto-start block entirely
+}
+// auto-start next round...
+```
+
+Only implement this for target-based programs (ABF, Iron Tide). Duration-based programs (DFW, Wolf, etc.) have no round target — skip this.
+
 ### Pattern C — Phase navigator (Iron Tide)
 
 Use when: session has multiple sequential movement types (e.g. Press → Snatch → Push/Pull).

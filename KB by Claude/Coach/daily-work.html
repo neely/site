@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ben's Daily Work</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #21262d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --tide: #58a6ff;
+    --ember: #f78166;
+    --gold: #d29922;
+    --green: #3fb950;
+    --purple: #bc8cff;
+    --teal: #39d353;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2rem 1.5rem 4rem;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--purple);
+    margin-bottom: 0.25rem;
+    line-height: 1.1;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+  }
+  .section-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 1.75rem 0 0.75rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .card.mobility::before { background: var(--teal); }
+  .card.pull::before { background: var(--tide); }
+  .card.gtg::before { background: var(--green); }
+  .card.elbow::before { background: var(--ember); }
+  .card.office::before { background: var(--gold); }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+  .card-name {
+    font-size: 0.95rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .card-dose {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.6;
+  }
+  .card-detail {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+  .card-detail strong { color: var(--text); }
+  .card-detail em { color: var(--gold); font-style: normal; }
+  .tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tag.every-day { background: rgba(57,211,83,0.12); color: var(--teal); border: 1px solid rgba(57,211,83,0.25); }
+  .tag.off-day { background: rgba(88,166,255,0.12); color: var(--tide); border: 1px solid rgba(88,166,255,0.25); }
+  .tag.kb-day { background: rgba(247,129,102,0.12); color: var(--ember); border: 1px solid rgba(247,129,102,0.25); }
+  .tag.caution { background: rgba(210,153,34,0.12); color: var(--gold); border: 1px solid rgba(210,153,34,0.25); }
+  .rule-box {
+    background: rgba(247,129,102,0.07);
+    border: 1px solid rgba(247,129,102,0.2);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-top: 1.5rem;
+    font-size: 0.72rem;
+    color: var(--ember);
+    line-height: 1.75;
+  }
+  .rule-box strong { color: var(--ember); }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .summary-title {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.6rem;
+  }
+  .summary-item {
+    font-size: 0.7rem;
+    color: var(--text);
+    line-height: 1.8;
+  }
+  .summary-item::before {
+    content: '→ ';
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<h1>Daily & Off-Day Work</h1>
+<p class="subtitle">Ben Neely · Shoulder health · GTG · Mobility · Every day counts</p>
+
+<p class="section-label">Every day — no exceptions</p>
+
+<div class="card mobility">
+  <span class="tag every-day">Every day</span>
+  <div class="card-header">
+    <div class="card-name">Doorframe pec stretch</div>
+    <div class="card-dose">30 sec / side<br>throughout day</div>
+  </div>
+  <div class="card-detail">
+    Hands at shoulder height on both sides of any doorframe. Lean gently through until you feel the chest open. Hold 30 seconds.<br><br>
+    <strong>Why:</strong> Pec minor restriction is pulling your shoulders forward. Your wife is seeing this. Two weeks of KB pressing on top of desk posture accelerates it. This is the direct fix.<br><br>
+    <em>Do it every time you walk through a doorframe at home. Zero time cost.</em>
+  </div>
+</div>
+
+<div class="card mobility">
+  <span class="tag every-day">Every day</span>
+  <div class="card-header">
+    <div class="card-name">Band pull-aparts</div>
+    <div class="card-dose">20–30 reps<br>1 set</div>
+  </div>
+  <div class="card-detail">
+    Hold band at shoulder height, arms straight, pull apart until band touches chest. Controlled return. Search "band pull-apart" — 30 seconds of video covers it.<br><br>
+    <strong>Why:</strong> Direct antagonist to your pressing volume. Rear deltoid and mid-trap activation. Best single movement for shoulder rounding correction.<br><br>
+    <em>Morning or desk break. Band lives somewhere visible so you don't forget it.</em>
+  </div>
+</div>
+
+<div class="card mobility">
+  <span class="tag every-day">Every day</span>
+  <div class="card-header">
+    <div class="card-name">Hip flexor wall stretch</div>
+    <div class="card-dose">60–90 sec / side</div>
+  </div>
+  <div class="card-detail">
+    Rear knee on floor, front foot forward, drive hips forward and squeeze glute of rear leg. Hold.<br><br>
+    <strong>Why:</strong> Desk hip flexors shut off glute activation — the foundation of every ABC complex, carry, and snatch you're doing. Highest ROI stretch for surf performance too.<br><br>
+    <em>Morning at home. Takes 3 minutes total.</em>
+  </div>
+</div>
+
+<p class="section-label">Off-day GTG — hall pullup bar at home</p>
+
+<div class="card pull">
+  <span class="tag off-day">Off days only</span>
+  <div class="card-header">
+    <div class="card-name">Pullup GTG</div>
+    <div class="card-dose">1–3 reps<br>every pass</div>
+  </div>
+  <div class="card-detail">
+    Every time you walk past the hall bar — 1 to 3 pullups. Never to failure. Never when arms are already tired. Just grease the pattern.<br><br>
+    <strong>Why:</strong> Your push-to-pull ratio is imbalanced. Press ladders + pushups significantly outvolume your pullups each session. GTG on off days builds pull volume without taxing the pressing muscles.<br><br>
+    <em>Dan John's most repeated recommendation for adding pullup reps. It works because it's never a workout — just practice.</em><br><br>
+    <strong>On KB session days: skip this.</strong> Don't add GTG on top of Day B — that's how the elbow creeps up.
+  </div>
+</div>
+
+<div class="card elbow">
+  <span class="tag off-day">Off days only</span>
+  <div class="card-header">
+    <div class="card-name">Dead hang</div>
+    <div class="card-dose">20–30 sec<br>1–2 sets</div>
+  </div>
+  <div class="card-detail">
+    Passive hang from the hall bar. Full grip, shoulders relaxed and letting the weight decompress the spine and shoulder. Don't active-shrug.<br><br>
+    <strong>Why:</strong> Best passive elbow rehab tool you have. Decompresses the joint, opens the shoulder, stretches the lat. Directly addresses medial epicondylitis recovery.<br><br>
+    <em>Pair with pullup GTG — hang after your reps.</em>
+  </div>
+</div>
+
+<p class="section-label">Home GTG — available anytime</p>
+
+<div class="card gtg">
+  <span class="tag every-day">Every day</span>
+  <div class="card-header">
+    <div class="card-name">Goblet squat GTG</div>
+    <div class="card-dose">5 reps / pass<br>12kg bell</div>
+  </div>
+  <div class="card-detail">
+    5 slow goblet squats with the 12kg whenever you walk past the bell at home. Pause at the bottom. Keep the bell at home for this purpose.<br><br>
+    <strong>Why:</strong> Greases the front squat pattern that's in every ABC complex. Keeps hips and ankles mobile between sessions.<br><br>
+    <em>Bell lives somewhere you walk past it. Out of sight = forgotten.</em>
+  </div>
+</div>
+
+<p class="section-label">On KB session days</p>
+
+<div class="card office">
+  <span class="tag kb-day">KB days</span>
+  <div class="card-header">
+    <div class="card-name">Warmup only — no GTG</div>
+    <div class="card-dose">~5–7 min</div>
+  </div>
+  <div class="card-detail">
+    Wrist circles → forearm self-massage → halos → prying goblet squats → plyometric squats → hip flexor wall stretch → dead hang if available.<br><br>
+    <strong>Daily mobility (pec stretch, band pull-aparts) still applies</strong> — just do them earlier in the day, not as part of warmup.<br><br>
+    <em>No pullup GTG on KB days. Elbow protection trumps volume accumulation.</em>
+  </div>
+</div>
+
+<p class="section-label">Equipment at home</p>
+
+<div class="card gtg" style="border-color: var(--border);">
+  <div class="card-header">
+    <div class="card-name">What you have / where it lives</div>
+  </div>
+  <div class="card-detail">
+    <strong>Hall pullup bar</strong> — GTG pullups + dead hangs on off days.<br>
+    <strong>Rings</strong> — stored, not permanent. Available for dips if pressing volume needs supplementing in later program blocks. Not needed now.<br>
+    <strong>12kg bell at home</strong> — goblet squat GTG. Stays home.<br>
+    <strong>Resistance band</strong> — pull-aparts daily. Lives somewhere visible.<br><br>
+    <em>Office: wall stretch + doorframe pec stretch only. No equipment needed.</em>
+  </div>
+</div>
+
+<div class="rule-box">
+  <strong>The shoulder rounding rule:</strong> Your wife's observation is real and consistent with your last KB cycle. The fix is pull volume + pec mobility, not more pressing. Band pull-aparts and pullup GTG are non-negotiable until she stops noticing it. Check in with her every 2 weeks — she's your best biofeedback tool.
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="summary-title">Every day</div>
+    <div class="summary-item">Doorframe pec stretch</div>
+    <div class="summary-item">Band pull-aparts</div>
+    <div class="summary-item">Hip flexor stretch</div>
+    <div class="summary-item">Goblet squat GTG</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-title">Off days only</div>
+    <div class="summary-item">Pullup GTG (hall bar)</div>
+    <div class="summary-item">Dead hang</div>
+    <div class="summary-item">No GTG on KB days</div>
+    <div class="summary-item">Rings if needed later</div>
+  </div>
+</div>
+
+</body>
+</html>
