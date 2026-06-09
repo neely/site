@@ -91,12 +91,12 @@
 [data-theme="geocities"],
 [data-theme="geocities"] body,
 [data-theme="geocities"] * {
-  cursor: crosshair;
+  cursor: url("../img/shooting-star-cursor.svg") 20 12, auto;
 }
 [data-theme="geocities"] a,
 [data-theme="geocities"] button,
 [data-theme="geocities"] #theme-btn {
-  cursor: help;
+  cursor: url("../img/shooting-star-cursor.svg") 20 12, help;
 }
 [data-theme="geocities"] a {
   color: #00ffff;
