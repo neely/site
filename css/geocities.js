@@ -12,6 +12,8 @@ const GC = (() => {
   let mounted  = false;
   let animId   = null;
   let glRenderer = null;
+  let cursorHandler = null;
+  let cursorLast = 0;
 
   // ── DOM helpers ───────────────────────────────────────────────
   function make(tag, attrs, html) {
@@ -235,6 +237,62 @@ const GC = (() => {
     document.head.appendChild(s);
   }
 
+
+  // ── Horrible shooting-star cursor trail ───────────────────────
+  function initShootingStarCursor() {
+    const style = track(make('style', { id: 'gc-cursor-style' }));
+    style.textContent = `
+      .gc-shooting-star {
+        position: fixed;
+        left: 0;
+        top: 0;
+        pointer-events: none;
+        z-index: 2147483647;
+        font-size: 24px;
+        line-height: 1;
+        transform: translate(-50%, -50%);
+        animation: gc-shooting-star 700ms linear forwards;
+        text-shadow:
+          0 0 4px #ffff00,
+          0 0 8px #ff00ff,
+          0 0 12px #00ffff;
+      }
+
+      @keyframes gc-shooting-star {
+        0% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-140%, -100%) scale(0.2) rotate(360deg);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const stars = ['✨', '🌟', '💫', '⭐', '☄️'];
+
+    cursorHandler = function (ev) {
+      const now = Date.now();
+
+      // Smaller number = more cursed. Try 15 if you want pain.
+      if (now - cursorLast < 35) return;
+      cursorLast = now;
+
+      const star = track(make('span', { class: 'gc-shooting-star' }));
+      star.textContent = stars[Math.floor(Math.random() * stars.length)];
+      star.style.left = ev.clientX + 'px';
+      star.style.top = ev.clientY + 'px';
+
+      document.body.appendChild(star);
+
+      setTimeout(() => star.remove(), 750);
+    };
+
+    window.addEventListener('mousemove', cursorHandler);
+  }
+
   // ── Public API ────────────────────────────────────────────────
   function mount() {
     if (mounted) return;
@@ -247,6 +305,7 @@ const GC = (() => {
     truncatePubs();
     injectCoolLinks();
     injectWebring();
+    initShootingStarCursor();
     loadThree(initProtein);
   }
 
@@ -255,6 +314,12 @@ const GC = (() => {
     mounted = false;
     if (animId)     { cancelAnimationFrame(animId); animId = null; }
     if (glRenderer) { glRenderer.dispose(); glRenderer = null; }
+
+    if (cursorHandler) {
+      window.removeEventListener('mousemove', cursorHandler);
+      cursorHandler = null;
+    }
+
     nodes.forEach(n => n.remove());
     nodes = [];
     hiddenEls.forEach(({ el, display }) => el.style.display = display);
