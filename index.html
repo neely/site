@@ -238,20 +238,27 @@
 		</div>
 	</div>
 
+<script src="css/geocities.js"></script>
 <script>
-  const themes = ['dark','light','retro'];
+  const themes = ['dark','light','retro','geocities'];
+  const labels = { dark:'☀️ Light', light:'◈ Retro', retro:'🌐 Geocities', geocities:'🌑 Dark' };
   const btn = document.getElementById('theme-btn');
-  const labels = {dark:'☀️ Light', light:'◈ Retro', retro:'🌑 Dark'};
-  btn.addEventListener('click', () => {
-    const cur = document.documentElement.dataset.theme || 'dark';
-    const next = themes[(themes.indexOf(cur) + 1) % themes.length];
+
+  function applyTheme(next, prev) {
+    if (prev === 'geocities') GC.unmount();
     document.documentElement.dataset.theme = next;
     localStorage.setItem('theme', next);
     btn.textContent = labels[next];
+    if (next === 'geocities') GC.mount();
+  }
+
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.dataset.theme || 'dark';
+    applyTheme(themes[(themes.indexOf(cur) + 1) % themes.length], cur);
   });
+
   const saved = localStorage.getItem('theme') || 'dark';
-  document.documentElement.dataset.theme = saved;
-  btn.textContent = labels[saved];
+  applyTheme(saved, null);
 </script>
 	
 </body>
