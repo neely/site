@@ -4,7 +4,7 @@
 /* Set it up! */
 body
 {
-	margin: 45px 20px 20px 20px;
+	margin: 45px 20px 200px 20px;
 	background-color: #ededed;
 	color: #616363;
 	font-family: "HelveticaNeue";
@@ -13,15 +13,18 @@ body
 a
 {
 	color: #472816;
-	font-family: "HelveticaNeue";
-	font-size: 14px;
 	text-decoration: none;
 }
 a:hover
 {
 	color: #653417;
-	font-family: "HelveticaNeue";
-	font-size: 14px;
+	text-decoration: underline;
+}
+a.large_title:hover
+{
+	color: #a33b00;
+	font-family: "HelveticaNeueLight";
+	font-size: 36px;
 	text-decoration: underline;
 }
 div#content
@@ -81,20 +84,16 @@ div#right_col
 }
 .subtitle a
 {
-	-webkit-transition:all 0.35s ease;
-	-moz-transition:all 0.35s ease;
-	-o-transition:all 0.35s ease;
-	transition:all 0.35s ease;
+	-webkit-transition: all 0.35s ease;
+	-moz-transition: all 0.35s ease;
+	-o-transition: all 0.35s ease;
+	transition: all 0.35s ease;
 	color: #472816;
-	font-family: "HelveticaNeue";
-	font-size: 14px;
 	text-decoration: none;
 }
 .subtitle a:hover
 {
 	color: #653417;
-	font-family: "HelveticaNeue";
-	font-size: 14px;
 	text-decoration: underline;
 }
 .item
@@ -102,12 +101,17 @@ div#right_col
 	margin: 30px 0 0 0;
 	clear: both;
 }
+/* Special case for Publications section */
+.item.publications
+{
+	text-align: left;
+}
 .item p
 {
-	-webkit-transition:color 0.5s ease;
-	-moz-transition:color 0.5s ease;
-	-o-transition:color 0.5s ease;
-	transition:color 0.5s ease;
+	-webkit-transition: color 0.5s ease;
+	-moz-transition: color 0.5s ease;
+	-o-transition: color 0.5s ease;
+	transition: color 0.5s ease;
 }
 .item:hover p
 {
@@ -120,4 +124,14 @@ div#right_col
 	width: 100%;
 	height: 40px;
 	margin-bottom: 40px;
+}
+#print_subtitle
+{
+	display: none;
+}
+
+/* Force left alignment for Publications section */
+#right_col .item.publications
+{
+	text-align: left !important;
 }
