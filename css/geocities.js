@@ -237,7 +237,6 @@ const GC = (() => {
     document.head.appendChild(s);
   }
 
-
   // ── Horrible shooting-star cursor trail ───────────────────────
   function initShootingStarCursor() {
     const style = track(make('style', { id: 'gc-cursor-style' }));
@@ -280,14 +279,16 @@ const GC = (() => {
       if (now - cursorLast < 35) return;
       cursorLast = now;
 
-      const star = track(make('span', { class: 'gc-shooting-star' }));
+      const star = make('span', { class: 'gc-shooting-star' });
       star.textContent = stars[Math.floor(Math.random() * stars.length)];
       star.style.left = ev.clientX + 'px';
       star.style.top = ev.clientY + 'px';
 
       document.body.appendChild(star);
 
-      setTimeout(() => star.remove(), 750);
+      setTimeout(() => {
+        star.remove();
+      }, 750);
     };
 
     window.addEventListener('mousemove', cursorHandler);
@@ -319,6 +320,8 @@ const GC = (() => {
       window.removeEventListener('mousemove', cursorHandler);
       cursorHandler = null;
     }
+
+    document.querySelectorAll('.gc-shooting-star').forEach(star => star.remove());
 
     nodes.forEach(n => n.remove());
     nodes = [];
