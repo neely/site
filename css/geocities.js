@@ -1,15 +1,16 @@
 /* geocities.js — Mount/unmount Geocities theme extras
-   Injects: marquee, construction banner, spinning protein,
-   visitor counter, Cool Links, and Webring.
-   All injected nodes are tracked and removed cleanly on unmount.
-   Three.js is loaded lazily and intentionally NOT removed on
-   unmount (so remounting is instant on repeat visits).
+   Injects:  marquee, construction banner, spinning protein,
+             visitor counter, simplified honors, Cool Links, Webring.
+   Hides:    Media section, full Honors & Distinctions,
+             Editorial Assignments, bulk of publications.
+   Everything is cleanly restored on unmount.
 ----------------------------------------------------------------- */
 const GC = (() => {
 
-  let nodes   = [];    // tracked injected DOM nodes
-  let mounted = false;
-  let animId  = null;
+  let nodes    = [];   // injected DOM nodes → removed on unmount
+  let hiddenEls = [];  // { el, display } → restored on unmount
+  let mounted  = false;
+  let animId   = null;
   let glRenderer = null;
 
   // ── DOM helpers ───────────────────────────────────────────────
@@ -24,7 +25,20 @@ const GC = (() => {
   }
   function track(e) { nodes.push(e); return e; }
 
-  // ── Derived content (stays in sync with index.html) ───────────
+  function hideEl(el) {
+    if (!el) return;
+    hiddenEls.push({ el, display: el.style.display });
+    el.style.display = 'none';
+  }
+
+  // Find an .item by its .large_title text
+  function findItem(titleText) {
+    return [...document.querySelectorAll('.large_title')]
+      .find(el => el.textContent.trim() === titleText)
+      ?.closest('.item');
+  }
+
+  // ── Derived content ───────────────────────────────────────────
   function pubCount() {
     const pub = document.querySelector('.item.publications');
     if (!pub) return '??';
@@ -64,26 +78,54 @@ const GC = (() => {
   function injectHeaderExtras() {
     const header = document.getElementById('header');
 
-    // Spinning protein canvas
     const wrap = track(make('div', { id: 'gc-protein-wrap' }));
     wrap.innerHTML = `<canvas id="gc-canvas" width="180" height="180"></canvas>
                       <div class="gc-blink" id="gc-protein-label">✦ SPINNING PROTEIN ✦</div>`;
     header.appendChild(wrap);
 
-    // Visitor counter
     const counter = track(make('div', { id: 'gc-counter' }));
     counter.innerHTML = `<span class="gc-counter-label">YOU ARE VISITOR NUMBER</span>
                          <span class="gc-counter-num">001,337</span>
                          <span class="gc-counter-label">SINCE 1997</span>`;
     header.appendChild(counter);
 
-    // Netscape badge
     const badge = track(make('div', { id: 'gc-badge' }));
     badge.textContent = '✓ BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800×600';
     header.appendChild(badge);
   }
 
+  // Static simplified honors — insert before real Honors item, which gets hidden
+  function injectSimpleHonors() {
+    const d = track(make('div', { class: 'item', id: 'gc-honors' }));
+    d.innerHTML = `
+      <span class="large_title">Honors!!</span>
+      <p>⭐ 2024 NIST MML Accolade for Service in Professional Organizations</p>
+      <p>⭐ 2024 Leadership Recognition Award, US Human Proteomics Organization</p>
+      <p>⭐ ACS Editors Choice for Neely <i>et al.</i>, 2021</p>
+      <p>⭐ Outstanding Service, ABRF, 2022</p>
+      <p>⭐ 2021 Rising Stars in Proteomics and Metabolomics</p>
+      <p>⭐ 1st Place Student Presentation, IAAAM, 2012 &amp; 2011</p>
+      <p>⭐ Graduated Magna Cum Laude, University of Georgia, 2003</p>`;
+    const realHonors = findItem('Honors & Distinctions');
+    if (realHonors) realHonors.parentNode.insertBefore(d, realHonors);
+    else document.getElementById('left_col').appendChild(d);
+  }
+
+  // Show only the 3 most recent numbered pubs; add "...and N more"
+  function truncatePubs() {
+    const pub = document.querySelector('.item.publications');
+    if (!pub) return;
+    const numbered = [...pub.querySelectorAll('p')]
+      .filter(p => /^\d+\./.test(p.textContent.trim()));
+    const keep = 3;
+    numbered.slice(0, numbered.length - keep).forEach(p => hideEl(p));
+    const more = track(make('p', { id: 'gc-pubmore' }));
+    more.innerHTML = `<a href="http://www.ncbi.nlm.nih.gov/sites/myncbi/1Jy3Cy92bECkr/bibliography/48132018/public/?sort=date&direction=ascending" target="_blank">...and ${numbered.length - keep} more on PubMed!!</a>`;
+    pub.appendChild(more);
+  }
+
   // Hardcoded — update here if media links change
+  // Inserted after the Contact item
   function injectCoolLinks() {
     const d = track(make('div', { class: 'item', id: 'gc-coollinks' }));
     d.innerHTML = `
@@ -94,7 +136,9 @@ const GC = (() => {
       <p><a href="https://www.technologynetworks.com/proteomics/news/brewing-up-a-storm-scientists-conduct-a-global-beer-proteomics-study-343689" target="_blank">🍺 Global Beer Proteomics Study (2020)</a></p>
       <p><a href="https://www.nist.gov/news-events/news/2017/02/diving-deep-dolphin-genome-could-benefit-human-health" target="_blank">🐬 Diving Deep into the Dolphin Genome (2017)</a></p>
       <p><a href="https://www.nist.gov/blogs/taking-measure/blood-sweat-and-genomes-quest-advance-measurement-science-non-model-organisms" target="_blank">🧬 Blood, Sweat and Genomes (2019)</a></p>`;
-    document.getElementById('right_col').appendChild(d);
+    const contact = document.querySelector('#right_col .item');
+    if (contact?.nextSibling) contact.parentNode.insertBefore(d, contact.nextSibling);
+    else document.getElementById('right_col').appendChild(d);
   }
 
   function injectWebring() {
@@ -107,6 +151,13 @@ const GC = (() => {
         &nbsp;|&nbsp; <a href="#">Next ►►</a>
       </p>`;
     document.getElementById('right_col').appendChild(d);
+  }
+
+  // ── Hide sections not needed in Geocities mode ────────────────
+  function hideSections() {
+    hideEl(findItem('Media'));
+    hideEl(findItem('Honors & Distinctions'));
+    hideEl(findItem('Editorial Assignments & Committees'));
   }
 
   // ── Three.js protein ribbon ───────────────────────────────────
@@ -126,23 +177,19 @@ const GC = (() => {
 
     scene.add(new T.AmbientLight(0xffffff, 0.4));
     const d1 = new T.DirectionalLight(0xff88ff, 1.2);
-    d1.position.set(5, 5, 5);
-    scene.add(d1);
+    d1.position.set(5, 5, 5); scene.add(d1);
     const d2 = new T.DirectionalLight(0x88ffff, 0.8);
-    d2.position.set(-5, -3, 2);
-    scene.add(d2);
+    d2.position.set(-5, -3, 2); scene.add(d2);
 
     const protein = new T.Group();
     scene.add(protein);
 
     function v(x, y, z) { return new T.Vector3(x, y, z); }
-
     function tube(pts, r, color, seg = 8) {
       const geo = new T.TubeGeometry(new T.CatmullRomCurve3(pts), pts.length * 4, r, seg, false);
       return new T.Mesh(geo, new T.MeshPhongMaterial({ color, shininess: 80 }));
     }
 
-    // Alpha helix 1 — teal
     const h1 = [];
     for (let i = 0; i <= 60; i++) {
       const t = i / 60, a = t * Math.PI * 4;
@@ -150,7 +197,6 @@ const GC = (() => {
     }
     protein.add(tube(h1, 0.18, 0x00cccc));
 
-    // Alpha helix 2 — magenta, tilted
     const h2 = [];
     for (let i = 0; i <= 48; i++) {
       const t = i / 48, a = t * Math.PI * 3.2 + 1.0;
@@ -160,7 +206,6 @@ const GC = (() => {
     hm.rotation.z = 0.4;
     protein.add(hm);
 
-    // Beta strands — gold and orange
     const b1 = [], b2 = [];
     for (let i = 0; i <= 20; i++) {
       const t = i / 20;
@@ -169,11 +214,8 @@ const GC = (() => {
     }
     protein.add(tube(b1, 0.22, 0xddaa00, 4));
     protein.add(tube(b2, 0.19, 0xff6600, 4));
-
-    // Loop regions — grey
-    protein.add(tube([v(0.55,1.6,0),   v(0.9,1.2,0.8),   v(1.5,0.9,0.2),  v(1.1,0.4,-0.3)],  0.08, 0xaaaaaa, 6));
-    protein.add(tube([v(-0.55,-1.6,0), v(-0.3,-1.8,-0.7), v(0.4,-1.6,-1.0), v(1.0,-1.4,-1.2)], 0.08, 0xaaaaaa, 6));
-
+    protein.add(tube([v(0.55,1.6,0),    v(0.9,1.2,0.8),   v(1.5,0.9,0.2),   v(1.1,0.4,-0.3)],   0.08, 0xaaaaaa, 6));
+    protein.add(tube([v(-0.55,-1.6,0),  v(-0.3,-1.8,-0.7), v(0.4,-1.6,-1.0), v(1.0,-1.4,-1.2)],  0.08, 0xaaaaaa, 6));
     protein.position.set(-0.3, 0, 0);
 
     function animate() {
@@ -191,7 +233,6 @@ const GC = (() => {
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
     s.onload = cb;
     document.head.appendChild(s);
-    // Intentionally not tracked — Three.js stays loaded for fast remounting
   }
 
   // ── Public API ────────────────────────────────────────────────
@@ -201,6 +242,9 @@ const GC = (() => {
     injectMarquee();
     injectConstruction();
     injectHeaderExtras();
+    hideSections();
+    injectSimpleHonors();
+    truncatePubs();
     injectCoolLinks();
     injectWebring();
     loadThree(initProtein);
@@ -213,6 +257,8 @@ const GC = (() => {
     if (glRenderer) { glRenderer.dispose(); glRenderer = null; }
     nodes.forEach(n => n.remove());
     nodes = [];
+    hiddenEls.forEach(({ el, display }) => el.style.display = display);
+    hiddenEls = [];
   }
 
   return { mount, unmount };
