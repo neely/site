@@ -87,6 +87,17 @@
   color: #ccccff;
   margin: 45px 20px 200px 20px;
 }
+/* Horrible Geocities cursor */
+[data-theme="geocities"],
+[data-theme="geocities"] body,
+[data-theme="geocities"] * {
+  cursor: crosshair;
+}
+[data-theme="geocities"] a,
+[data-theme="geocities"] button,
+[data-theme="geocities"] #theme-btn {
+  cursor: help;
+}
 [data-theme="geocities"] a {
   color: #00ffff;
   font-family: "Comic Sans MS", "Chalkboard SE", cursive;
