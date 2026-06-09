@@ -5,6 +5,7 @@
 	<title>Benjamin Neely</title>
 	<link rel="stylesheet" type="text/css" href="css/dark.css" />
 	<link rel="stylesheet" href="css/printable.css" type="text/css" media="print" />
+	<link rel="stylesheet" type="text/css" href="css/themes.css" />
 	<link rel="shortcut icon" type="image/png" href="https://dl.dropbox.com/u/1759357/Full/BEN_small16.png">
 	<link rel="icon" type="image/png" href="https://dl.dropbox.com/u/1759357/Full/BEN_small16.png">
 	<link rel="shortcut icon" type="image/png" href="./BEN_small16.png">
@@ -21,6 +22,7 @@
 </script>
 
 <body>
+	<button id="theme-btn">☀️ Light</button>
 	<div id="content">
 		<div id="header">
 			<span class="header_name">Benjamin Neely</span><br />
@@ -235,5 +237,22 @@
 			<p>&nbsp;</p>
 		</div>
 	</div>
+
+<script>
+  const themes = ['dark','light','retro'];
+  const btn = document.getElementById('theme-btn');
+  const labels = {dark:'☀️ Light', light:'◈ Retro', retro:'🌑 Dark'};
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.dataset.theme || 'dark';
+    const next = themes[(themes.indexOf(cur) + 1) % themes.length];
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+    btn.textContent = labels[next];
+  });
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  btn.textContent = labels[saved];
+</script>
+	
 </body>
 </html>
