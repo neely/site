@@ -2,7 +2,7 @@
 
 My personal site/CV — plain HTML/CSS, no framework, no build step. Lives at [benjaminneely.com](https://benjaminneely.com).
 
-`index.html` renders a resume-style timeline (research chemist at NIST/COMPAR, adjunct faculty at College of Charleston, prior work at MUSC), with a theme picker (more on that in a [blog post on neely.github.io](https://neely.github.io)). The favicon/nameplate (`BEN_small16.png`) dates back to grad school, c. 2007. `publications.html` covers papers.
+`index.html` renders a resume-style timeline (research chemist at NIST/COMPAR, adjunct faculty at College of Charleston, prior work at MUSC), with a theme picker — including a hidden Geocities-chaos mode (marquee, sparkle cursor trail, spinning protein). Story behind it: [Playing with my nameplate](https://neely.github.io/Playing-with-my-nameplate/). The favicon/nameplate (`BEN_small16.png`) traces back to an early-2010s "nameplate" style landing page, in the same Lifehacker-inspired vein.
 
 ## Layout
 
